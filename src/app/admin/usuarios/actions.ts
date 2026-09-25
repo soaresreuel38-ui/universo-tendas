@@ -27,8 +27,8 @@ export async function updateUserAction(_: ActionState, form: FormData): Promise<
   return run(async () => {
     const id = zId.parse(str(form, "id"));
     const data = z
-      .object({ name: zReqText(120, "Nome"), role, active: zCheckbox, password: z.string().max(200) })
-      .parse({ name: str(form, "name"), role: str(form, "role"), active: form.get("active"), password: str(form, "password") });
+      .object({ name: zReqText(120, "Nome"), email: zEmail, role, active: zCheckbox, password: z.string().max(200) })
+      .parse({ name: str(form, "name"), email: str(form, "email"), role: str(form, "role"), active: form.get("active"), password: str(form, "password") });
     await updateUser(prisma, user, id, { ...data, password: data.password || null });
     refreshPanel();
     return "Usuário atualizado.";

@@ -22,7 +22,7 @@ export async function updateUser(
   db: PrismaClient,
   actor: Actor,
   id: string,
-  input: { name: string; role: Role; active: boolean; password?: string | null },
+  input: { name: string; email?: string; role: Role; active: boolean; password?: string | null },
 ) {
   assertCan(actor, "user.manage");
   if (id === actor.id && (input.role !== "ADMIN" || !input.active)) {
@@ -35,6 +35,11 @@ export async function updateUser(
   const current = await db.user.findUnique({ where: { id } });
   if (!current) throw new DomainError("Usuário não encontrado.");
   const data: Parameters<typeof db.user.update>[0]["data"] = { name: input.name.trim(), role: input.role, active: input.active };
+  const email = input.email?.trim().toLowerCase();
+  if (email && email !== current.email) {
+    if (await db.user.findUnique({ where: { email } })) throw new DomainError("Já existe um usuário com este e-mail.");
+    data.email = email;
+  }
   if (input.password) {
     if (input.password.length < MIN_PASSWORD) throw new DomainError(`A senha precisa ter ao menos ${MIN_PASSWORD} caracteres.`);
     data.passwordHash = await hashPassword(input.password);

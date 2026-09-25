@@ -62,6 +62,9 @@ export default async function UsersPage() {
                       <Field label="Nome">
                         <Input name="name" required maxLength={120} defaultValue={u.name} />
                       </Field>
+                      <Field label="E-mail (login)">
+                        <Input name="email" type="email" required maxLength={160} defaultValue={u.email} />
+                      </Field>
                       <Field label="Tipo">
                         <Select name="role" defaultValue={u.role}>
                           <option value="EMPLOYEE">Funcionário</option>
