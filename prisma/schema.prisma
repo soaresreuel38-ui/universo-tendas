@@ -1,0 +1,415 @@
+// Universo Tendas — modelo de dados do sistema de estoque, locação e vendas.
+//
+// Regras de estoque (contadores em Product):
+//   qtyAvailable   → no depósito, em condições de uso (inclui o que está reservado para locações futuras)
+//   qtyRented      → fora da empresa em locação
+//   qtyMaintenance → em manutenção
+//   qtyPending     → faltantes de locações (pendência a resolver)
+//   total          → qtyAvailable + qtyRented + qtyMaintenance + qtyPending
+//   qtySold / qtyLost → acumulados históricos (já saíram definitivamente do estoque)
+// "Reservado" é calculado a partir das locações ativas (ver src/server/availability.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum ProductKind {
+  RENTAL
+  SALE
+  BOTH
+}
+
+enum TrackingMode {
+  QUANTITY
+  UNIT
+}
+
+enum UnitStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  PENDING
+  SOLD
+  LOST
+}
+
+enum RentalStatus {
+  ORCAMENTO
+  RESERVADA
+  CONFIRMADA
+  SEPARACAO
+  SAIU
+  EM_EVENTO
+  AGUARDANDO_RETORNO
+  ATRASADA
+  RETORNADA
+  CONFERIDA
+  FINALIZADA
+  CANCELADA
+}
+
+enum SaleStatus {
+  CONCLUIDA
+  CANCELADA
+}
+
+enum MovementType {
+  ENTRADA
+  SAIDA_LOCACAO
+  RETORNO_LOCACAO
+  VENDA
+  VENDA_CANCELADA
+  ENVIO_MANUTENCAO
+  RETORNO_MANUTENCAO
+  DESCARTE_MANUTENCAO
+  DANIFICADO_RETORNO
+  PENDENCIA
+  PENDENCIA_ENCONTRADA
+  PENDENCIA_PERDIDA
+  PERDA
+  TRANSFERENCIA
+  SAIDA_OUTRA
+  AJUSTE
+}
+
+enum MaintenanceStatus {
+  ABERTA
+  CONCLUIDA
+  DESCARTADA
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(EMPLOYEE)
+  active       Boolean   @default(true)
+  /// Incrementado ao trocar senha/desativar: invalida sessões antigas.
+  sessionVersion Int     @default(0)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  movements    StockMovement[]
+  rentals      Rental[]           @relation("RentalCreatedBy")
+  checkedIn    Rental[]           @relation("RentalCheckedBy")
+  sales        Sale[]
+  maintenances Maintenance[]
+  adjustments  InventoryAdjustment[]
+  photos       Photo[]
+}
+
+/** Tentativas de login com falha — rate limit persistente (funciona em serverless). */
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  document  String?
+  phone     String?
+  whatsapp  String?
+  email     String?
+  address   String?
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rentals Rental[]
+  sales   Sale[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([document])
+}
+
+model Product {
+  id               String       @id @default(cuid())
+  name             String
+  sku              String       @unique
+  category         String
+  kind             ProductKind  @default(RENTAL)
+  trackingMode     TrackingMode @default(QUANTITY)
+  description      String?
+  unit             String       @default("un")
+  salePriceCents   Int?
+  rentalPriceCents Int?
+  photoId          String?
+  notes            String?
+  /// Alerta de estoque baixo quando o livre para uso ficar igual ou abaixo deste valor.
+  minStock         Int          @default(0)
+  active           Boolean      @default(true)
+
+  qtyAvailable   Int @default(0)
+  qtyRented      Int @default(0)
+  qtyMaintenance Int @default(0)
+  qtyPending     Int @default(0)
+  qtySold        Int @default(0)
+  qtyLost        Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photo        Photo?                @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  units        ProductUnit[]
+  movements    StockMovement[]
+  rentalItems  RentalItem[]
+  saleItems    SaleItem[]
+  maintenances Maintenance[]
+  adjustments  InventoryAdjustment[]
+
+  @@index([name])
+  @@index([category])
+  @@index([active, kind])
+}
+
+/** Unidade física identificada individualmente (ex.: Tenda 5x5 #001). */
+model ProductUnit {
+  id        String     @id @default(cuid())
+  productId String
+  code      String
+  status    UnitStatus @default(AVAILABLE)
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  product      Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  rentalUnits  RentalItemUnit[]
+  movements    StockMovement[]
+  maintenances Maintenance[]
+
+  @@unique([productId, code])
+  @@index([productId, status])
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  unitId    String?
+  type      MovementType
+  /// Variação no estoque disponível (depósito). Ex.: +5 entrada, -3 saída para locação.
+  delta     Int
+  /// Quantidade envolvida na operação (sempre positiva).
+  quantity  Int
+  reason    String?
+  notes     String?
+  userId    String
+  rentalId  String?
+  saleId    String?
+  /// Saldo após a operação (depósito / total), para auditoria.
+  availableAfter Int
+  totalAfter     Int
+  /// Data informada pelo usuário (ex.: data da compra). createdAt é o registro no sistema.
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  unit    ProductUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  rental  Rental?      @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  sale    Sale?        @relation(fields: [saleId], references: [id], onDelete: SetNull)
+
+  @@index([productId, occurredAt])
+  @@index([occurredAt])
+  @@index([type, createdAt])
+  @@index([rentalId])
+}
+
+model Rental {
+  id               String       @id @default(cuid())
+  number           Int          @unique @default(autoincrement())
+  customerId       String
+  eventName        String
+  eventAddress     String?
+  setupAt          DateTime?
+  departureAt      DateTime
+  eventAt          DateTime?
+  expectedReturnAt DateTime
+  actualReturnAt   DateTime?
+  departedAt       DateTime?
+  pickupBy         String?
+  status           RentalStatus @default(ORCAMENTO)
+  totalCents       Int          @default(0)
+  discountCents    Int          @default(0)
+  notes            String?
+  checkNotes       String?
+  checkedById      String?
+  checkedAt        DateTime?
+  createdById      String
+  canceledAt       DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  customer  Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdBy User            @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  checkedBy User?           @relation("RentalCheckedBy", fields: [checkedById], references: [id], onDelete: SetNull)
+  items     RentalItem[]
+  movements StockMovement[]
+  photos    Photo[]
+  maintenances Maintenance[]
+
+  @@index([status])
+  @@index([departureAt])
+  @@index([expectedReturnAt])
+  @@index([customerId])
+}
+
+model RentalItem {
+  id             String @id @default(cuid())
+  rentalId       String
+  productId      String
+  quantity       Int
+  unitPriceCents Int    @default(0)
+  qtyReturned    Int?
+  qtyDamaged     Int?
+  qtyMissing     Int?
+  /// Faltantes já resolvidos (encontrados ou baixados como perda).
+  qtyMissingResolved Int @default(0)
+  checkNote      String?
+
+  rental Rental           @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  units  RentalItemUnit[]
+
+  @@unique([rentalId, productId])
+  @@index([productId])
+}
+
+/** Quais unidades identificadas saíram em cada item de locação. */
+model RentalItemUnit {
+  id           String      @id @default(cuid())
+  rentalItemId String
+  unitId       String
+  /// OK, DANIFICADA ou FALTANTE — preenchido na conferência.
+  returnState  String?
+
+  rentalItem RentalItem  @relation(fields: [rentalItemId], references: [id], onDelete: Cascade)
+  unit       ProductUnit @relation(fields: [unitId], references: [id], onDelete: Restrict)
+
+  @@unique([rentalItemId, unitId])
+  @@index([unitId])
+}
+
+model Sale {
+  id            String     @id @default(cuid())
+  number        Int        @unique @default(autoincrement())
+  customerId    String?
+  customerName  String?
+  soldAt        DateTime   @default(now())
+  totalCents    Int        @default(0)
+  discountCents Int        @default(0)
+  status        SaleStatus @default(CONCLUIDA)
+  notes         String?
+  userId        String
+  canceledAt    DateTime?
+  createdAt     DateTime   @default(now())
+
+  customer  Customer?       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items     SaleItem[]
+  movements StockMovement[]
+
+  @@index([soldAt])
+  @@index([customerId])
+}
+
+model SaleItem {
+  id             String @id @default(cuid())
+  saleId         String
+  productId      String
+  quantity       Int
+  unitPriceCents Int    @default(0)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([productId])
+}
+
+model Maintenance {
+  id        String            @id @default(cuid())
+  productId String
+  unitId    String?
+  rentalId  String?
+  quantity  Int
+  reason    String
+  status    MaintenanceStatus @default(ABERTA)
+  notes     String?
+  costCents Int?
+  userId    String
+  openedAt  DateTime          @default(now())
+  closedAt  DateTime?
+
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  unit    ProductUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  rental  Rental?      @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([productId])
+}
+
+model InventoryAdjustment {
+  id          String   @id @default(cuid())
+  productId   String
+  previousQty Int
+  countedQty  Int
+  reason      String
+  userId      String
+  createdAt   DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([productId])
+}
+
+/** Fotos de produtos e de conferências (armazenadas no próprio banco, já comprimidas no navegador). */
+model Photo {
+  id         String   @id @default(cuid())
+  mime       String
+  size       Int
+  data       Bytes
+  caption    String?
+  rentalId   String?
+  uploadedById String
+  createdAt  DateTime @default(now())
+
+  rental     Rental?   @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  products   Product[]
+
+  @@index([rentalId])
+}
+
+/** Configurações da empresa (linha única, id = "default"). */
+model BusinessSettings {
+  id                  String   @id @default("default")
+  companyName         String   @default("Universo Tendas")
+  city                String   @default("Sinop - MT")
+  phones              String   @default("(66) 3531-4760 · (66) 9 9982-4544")
+  whatsappNumber      String   @default("5566999824544")
+  instagram           String   @default("@universotendas")
+  address             String?
+  defaultMinStock     Int      @default(0)
+  whatsappFooter      String   @default("Universo Tendas")
+  updatedAt           DateTime @updatedAt
+}
