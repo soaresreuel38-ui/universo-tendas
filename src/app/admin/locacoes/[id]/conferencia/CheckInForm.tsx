@@ -117,9 +117,9 @@ export function CheckInForm({
           const sumOk = c.good + c.damaged + c.missing === item.quantity;
           const diff = c.damaged + c.missing > 0 || c.good !== item.quantity;
           return (
-            <li key={item.id} className={`rounded-lg border bg-white p-4 ${!sumOk ? "border-red-300" : diff ? "border-amber-300" : "border-zinc-200"}`}>
+            <li key={item.id} className={`rounded-lg border bg-white p-4 ${!sumOk ? "border-red-300" : diff ? "border-amber-300" : "border-line"}`}>
               <div className="flex items-start justify-between gap-3">
-                <p className="font-medium text-zinc-900">
+                <p className="font-medium text-graphite">
                   <span className={diff ? "text-amber-600" : "text-emerald-600"} aria-hidden>
                     {diff ? "⚠" : "☑"}
                   </span>{" "}
@@ -129,7 +129,7 @@ export function CheckInForm({
                   {c.good}/{item.quantity}
                 </p>
               </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-faint">
                 Enviado: {item.quantity} {item.unit}
                 {c.damaged ? ` · ${c.damaged} danificada(s)` : ""}
                 {c.missing ? ` · ${c.missing} faltante(s)` : ""}
@@ -141,7 +141,7 @@ export function CheckInForm({
                   role="radio"
                   aria-checked={!s.problem}
                   onClick={() => set(item.id, { problem: false })}
-                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${!s.problem ? "bg-emerald-600 text-white" : "bg-zinc-100 text-zinc-700"}`}
+                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${!s.problem ? "bg-emerald-600 text-white" : "bg-canvas text-muted"}`}
                 >
                   🟢 OK
                 </button>
@@ -150,7 +150,7 @@ export function CheckInForm({
                   role="radio"
                   aria-checked={s.problem}
                   onClick={() => set(item.id, { problem: true })}
-                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${s.problem ? "bg-red-600 text-white" : "bg-zinc-100 text-zinc-700"}`}
+                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${s.problem ? "bg-red-600 text-white" : "bg-canvas text-muted"}`}
                 >
                   🔴 PROBLEMA
                 </button>
@@ -161,7 +161,7 @@ export function CheckInForm({
                   {item.units.map((u) => (
                     <li key={u.unitId} className="flex items-center justify-between gap-2">
                       <span className="font-mono text-sm">#{u.code}</span>
-                      <span className="inline-flex overflow-hidden rounded-md border border-zinc-300">
+                      <span className="inline-flex overflow-hidden rounded-md border border-line-strong">
                         {(Object.keys(UNIT_LABEL) as UnitState[]).map((st) => (
                           <button
                             type="button"
@@ -174,7 +174,7 @@ export function CheckInForm({
                                   : st === "DANIFICADA"
                                     ? "bg-amber-500 text-white"
                                     : "bg-red-600 text-white"
-                                : "bg-white text-zinc-600"
+                                : "bg-white text-muted"
                             }`}
                           >
                             {UNIT_LABEL[st]}
@@ -209,7 +209,7 @@ export function CheckInForm({
                     <select
                       value={s.damageType}
                       onChange={(e) => set(item.id, { damageType: e.target.value })}
-                      className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+                      className="h-10 w-full rounded-lg border border-line-strong bg-white px-3 text-sm"
                     >
                       <option value="">Selecione…</option>
                       {DAMAGE_TYPES.map((t) => (
@@ -223,7 +223,7 @@ export function CheckInForm({
                     <Input value={s.responsible} onChange={(e) => set(item.id, { responsible: e.target.value })} maxLength={120} />
                   </Field>
                   <div className="sm:col-span-2">
-                    <span className="text-sm font-medium text-zinc-700">Fotos do dano</span>
+                    <span className="text-sm font-medium text-muted">Fotos do dano</span>
                     <PhotoInput name={`damagePhotos_${item.id}`} multiple label="Tirar / enviar foto" />
                   </div>
                 </div>
@@ -233,26 +233,26 @@ export function CheckInForm({
         })}
       </ul>
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="rounded-lg border border-line bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Data/hora do retorno">
             <Input type="datetime-local" name="returnedAt" defaultValue={now} />
           </Field>
           <div className="md:col-span-2">
-            <span className="text-sm font-medium text-zinc-700">Fotos da condição dos equipamentos</span>
-            <p className="mb-2 text-xs text-zinc-500">Registre danos para ter o histórico.</p>
+            <span className="text-sm font-medium text-muted">Fotos da condição dos equipamentos</span>
+            <p className="mb-2 text-xs text-faint">Registre danos para ter o histórico.</p>
             <PhotoInput name="photoIds" multiple label="Tirar / anexar foto" />
           </div>
           <Field label="Observações gerais" className="md:col-span-2">
             <Textarea name="notes" maxLength={2000} />
           </Field>
         </div>
-        <p className="mt-3 text-xs text-zinc-500">
+        <p className="mt-3 text-xs text-faint">
           Ao finalizar: itens OK voltam para <b>Disponível</b>, danificados vão para <b>Manutenção</b> e faltantes ficam como <b>Pendência</b>.
         </p>
       </div>
 
-      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-line bg-canvas/95 px-4 py-3 backdrop-blur lg:bottom-0">
         {problems.length ? (
           <ul className="text-sm text-red-700">
             {problems.map((p) => (

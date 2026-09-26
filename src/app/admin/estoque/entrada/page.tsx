@@ -21,7 +21,7 @@ export default async function EntryPage({ searchParams }: { searchParams: Promis
       />
       <Section>
         {products.length === 0 ? (
-          <p className="text-sm text-zinc-500">Cadastre um produto antes de registrar entradas.</p>
+          <p className="text-sm text-faint">Cadastre um produto antes de registrar entradas.</p>
         ) : (
           <EntryForm action={stockEntryAction} products={products} defaultProduct={produto} now={toLocalInput(new Date())} />
         )}

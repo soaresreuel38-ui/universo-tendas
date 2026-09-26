@@ -55,7 +55,7 @@ export function SignaturePad({ name = "signature", onChange }: { name?: string; 
   return (
     <div>
       <input type="hidden" name={name} value={value} />
-      <div className="relative rounded-lg border border-zinc-300 bg-white">
+      <div className="relative rounded-lg border border-line-strong bg-white">
         <canvas
           ref={canvasRef}
           aria-label="Área para assinar"
@@ -85,8 +85,8 @@ export function SignaturePad({ name = "signature", onChange }: { name?: string; 
             drawing.current = false;
           }}
         />
-        <span className="pointer-events-none absolute bottom-8 left-6 right-6 border-b border-dashed border-zinc-300" />
-        <span className="pointer-events-none absolute bottom-2 left-6 text-xs text-zinc-400">Assine acima da linha</span>
+        <span className="pointer-events-none absolute bottom-8 left-6 right-6 border-b border-dashed border-line-strong" />
+        <span className="pointer-events-none absolute bottom-2 left-6 text-xs text-faint">Assine acima da linha</span>
       </div>
       <button
         type="button"
@@ -96,7 +96,7 @@ export function SignaturePad({ name = "signature", onChange }: { name?: string; 
           setValue("");
           onChange?.(false);
         }}
-        className="mt-1 text-sm text-zinc-600 underline"
+        className="mt-1 text-sm text-muted underline"
       >
         Limpar assinatura
       </button>

@@ -38,7 +38,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
   const rentalColumns = [
     { header: "Locação", mobile: "title" as const, cell: (r: (typeof c.rentals)[number]) => <>#{seq(r.number)} — {r.eventName}</> },
     { header: "Saída", cell: (r: (typeof c.rentals)[number]) => fmtDateTime(r.departureAt) },
-    { header: "Produtos", cell: (r: (typeof c.rentals)[number]) => <span className="text-zinc-600">{r.items.map((i) => `${i.quantity} ${i.product.name}`).join(", ")}</span> },
+    { header: "Produtos", cell: (r: (typeof c.rentals)[number]) => <span className="text-muted">{r.items.map((i) => `${i.quantity} ${i.product.name}`).join(", ")}</span> },
     { header: "Valor", align: "right" as const, cell: (r: (typeof c.rentals)[number]) => money(r.totalCents) },
     { header: "Status", cell: (r: (typeof c.rentals)[number]) => <RentalStatusBadge rental={r} /> },
   ];
@@ -52,7 +52,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         actions={
           <>
             {wa ? (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium">
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line-strong bg-white px-4 text-sm font-medium">
                 <Icon name="whatsapp" className="h-4 w-4 text-emerald-600" /> WhatsApp
               </a>
             ) : null}
@@ -75,13 +75,13 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       <div className="grid gap-4 lg:grid-cols-2">
         <Section title="Produtos já alugados">
           {products.size === 0 ? (
-            <p className="text-sm text-zinc-500">Nenhum ainda.</p>
+            <p className="text-sm text-faint">Nenhum ainda.</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {[...products.entries()].sort((a, b) => b[1].qty - a[1].qty).map(([pid, p]) => (
                 <li key={pid} className="flex justify-between">
                   <Link href={`/admin/produtos/${pid}`} className="hover:underline">{p.name}</Link>
-                  <span className="tabular text-zinc-600">{p.qty}</span>
+                  <span className="tabular text-muted">{p.qty}</span>
                 </li>
               ))}
             </ul>
@@ -108,7 +108,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         <Section title="Excluir cliente">
           <ActionForm action={deleteCustomerAction} submitLabel="Excluir / desativar" submitVariant="danger" confirm="Excluir este cliente? Com histórico, ele será apenas desativado.">
             <input type="hidden" name="id" value={c.id} />
-            <p className="text-sm text-zinc-500">Clientes com locações ou compras são desativados para preservar o histórico.</p>
+            <p className="text-sm text-faint">Clientes com locações ou compras são desativados para preservar o histórico.</p>
           </ActionForm>
         </Section>
       ) : null}

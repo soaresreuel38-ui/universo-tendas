@@ -55,7 +55,7 @@ export function SaleForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
+      <fieldset className="rounded-lg border border-line bg-white p-4">
         <legend className="px-1 text-sm font-semibold">Cliente</legend>
         <div className="mb-2 flex gap-4 text-sm">
           <label className="inline-flex items-center gap-1.5">
@@ -72,17 +72,17 @@ export function SaleForm({
         )}
       </fieldset>
 
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
+      <fieldset className="rounded-lg border border-line bg-white p-4">
         <legend className="px-1 text-sm font-semibold">Produtos</legend>
         <ul className="space-y-3">
           {rows.map((r) => {
             const p = products.find((x) => x.value === r.productId);
             const isOver = p ? Number(r.quantity) > p.free : false;
             return (
-              <li key={r.key} className={`rounded-md border p-3 ${isOver ? "border-red-300 bg-red-50/50" : "border-zinc-200"}`}>
+              <li key={r.key} className={`rounded-md border p-3 ${isOver ? "border-red-300 bg-red-50/50" : "border-line"}`}>
                 <div className="grid gap-3 md:grid-cols-[1fr_7rem_9rem_auto] md:items-end">
                   <div>
-                    <span className="text-sm font-medium text-zinc-700">Produto</span>
+                    <span className="text-sm font-medium text-muted">Produto</span>
                     <SearchSelect
                       options={products}
                       value={r.productId}
@@ -99,14 +99,14 @@ export function SaleForm({
                   <button
                     type="button"
                     onClick={() => setRows((prev) => (prev.length > 1 ? prev.filter((x) => x.key !== r.key) : prev))}
-                    className="inline-flex h-10 items-center justify-center rounded-md px-2 text-zinc-500 hover:bg-zinc-100 hover:text-red-700"
+                    className="inline-flex h-10 items-center justify-center rounded-md px-2 text-faint hover:bg-canvas hover:text-red-700"
                     aria-label="Remover produto"
                   >
                     <Icon name="trash" className="h-4 w-4" />
                   </button>
                 </div>
                 {p ? (
-                  <p className={`mt-2 text-sm ${isOver ? "font-medium text-red-700" : "text-zinc-600"}`}>
+                  <p className={`mt-2 text-sm ${isOver ? "font-medium text-red-700" : "text-muted"}`}>
                     {isOver ? `Estoque insuficiente. Disponível para venda: ${p.free} ${p.unit}.` : `Disponível para venda: ${p.free} ${p.unit}`}
                   </p>
                 ) : null}
@@ -122,23 +122,23 @@ export function SaleForm({
           <Icon name="plus" className="h-4 w-4" /> Adicionar produto
         </button>
         {duplicate ? <p className="mt-2 text-sm text-red-700">O mesmo produto aparece duas vezes.</p> : null}
-        <div className="mt-4 grid gap-3 border-t border-zinc-200 pt-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 border-t border-line pt-4 md:grid-cols-3">
           <Field label="Desconto (R$)">
             <Input name="discount" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" />
           </Field>
           <div className="md:col-span-2 md:text-right">
-            <p className="text-sm text-zinc-500">Subtotal {money(gross)}</p>
+            <p className="text-sm text-faint">Subtotal {money(gross)}</p>
             <p className="tabular text-2xl font-semibold">Total {money(total)}</p>
           </div>
         </div>
       </fieldset>
 
-      <fieldset className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 md:grid-cols-2">
+      <fieldset className="grid gap-3 rounded-lg border border-line bg-white p-4 md:grid-cols-2">
         <Field label="Data da venda" required>
           <Input type="datetime-local" name="soldAt" required defaultValue={now} />
         </Field>
         <Field label="Pagamento recebido agora" hint="Deixe em branco se o pagamento será feito depois.">
-          <select name="paymentMethod" defaultValue="PIX" className="mt-1 block h-10 w-full rounded-md border border-zinc-300 bg-white px-2">
+          <select name="paymentMethod" defaultValue="PIX" className="mt-1 block h-10 w-full rounded-lg border border-line-strong bg-white px-2">
             <option value="">Ainda não pago</option>
             <option value="PIX">Pix</option>
             <option value="DINHEIRO">Dinheiro</option>
@@ -154,9 +154,9 @@ export function SaleForm({
         </Field>
       </fieldset>
 
-      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-line bg-canvas/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
         <SubmitButton pending={pending} disabled={blocked}>Registrar venda</SubmitButton>
-        <p className="text-xs text-zinc-500">A venda retira os produtos do estoque definitivamente.</p>
+        <p className="text-xs text-faint">A venda retira os produtos do estoque definitivamente.</p>
         <FormMessage state={state} />
       </div>
     </form>

@@ -19,7 +19,7 @@ export default async function NewSalePage({ searchParams }: { searchParams: Prom
     <div className="max-w-4xl">
       <PageHeader title="Nova venda" description="Produto vendido sai definitivamente do estoque." back={{ href: "/admin/vendas", label: "Vendas" }} />
       {products.length === 0 ? (
-        <p className="rounded-lg border border-zinc-200 bg-white p-4 text-sm text-zinc-600">
+        <p className="rounded-lg border border-line bg-white p-4 text-sm text-muted">
           Nenhum produto cadastrado para venda. Cadastre produtos com tipo “Venda” ou “Locação e venda”.
         </p>
       ) : (

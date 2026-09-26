@@ -23,10 +23,10 @@ export function EntryForm({ action, products, defaultProduct, now }: { action: A
     <ActionForm action={action} submitLabel="Confirmar entrada" resetOnSuccess>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
-          <span className="text-sm font-medium text-zinc-700">Produto <span className="text-accent">*</span></span>
+          <span className="text-sm font-medium text-muted">Produto <span className="text-accent">*</span></span>
           <SearchSelect name="productId" options={products} value={productId} onChange={setProductId} placeholder="Digite o nome ou código" required />
           {product ? (
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-faint">
               No depósito agora: {product.qtyAvailable} {product.unit}
               {product.trackingMode === "UNIT" ? " · as novas unidades receberão números sequenciais" : ""}
             </p>
@@ -80,7 +80,7 @@ export function ExitForm({
       <input type="hidden" name="kind" value={kind} />
       <div className="grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
-          <span className="text-sm font-medium text-zinc-700">Produto <span className="text-accent">*</span></span>
+          <span className="text-sm font-medium text-muted">Produto <span className="text-accent">*</span></span>
           <SearchSelect
             name="productId"
             options={products}
@@ -93,7 +93,7 @@ export function ExitForm({
             required
           />
           {product ? (
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-faint">
               Livre para esta saída: <b className={product.free > 0 ? "text-emerald-700" : "text-red-700"}>{product.free}</b> {product.unit} (no depósito: {product.qtyAvailable}; o restante está reservado)
             </p>
           ) : null}
@@ -115,13 +115,13 @@ export function ExitForm({
         </Field>
         {product?.trackingMode === "UNIT" && product.units?.length ? (
           <fieldset className="md:col-span-2">
-            <legend className="text-sm font-medium text-zinc-700">Unidades (opcional)</legend>
-            <p className="mb-2 text-xs text-zinc-500">Marque quais unidades saem. Sem marcar, o sistema escolhe as de menor número.</p>
+            <legend className="text-sm font-medium text-muted">Unidades (opcional)</legend>
+            <p className="mb-2 text-xs text-faint">Marque quais unidades saem. Sem marcar, o sistema escolhe as de menor número.</p>
             <div className="flex flex-wrap gap-2">
               {product.units.map((u) => {
                 const on = selectedUnits.includes(u.id);
                 return (
-                  <label key={u.id} className={`cursor-pointer rounded-md border px-2.5 py-1.5 font-mono text-sm ${on ? "border-ink bg-ink text-white" : "border-zinc-300"}`}>
+                  <label key={u.id} className={`cursor-pointer rounded-md border px-2.5 py-1.5 font-mono text-sm ${on ? "border-graphite bg-graphite text-white" : "border-line-strong"}`}>
                     <input
                       type="checkbox"
                       name="unitIds"

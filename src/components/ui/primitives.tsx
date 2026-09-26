@@ -2,20 +2,25 @@ import Link from "next/link";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { Icon, type IconName } from "./icons";
 
+/*
+ * Linguagem visual "Estrutura": papel neutro, grafite, linhas finas no lugar de caixas,
+ * azul Universo só onde há ação e o vermelho da marca reservado para alertas.
+ */
+
 // ───────────────────────── Botões ─────────────────────────
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "accent";
 
 export function buttonClass(variant: ButtonVariant = "secondary", size: "sm" | "md" | "lg" = "md") {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 whitespace-nowrap";
-  const sizes = { sm: "h-8 px-3 text-sm", md: "h-10 px-4 text-sm", lg: "h-12 px-5 text-base" }[size];
+    "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-45";
+  const sizes = { sm: "h-8 px-3 text-[13px]", md: "h-10 px-4 text-sm", lg: "h-12 px-5 text-[15px]" }[size];
   const variants = {
-    primary: "bg-ink text-white hover:bg-ink-soft",
-    accent: "bg-accent text-white hover:bg-accent-strong",
-    secondary: "border border-zinc-300 bg-white text-zinc-800 hover:border-zinc-400 hover:bg-zinc-50",
-    ghost: "text-zinc-700 hover:bg-zinc-200/60",
-    danger: "border border-red-200 bg-white text-red-700 hover:bg-red-50",
+    primary: "bg-ink text-white shadow-[0_1px_0_rgba(8,44,92,0.4),inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-ink-soft",
+    accent: "bg-accent text-white shadow-[0_1px_0_rgba(120,20,26,0.35)] hover:bg-accent-strong",
+    secondary: "border border-line-strong bg-white text-graphite hover:border-[#bfbab0] hover:bg-paper",
+    ghost: "text-muted hover:bg-black/[0.04] hover:text-graphite",
+    danger: "border border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50",
   }[variant];
   return `${base} ${sizes} ${variants}`;
 }
@@ -50,24 +55,27 @@ export function PageHeader({
   description,
   actions,
   back,
+  eyebrow,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
+  eyebrow?: ReactNode;
 }) {
   return (
-    <header className="mb-5 md:mb-6">
+    <header className="mb-6 animate-rise md:mb-8">
       {back ? (
-        <Link href={back.href} className="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800">
+        <Link href={back.href} className="mb-3 inline-flex items-center gap-1 text-[13px] text-muted transition-colors hover:text-graphite">
           <Icon name="chevronLeft" className="h-4 w-4" />
           {back.label}
         </Link>
       ) : null}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold tracking-tight text-zinc-900 md:text-2xl">{title}</h1>
-          {description ? <p className="mt-1 text-sm text-zinc-500">{description}</p> : null}
+          {eyebrow ? <p className="eyebrow mb-1.5">{eyebrow}</p> : null}
+          <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em] text-graphite md:text-[30px]">{title}</h1>
+          {description ? <p className="mt-1.5 max-w-2xl text-sm text-muted">{description}</p> : null}
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
       </div>
@@ -91,62 +99,86 @@ export function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className={`scroll-mt-20 rounded-lg border border-zinc-200 bg-white ${className}`}>
+    <section id={id} className={`scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-white ${className}`}>
       {title ? (
-        <div className="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
-          {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+        <div className="flex min-h-12 items-center justify-between gap-3 border-b border-line px-5 py-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-graphite">{title}</h2>
+          {actions ? <div className="flex items-center gap-2 text-sm">{actions}</div> : null}
         </div>
       ) : null}
-      <div className={padded ? "p-4" : ""}>{children}</div>
+      <div className={padded ? "p-5" : ""}>{children}</div>
     </section>
   );
 }
 
-export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
+export function EmptyState({ children, action, icon = "layers" }: { children: ReactNode; action?: ReactNode; icon?: IconName }) {
   return (
-    <div className="px-4 py-8 text-center text-sm text-zinc-500">
-      <p>{children}</p>
-      {action ? <div className="mt-3">{action}</div> : null}
+    <div className="flex flex-col items-center px-5 py-10 text-center">
+      <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-faint">
+        <Icon name={icon} className="h-5 w-5" />
+      </span>
+      <p className="max-w-sm text-sm text-muted">{children}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "warn" | "danger" | "ok"; children: ReactNode }) {
   const styles = {
-    info: "border-zinc-200 bg-zinc-50 text-zinc-700",
-    warn: "border-amber-200 bg-amber-50 text-amber-900",
-    danger: "border-red-200 bg-red-50 text-red-800",
-    ok: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    info: "border-line bg-paper text-graphite",
+    warn: "border-amber-200 bg-amber-50/80 text-amber-950",
+    danger: "border-red-200 bg-red-50/80 text-red-900",
+    ok: "border-emerald-200 bg-emerald-50/80 text-emerald-900",
   }[tone];
-  return <div className={`rounded-md border px-3 py-2 text-sm ${styles}`}>{children}</div>;
+  const icon: IconName = tone === "ok" ? "check" : tone === "info" ? "sparkle" : "alert";
+  return (
+    <div role={tone === "danger" ? "alert" : "status"} className={`flex animate-rise items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${styles}`}>
+      <Icon name={icon} className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
 }
 
 // ───────────────────────── Selos ─────────────────────────
 
 export type Tone = "neutral" | "info" | "accent" | "warn" | "danger" | "ok" | "muted";
 
+const DOT: Record<Tone, string> = {
+  neutral: "bg-faint",
+  muted: "bg-line-strong",
+  info: "bg-st-reserved",
+  accent: "bg-st-rented",
+  warn: "bg-amber-500",
+  danger: "bg-st-late",
+  ok: "bg-st-free",
+};
+
 export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
-  const styles = {
-    neutral: "bg-zinc-100 text-zinc-700 ring-zinc-200",
-    muted: "bg-zinc-50 text-zinc-500 ring-zinc-200",
-    info: "bg-sky-50 text-sky-800 ring-sky-200",
-    accent: "bg-amber-50 text-amber-800 ring-amber-200",
-    warn: "bg-yellow-50 text-yellow-800 ring-yellow-300",
-    danger: "bg-red-50 text-red-700 ring-red-200",
-    ok: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  const text = {
+    neutral: "text-graphite",
+    muted: "text-faint",
+    info: "text-[#244f8a]",
+    accent: "text-[#8a5413]",
+    warn: "text-amber-800",
+    danger: "text-red-700",
+    ok: "text-emerald-800",
   }[tone];
   return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${styles}`}>
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white px-2 py-0.5 text-xs font-medium ${text}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT[tone]}`} aria-hidden />
       {children}
     </span>
   );
 }
 
+export function StatusDot({ tone = "neutral", className = "" }: { tone?: Tone; className?: string }) {
+  return <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${DOT[tone]} ${className}`} aria-hidden />;
+}
+
 // ───────────────────────── Formulários ─────────────────────────
 
 const control =
-  "mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 shadow-xs outline-none transition placeholder:text-zinc-400 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500";
+  "mt-1.5 block w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-graphite outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-faint hover:border-[#bfbab0] focus:border-ink focus:ring-4 focus:ring-ink/10 disabled:bg-canvas disabled:text-faint";
 
 export function Field({
   label,
@@ -163,12 +195,12 @@ export function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-sm font-medium text-zinc-700">
+      <span className="text-[13px] font-medium text-graphite">
         {label}
         {required ? <span className="text-accent"> *</span> : null}
       </span>
       {children}
-      {hint ? <span className="mt-1 block text-xs text-zinc-500">{hint}</span> : null}
+      {hint ? <span className="mt-1.5 block text-xs text-faint">{hint}</span> : null}
     </label>
   );
 }
@@ -187,8 +219,8 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 
 export function Checkbox({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
   return (
-    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-zinc-800">
-      <input type="checkbox" {...props} className="h-4 w-4 rounded border-zinc-300 accent-[#0c3f80]" />
+    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2.5 text-sm text-graphite">
+      <input type="checkbox" {...props} className="h-4 w-4 rounded border-line-strong accent-[#0c3f80]" />
       {label}
     </label>
   );
@@ -206,7 +238,7 @@ export type Column<T> = {
 };
 
 /**
- * Tabela no computador; no celular cada linha vira um cartão compacto
+ * Tabela no computador; no celular cada linha vira um bloco compacto
  * (em vez de uma tabela espremida).
  */
 export function DataTable<T>({
@@ -230,21 +262,21 @@ export function DataTable<T>({
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50/80 text-xs uppercase tracking-wide text-zinc-500">
+            <tr className="border-b border-line">
               {columns.map((c, i) => (
-                <th key={i} className={`px-4 py-2.5 font-medium ${align(c)} ${c.className ?? ""}`}>
+                <th key={i} className={`eyebrow px-5 py-3 font-semibold ${align(c)} ${c.className ?? ""}`}>
                   {c.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-line/70">
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="group hover:bg-zinc-50">
+              <tr key={rowKey(row)} className="group transition-colors hover:bg-paper">
                 {columns.map((c, i) => (
-                  <td key={i} className={`px-4 py-2.5 align-middle ${align(c)} ${c.className ?? ""}`}>
+                  <td key={i} className={`px-5 py-3 align-middle ${align(c)} ${c.className ?? ""}`}>
                     {i === 0 && rowHref ? (
-                      <Link href={rowHref(row)} className="font-medium text-zinc-900 hover:underline">
+                      <Link href={rowHref(row)} className="font-medium text-graphite underline-offset-4 group-hover:underline">
                         {c.cell(row)}
                       </Link>
                     ) : (
@@ -257,18 +289,18 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      <ul className="divide-y divide-zinc-100 md:hidden">
+      <ul className="divide-y divide-line md:hidden">
         {rows.map((row) => {
           const content = (
             <>
-              <div className="font-medium text-zinc-900">{titleCol.cell(row)}</div>
-              <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
+              <div className="font-medium text-graphite">{titleCol.cell(row)}</div>
+              <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
                 {columns
                   .filter((c) => c !== titleCol && c.mobile !== "hide")
                   .map((c, i) => (
                     <div key={i} className="contents">
-                      <dt className="text-zinc-500">{c.header}</dt>
-                      <dd className="min-w-0 text-right text-zinc-800">{c.cell(row)}</dd>
+                      <dt className="text-faint">{c.header}</dt>
+                      <dd className="min-w-0 text-right text-graphite">{c.cell(row)}</dd>
                     </div>
                   ))}
               </dl>
@@ -277,11 +309,11 @@ export function DataTable<T>({
           return (
             <li key={rowKey(row)}>
               {rowHref ? (
-                <Link href={rowHref(row)} className="block px-4 py-3 active:bg-zinc-50">
+                <Link href={rowHref(row)} className="block px-4 py-3.5 active:bg-paper">
                   {content}
                 </Link>
               ) : (
-                <div className="px-4 py-3">{content}</div>
+                <div className="px-4 py-3.5">{content}</div>
               )}
             </li>
           );
@@ -306,24 +338,18 @@ export function Stat({
   tone?: "neutral" | "accent" | "danger" | "ok" | "info" | "warn";
   href?: string;
 }) {
-  const bar = {
-    neutral: "bg-zinc-300",
-    accent: "bg-amber-500",
-    danger: "bg-red-500",
-    ok: "bg-emerald-500",
-    info: "bg-sky-500",
-    warn: "bg-yellow-400",
-  }[tone];
   const body = (
-    <div className="relative h-full overflow-hidden rounded-lg border border-zinc-200 bg-white px-4 py-3">
-      <span className={`absolute inset-y-0 left-0 w-1 ${bar}`} aria-hidden />
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="tabular mt-1 text-2xl font-semibold text-zinc-900 md:text-3xl">{value}</p>
-      {hint ? <p className="mt-0.5 text-xs text-zinc-500">{hint}</p> : null}
+    <div className="h-full px-5 py-4">
+      <p className="eyebrow flex items-center gap-2">
+        <StatusDot tone={tone === "neutral" ? "muted" : tone} />
+        {label}
+      </p>
+      <p className={`tabular mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] ${tone === "danger" && value ? "text-accent" : "text-graphite"}`}>{value}</p>
+      {hint ? <p className="mt-1.5 text-xs text-faint">{hint}</p> : null}
     </div>
   );
   return href ? (
-    <Link href={href} className="block transition hover:-translate-y-px">
+    <Link href={href} className="block h-full transition-colors hover:bg-paper">
       {body}
     </Link>
   ) : (
@@ -331,13 +357,23 @@ export function Stat({
   );
 }
 
+/** Faixa de indicadores separados por linhas finas (em vez de vários cartões). */
+export function StatStrip({ children, cols = 5 }: { children: ReactNode; cols?: 3 | 4 | 5 }) {
+  const grid = { 3: "sm:grid-cols-3", 4: "sm:grid-cols-4", 5: "sm:grid-cols-5" }[cols];
+  return (
+    <div className={`grid grid-cols-2 divide-line overflow-hidden rounded-2xl border border-line bg-white max-sm:divide-y sm:divide-x ${grid} [&>*:nth-child(odd)]:max-sm:border-r [&>*:last-child:nth-child(odd)]:max-sm:col-span-2 [&>*:last-child:nth-child(odd)]:max-sm:border-r-0 [&>*]:border-line`}>
+      {children}
+    </div>
+  );
+}
+
 export function DefinitionList({ items }: { items: Array<[ReactNode, ReactNode]> }) {
   return (
-    <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+    <dl className="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
       {items.map(([k, v], i) => (
         <div key={i} className="min-w-0">
-          <dt className="text-xs uppercase tracking-wide text-zinc-500">{k}</dt>
-          <dd className="mt-0.5 break-words text-zinc-900">{v ?? "—"}</dd>
+          <dt className="eyebrow">{k}</dt>
+          <dd className="mt-1 break-words text-graphite">{v ?? "—"}</dd>
         </div>
       ))}
     </dl>

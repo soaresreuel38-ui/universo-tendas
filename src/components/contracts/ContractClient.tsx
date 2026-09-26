@@ -11,18 +11,20 @@ import { SignaturePad } from "./SignaturePad";
 export function WhatsappContractButton({
   contractId,
   action,
+  className = "",
 }: {
   contractId: string;
   action: (id: string) => Promise<{ ok: boolean; url?: string; message: string }>;
+  className?: string;
 }) {
   const [msg, setMsg] = useState<{ ok: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
   return (
-    <div>
+    <div className={className}>
       <button
         type="button"
         disabled={busy}
-        className={`${buttonClass("primary", "lg")} w-full`}
+        className={`${buttonClass("secondary", "md")} w-full`}
         onClick={async () => {
           // Abre a aba já no clique (evita bloqueio de pop-up) e depois aponta para o WhatsApp.
           const win = window.open("about:blank", "_blank");
@@ -36,9 +38,9 @@ export function WhatsappContractButton({
           } else win?.close();
         }}
       >
-        <Icon name="whatsapp" className="h-5 w-5" /> {busy ? "Preparando…" : "Enviar pelo WhatsApp"}
+        <Icon name="whatsapp" className="h-4 w-4 text-[#1f8a5b]" /> {busy ? "Preparando…" : "WhatsApp"}
       </button>
-      {msg ? <p className={`mt-2 text-sm ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>{msg.message}</p> : null}
+      {msg ? <p className={`mt-2 text-xs ${msg.ok ? "text-emerald-700" : "text-accent"}`}>{msg.message}</p> : null}
     </div>
   );
 }
@@ -76,5 +78,30 @@ export function SignInPersonForm({
       </SubmitButton>
       <FormMessage state={state} />
     </form>
+  );
+}
+
+/** Imprime o PDF exibido na prévia; sem prévia (celular), abre o PDF para imprimir pelo navegador. */
+export function PrintPdfButton({ url, frameId }: { url: string; frameId: string }) {
+  return (
+    <button
+      type="button"
+      className={`${buttonClass("secondary", "md")} w-full`}
+      onClick={() => {
+        const frame = document.getElementById(frameId) as HTMLIFrameElement | null;
+        try {
+          if (frame && frame.offsetParent !== null && frame.contentWindow) {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+            return;
+          }
+        } catch {
+          /* segue para abrir em nova aba */
+        }
+        window.open(url, "_blank", "noopener");
+      }}
+    >
+      <Icon name="printer" className="h-4 w-4" /> Imprimir
+    </button>
   );
 }

@@ -44,17 +44,17 @@ export default async function MaintenancePage() {
         {open.length === 0 ? (
           <EmptyState>Nenhum item em manutenção.</EmptyState>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {open.map((m) => (
               <li key={m.id} className="grid gap-3 p-4 md:grid-cols-[1fr_auto]">
                 <div>
                   <p className="font-medium">
                     <Link href={`/admin/produtos/${m.productId}`} className="hover:underline">{m.product.name}</Link>
-                    {m.unit ? <span className="ml-1 font-mono text-sm text-zinc-500">#{m.unit.code}</span> : null}
-                    <span className="ml-2 tabular text-zinc-700">× {m.quantity}</span>
+                    {m.unit ? <span className="ml-1 font-mono text-sm text-faint">#{m.unit.code}</span> : null}
+                    <span className="ml-2 tabular text-muted">× {m.quantity}</span>
                   </p>
-                  <p className="text-sm text-zinc-600">{m.reason}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-sm text-muted">{m.reason}</p>
+                  <p className="text-xs text-faint">
                     Desde {fmtDateTime(m.openedAt)} · {m.user.name}
                     {m.rental ? (
                       <>
@@ -63,11 +63,11 @@ export default async function MaintenancePage() {
                       </>
                     ) : null}
                   </p>
-                  {m.notes ? <p className="mt-1 text-xs text-zinc-500">{m.notes}</p> : null}
+                  {m.notes ? <p className="mt-1 text-xs text-faint">{m.notes}</p> : null}
                 </div>
                 <details className="md:w-80">
-                  <summary className="rounded-md border border-zinc-300 px-3 py-2 text-center text-sm font-medium">Encerrar manutenção</summary>
-                  <div className="mt-2 space-y-3 rounded-md border border-zinc-200 p-3">
+                  <summary className="rounded-md border border-line-strong px-3 py-2 text-center text-sm font-medium">Encerrar manutenção</summary>
+                  <div className="mt-2 space-y-3 rounded-md border border-line p-3">
                     <ActionForm action={closeMaintenanceAction} submitLabel="Consertado — volta ao estoque" submitVariant="primary">
                       <input type="hidden" name="maintenanceId" value={m.id} />
                       <input type="hidden" name="outcome" value="CONCLUIDA" />
@@ -103,20 +103,20 @@ export default async function MaintenancePage() {
           {pendings.length === 0 ? (
             <EmptyState>Nenhum item faltante de locações.</EmptyState>
           ) : (
-            <ul className="divide-y divide-zinc-100">
+            <ul className="divide-y divide-line">
               {pendings.map((i) => (
                 <li key={i.id}>
-                  <Link href={`/admin/locacoes/${i.rental.id}`} className="flex items-center justify-between gap-3 p-4 hover:bg-zinc-50">
+                  <Link href={`/admin/locacoes/${i.rental.id}`} className="flex items-center justify-between gap-3 p-4 hover:bg-paper">
                     <span className="min-w-0">
                       <span className="block font-medium">
                         {i.product.name} <span className="tabular text-red-700">× {(i.qtyMissing ?? 0) - i.qtyMissingResolved}</span>
                       </span>
-                      <span className="block text-sm text-zinc-600">
+                      <span className="block text-sm text-muted">
                         Locação #{seq(i.rental.number)} · {i.rental.customer.name} {i.rental.customer.phone ? `· ${i.rental.customer.phone}` : ""}
                       </span>
-                      {i.checkNote ? <span className="block text-xs text-zinc-500">{i.checkNote}</span> : null}
+                      {i.checkNote ? <span className="block text-xs text-faint">{i.checkNote}</span> : null}
                     </span>
-                    <span className="shrink-0 text-sm text-zinc-600 underline">Resolver</span>
+                    <span className="shrink-0 text-sm text-muted underline">Resolver</span>
                   </Link>
                 </li>
               ))}
@@ -129,13 +129,13 @@ export default async function MaintenancePage() {
         {recent.length === 0 ? (
           <EmptyState>Nenhuma ainda.</EmptyState>
         ) : (
-          <ul className="divide-y divide-zinc-100 text-sm">
+          <ul className="divide-y divide-line text-sm">
             {recent.map((m) => (
               <li key={m.id} className="flex flex-wrap justify-between gap-2 px-4 py-2.5">
                 <span>
                   {m.product.name} {m.unit ? `#${m.unit.code}` : ""} × {m.quantity} — {m.reason}
                 </span>
-                <span className="text-zinc-500">
+                <span className="text-faint">
                   {m.status === "CONCLUIDA" ? "Consertado" : "Baixado"} em {fmtDateTime(m.closedAt)}
                 </span>
               </li>

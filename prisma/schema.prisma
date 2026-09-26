@@ -422,6 +422,9 @@ model Photo {
   mime         String
   size         Int
   data         Bytes
+  /// Miniatura (~480 px, WebP ou JPEG) para listas e catálogo; opcional em fotos antigas.
+  thumb        Bytes?
+  thumbMime    String?
   caption      String?
   rentalId     String?
   uploadedById String

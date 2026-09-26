@@ -86,7 +86,7 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
               <Link
                 href={`/admin/locacoes?aba=${t.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
                 className={`inline-block rounded-full border px-3 py-1.5 text-sm ${
-                  t.key === tab ? "border-ink bg-ink text-white" : "border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400"
+                  t.key === tab ? "border-graphite bg-graphite text-white" : "border-line-strong bg-white text-muted hover:border-line-strong"
                 }`}
               >
                 {t.label}
@@ -97,8 +97,8 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
       </nav>
       <form className="mb-3 flex gap-2" role="search">
         <input type="hidden" name="aba" value={tab} />
-        <input name="q" defaultValue={q} type="search" placeholder="Nº, evento, cliente ou telefone" className="h-10 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm" />
-        <button className="h-10 rounded-md bg-ink px-4 text-sm font-medium text-white">Buscar</button>
+        <input name="q" defaultValue={q} type="search" placeholder="Nº, evento, cliente ou telefone" className="h-10 flex-1 rounded-lg border border-line-strong bg-white px-3 text-sm" />
+        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Buscar</button>
       </form>
       <Section padded={false}>
         <DataTable
@@ -112,7 +112,7 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
               mobile: "title",
               cell: (r) => (
                 <span>
-                  <span className="font-mono text-xs text-zinc-500">#{seq(r.number)}</span> {r.eventName}
+                  <span className="font-mono text-xs text-faint">#{seq(r.number)}</span> {r.eventName}
                 </span>
               ),
             },
@@ -122,14 +122,14 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
             {
               header: "Itens",
               mobile: "hide",
-              cell: (r) => <span className="text-zinc-600">{r.items.reduce((s, i) => s + i.quantity, 0)} un.</span>,
+              cell: (r) => <span className="text-muted">{r.items.reduce((s, i) => s + i.quantity, 0)} un.</span>,
             },
             { header: "Valor", align: "right", cell: (r) => <span className="tabular">{money(r.totalCents)}</span> },
             { header: "Status", cell: (r) => <RentalStatusBadge rental={r} /> },
           ]}
         />
       </Section>
-      {rentals.length === 300 ? <p className="mt-2 text-xs text-zinc-500">Mostrando as 300 primeiras. Use a busca para refinar.</p> : null}
+      {rentals.length === 300 ? <p className="mt-2 text-xs text-faint">Mostrando as 300 primeiras. Use a busca para refinar.</p> : null}
     </div>
   );
 }

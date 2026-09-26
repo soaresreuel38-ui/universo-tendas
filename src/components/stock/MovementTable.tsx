@@ -16,7 +16,7 @@ export type MovementRow = Prisma.StockMovementGetPayload<{ include: typeof movem
 function signed(m: MovementRow) {
   if (m.delta > 0) return <span className="tabular font-semibold text-emerald-700">+{m.delta}</span>;
   if (m.delta < 0) return <span className="tabular font-semibold text-red-700">{m.delta}</span>;
-  return <span className="tabular text-zinc-600">{m.quantity}</span>;
+  return <span className="tabular text-muted">{m.quantity}</span>;
 }
 
 export function MovementTable({ rows, showProduct = true }: { rows: MovementRow[]; showProduct?: boolean }) {
@@ -32,7 +32,7 @@ export function MovementTable({ rows, showProduct = true }: { rows: MovementRow[
           cell: (m) => (
             <span className="whitespace-nowrap">
               {fmtDateTime(m.occurredAt)}
-              <span className="ml-2 font-normal text-zinc-500 md:hidden">{MOVEMENT_LABEL[m.type]}</span>
+              <span className="ml-2 font-normal text-faint md:hidden">{MOVEMENT_LABEL[m.type]}</span>
             </span>
           ),
         },
@@ -41,12 +41,12 @@ export function MovementTable({ rows, showProduct = true }: { rows: MovementRow[
           : []),
         { header: "Operação", mobile: "hide" as const, cell: (m: MovementRow) => MOVEMENT_LABEL[m.type] },
         { header: "Qtd. / depósito", align: "right" as const, cell: signed },
-        { header: "Saldo total", align: "right" as const, mobile: "hide" as const, cell: (m: MovementRow) => <span className="tabular text-zinc-600">{m.totalAfter}</span> },
+        { header: "Saldo total", align: "right" as const, mobile: "hide" as const, cell: (m: MovementRow) => <span className="tabular text-muted">{m.totalAfter}</span> },
         { header: "Usuário", cell: (m: MovementRow) => m.user.name },
         {
           header: "Motivo / referência",
           cell: (m: MovementRow) => (
-            <span className="text-zinc-700">
+            <span className="text-muted">
               {m.rental ? (
                 <Link href={`/admin/locacoes/${m.rental.id}`} className="underline">Locação #{seq(m.rental.number)}</Link>
               ) : m.sale ? (
@@ -57,7 +57,7 @@ export function MovementTable({ rows, showProduct = true }: { rows: MovementRow[
             </span>
           ),
         },
-        { header: "Observação", mobile: "hide" as const, cell: (m: MovementRow) => <span className="text-zinc-500">{m.notes ?? ""}</span> },
+        { header: "Observação", mobile: "hide" as const, cell: (m: MovementRow) => <span className="text-faint">{m.notes ?? ""}</span> },
       ]}
     />
   );

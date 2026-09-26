@@ -34,8 +34,8 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         actions={<LinkButton href="/admin/vendas/nova" variant="primary" icon="plus">Nova venda</LinkButton>}
       />
       <form className="mb-3 flex gap-2" role="search">
-        <input name="q" defaultValue={q} type="search" placeholder="Nº, cliente ou produto" className="h-10 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm" />
-        <button className="h-10 rounded-md bg-ink px-4 text-sm font-medium text-white">Buscar</button>
+        <input name="q" defaultValue={q} type="search" placeholder="Nº, cliente ou produto" className="h-10 flex-1 rounded-lg border border-line-strong bg-white px-3 text-sm" />
+        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Buscar</button>
       </form>
       <Section padded={false}>
         <DataTable
@@ -46,9 +46,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           columns={[
             { header: "Venda", mobile: "title", cell: (s) => <>#{seq(s.number)} — {s.customer?.name ?? s.customerName ?? "Venda avulsa"}</> },
             { header: "Data", cell: (s) => fmtDateTime(s.soldAt) },
-            { header: "Produtos", cell: (s) => <span className="text-zinc-600">{s.items.map((i) => `${i.quantity} ${i.product.name}`).join(", ")}</span> },
+            { header: "Produtos", cell: (s) => <span className="text-muted">{s.items.map((i) => `${i.quantity} ${i.product.name}`).join(", ")}</span> },
             { header: "Responsável", mobile: "hide", cell: (s) => s.user.name },
-            { header: "Total", align: "right", cell: (s) => <span className={`tabular ${s.status === "CANCELADA" ? "text-zinc-400 line-through" : ""}`}>{money(s.totalCents)}</span> },
+            { header: "Total", align: "right", cell: (s) => <span className={`tabular ${s.status === "CANCELADA" ? "text-faint line-through" : ""}`}>{money(s.totalCents)}</span> },
             { header: "", cell: (s) => (s.status === "CANCELADA" ? <Badge tone="muted">Cancelada</Badge> : <Badge tone="ok">Concluída</Badge>) },
           ]}
         />

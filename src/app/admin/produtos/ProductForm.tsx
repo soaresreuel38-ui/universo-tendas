@@ -116,8 +116,8 @@ export function ProductForm({
           <Textarea name="description" maxLength={2000} defaultValue={initial?.description ?? ""} />
         </Field>
         <div className="md:col-span-2">
-          <span className="text-sm font-medium text-zinc-700">Foto</span>
-          <p className="mb-2 text-xs text-zinc-500">Ajuda o funcionário a identificar o equipamento.</p>
+          <span className="text-sm font-medium text-muted">Foto</span>
+          <p className="mb-2 text-xs text-faint">Ajuda o funcionário a identificar o equipamento.</p>
           <PhotoInput name="photoId" initial={initial?.photoId ? [initial.photoId] : []} />
         </div>
         <Field label="Observações" className="md:col-span-2">

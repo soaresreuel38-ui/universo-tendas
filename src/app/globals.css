@@ -2,16 +2,45 @@
 
 /* Universo Tendas — identidade da marca: azul Universo, branco e cinzas, com o vermelho do logo como destaque. */
 @theme {
+  /* Marca */
   --color-ink: #0c3f80;
-  --color-ink-soft: #0f4a96;
+  --color-ink-soft: #1d56a3;
   --color-ink-deep: #082c5c;
+  --color-ink-tint: #eef3fa;
   --color-accent: #c62b34;
   --color-accent-strong: #a8222a;
-  --color-accent-soft: #fde8ea;
-  --color-graphite: #1f2430;
-  --color-canvas: #f4f6f9;
+  --color-accent-soft: #fbeaeb;
+  /* Neutros "papel" e grafite */
+  --color-canvas: #f5f4f1;
+  --color-paper: #fbfaf8;
+  --color-line: #e6e3dd;
+  --color-line-strong: #d4d0c8;
+  --color-graphite: #16181d;
+  --color-muted: #5d626b;
+  --color-faint: #8b9098;
+  /* Estados do equipamento (mesmas cores em todo o sistema) */
+  --color-st-free: #1f8a5b;
+  --color-st-reserved: #3a6fb5;
+  --color-st-rented: #c7812a;
+  --color-st-maint: #7c6f64;
+  --color-st-late: #c62b34;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --animate-rise: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade: fade 0.2s ease-out both;
+  --animate-sheet: sheet 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes sheet {
+    from { opacity: 0; transform: translateY(16px) scale(0.99); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 @layer base {
@@ -20,6 +49,7 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
     -webkit-tap-highlight-color: transparent;
   }
   body {
@@ -27,7 +57,7 @@
     color: var(--color-graphite);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: "cv11", "ss01", "ss03";
     letter-spacing: -0.005em;
   }
   button,
@@ -36,7 +66,7 @@
     cursor: pointer;
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ink);
     outline-offset: 2px;
   }
   input,
@@ -60,4 +90,37 @@
 /* Área segura do iPhone para a barra inferior */
 @utility pb-safe {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Rótulo técnico (estilo prancha de projeto) */
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/* Esqueleto de carregamento */
+@utility skeleton {
+  background: linear-gradient(90deg, #ebe8e2 0%, #f4f2ee 50%, #ebe8e2 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::selection {
+  background: #cfdcf0;
 }

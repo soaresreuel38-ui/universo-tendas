@@ -24,23 +24,23 @@ export function StockBreakdown({
   const total = parts.reduce((s, p) => s + p.value, 0);
   return (
     <div>
-      <div className="flex h-3 overflow-hidden rounded-full bg-zinc-100" role="img" aria-label="Distribuição do estoque">
+      <div className="flex h-3 overflow-hidden rounded-full bg-canvas" role="img" aria-label="Distribuição do estoque">
         {total > 0 ? parts.map((p) => (p.value > 0 ? <span key={p.label} className={p.color} style={{ width: `${(p.value / total) * 100}%` }} /> : null)) : null}
       </div>
       <dl className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
         {parts.map((p) => (
           <div key={p.label}>
-            <dt className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <dt className="flex items-center gap-1.5 text-xs text-faint">
               <span className={`h-2 w-2 rounded-full ${p.color}`} />
               {p.label}
             </dt>
-            <dd className="tabular text-xl font-semibold text-zinc-900">{p.value}</dd>
+            <dd className="tabular text-xl font-semibold text-graphite">{p.value}</dd>
           </div>
         ))}
         <div>
-          <dt className="text-xs text-zinc-500">Total</dt>
-          <dd className="tabular text-xl font-semibold text-zinc-900">
-            {total} <span className="text-sm font-normal text-zinc-400">{unit}</span>
+          <dt className="text-xs text-faint">Total</dt>
+          <dd className="tabular text-xl font-semibold text-graphite">
+            {total} <span className="text-sm font-normal text-faint">{unit}</span>
           </dd>
         </div>
       </dl>

@@ -22,7 +22,7 @@ export function PublicSignForm({ token, name, document, action }: { token: strin
         <Input name="signerDocument" maxLength={30} defaultValue={document ?? ""} inputMode="numeric" />
       </Field>
       <div>
-        <span className="text-sm font-medium text-zinc-700">Sua assinatura</span>
+        <span className="text-sm font-medium text-muted">Sua assinatura</span>
         <SignaturePad onChange={setHasInk} />
       </div>
       <Checkbox name="accept" required label="Li o contrato e concordo com os termos." />

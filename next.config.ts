@@ -30,7 +30,17 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Só os PDFs podem ser exibidos dentro do próprio sistema (prévia do contrato); nunca por outros sites.
+      {
+        source: "/api/pdf/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'").replace("object-src 'none'", "object-src 'self'") },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
   },
 };
 

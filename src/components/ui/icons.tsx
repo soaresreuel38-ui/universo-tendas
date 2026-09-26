@@ -35,6 +35,19 @@ const paths = {
   list: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01",
   truck: "M3 6h11v10H3zM14 10h4l3 3v3h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3",
   clipboard: "M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12l2 2 4-4",
+  grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  layers: "m12 3 9 5-9 5-9-5zM3 13l9 5 9-5",
+  file: "M14 3H6v18h12V7zM14 3v4h4M9 12h6M9 16h6",
+  sun: "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
+  cube: "m12 3 8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12 4 7.5",
+  expand: "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5",
+  printer: "M7 8V3h10v5M7 17H4v-7h16v7h-3M7 14h10v7H7z",
+  money: "M3 6h18v12H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M6 9v.01M18 15v.01",
+  arrowRight: "M5 12h14m-6-6 6 6-6 6",
+  filter: "M4 5h16l-6 8v6l-4-2v-4z",
+  pin: "M12 21s-7-6.2-7-11.5a7 7 0 1 1 14 0C19 14.8 12 21 12 21M12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5",
+  image: "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9.5a1.5 1.5 0 1 0 0-.01",
+  sparkle: "M12 3v5m0 8v5M3 12h5m8 0h5",
 } as const;
 
 export type IconName = keyof typeof paths;

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { openSearch } from "./CommandPalette";
 
 const ROUTES: Record<string, string> = {
   n: "/admin/locacoes/nova",
@@ -26,12 +27,8 @@ export function Shortcuts() {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.repeat || typing(e.target)) return;
       if (e.key === "/") {
-        const input = document.querySelector<HTMLInputElement>("input[aria-label='Busca global']");
-        if (input) {
-          e.preventDefault();
-          input.focus();
-          input.select();
-        }
+        e.preventDefault();
+        openSearch();
         return;
       }
       const href = ROUTES[e.key.toLowerCase()];

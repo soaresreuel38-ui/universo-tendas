@@ -32,7 +32,7 @@ export default async function CheckInPage({ params }: { params: Promise<{ id: st
         }
         back={{ href: `/admin/locacoes/${r.id}`, label: `#${seq(r.number)}` }}
       />
-      <p className="mb-4 text-sm text-zinc-600">Responsável pela conferência: <b>{user.name}</b></p>
+      <p className="mb-4 text-sm text-muted">Responsável pela conferência: <b>{user.name}</b></p>
       <CheckInForm
         rentalId={r.id}
         action={checkInAction}

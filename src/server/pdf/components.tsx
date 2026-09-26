@@ -8,11 +8,11 @@ export const ACCENT = "#c62b34";
 const INK = "#1f2937";
 const MUTED = "#6b7280";
 const LINE = "#e5e7eb";
-const SOFT = "#f5f7fb";
+const SOFT = "#f6f7f9";
 
 export const s = StyleSheet.create({
   page: { paddingTop: 34, paddingBottom: 56, paddingHorizontal: 40, fontFamily: "Helvetica", fontSize: 9, color: INK },
-  header: { flexDirection: "row", alignItems: "center", paddingBottom: 12, borderBottomWidth: 2, borderBottomColor: BRAND, marginBottom: 14 },
+  header: { flexDirection: "row", alignItems: "center", paddingBottom: 14, borderBottomWidth: 1.5, borderBottomColor: BRAND, marginBottom: 16 },
   logo: { width: 58, height: 58, borderRadius: 6 },
   company: { flex: 1, marginLeft: 12 },
   companyName: { fontSize: 13, fontFamily: "Helvetica-Bold", color: BRAND, letterSpacing: 0.5 },
@@ -30,15 +30,26 @@ export const s = StyleSheet.create({
     marginTop: 12,
     marginBottom: 5,
   },
-  grid: { flexDirection: "row", flexWrap: "wrap", backgroundColor: SOFT, borderRadius: 4, paddingVertical: 6, paddingHorizontal: 8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", backgroundColor: SOFT, borderRadius: 3, paddingVertical: 7, paddingHorizontal: 9, borderLeftWidth: 2, borderLeftColor: BRAND },
   cell: { width: "50%", paddingVertical: 2.5, paddingRight: 8 },
   cellWide: { width: "100%", paddingVertical: 2.5 },
   label: { fontSize: 7, color: MUTED, textTransform: "uppercase", letterSpacing: 0.6 },
   value: { fontSize: 9, marginTop: 1.5, lineHeight: 1.3 },
   table: { borderWidth: 1, borderColor: LINE, borderRadius: 4 },
-  thead: { flexDirection: "row", backgroundColor: BRAND, color: "#ffffff", fontFamily: "Helvetica-Bold", fontSize: 7.5, paddingVertical: 5, paddingHorizontal: 6 },
-  row: { flexDirection: "row", paddingVertical: 5, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: LINE },
-  rowAlt: { backgroundColor: "#fafbfd" },
+  thead: {
+    flexDirection: "row",
+    backgroundColor: "#eef3fa",
+    color: BRAND,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 7,
+    letterSpacing: 0.6,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: BRAND,
+  },
+  row: { flexDirection: "row", paddingVertical: 6, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: LINE },
+  rowAlt: { backgroundColor: "#fbfbfa" },
   totals: { alignSelf: "flex-end", width: 210, marginTop: 8 },
   totalLine: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
   grandTotal: { flexDirection: "row", justifyContent: "space-between", marginTop: 4, paddingTop: 5, borderTopWidth: 1.5, borderTopColor: BRAND },

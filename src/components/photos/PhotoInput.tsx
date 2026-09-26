@@ -3,23 +3,40 @@
 import { useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icons";
 
-/** Reduz a foto no próprio celular antes de enviar (economiza dados e espaço no banco). */
-async function compress(file: File, maxSide = 1600, quality = 0.8): Promise<Blob> {
-  const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap) return file;
+/** Redimensiona no próprio aparelho: WebP quando o navegador suporta, senão JPEG. */
+async function resize(bitmap: ImageBitmap, maxSide: number, quality: number): Promise<Blob | null> {
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return new Promise((resolve) => canvas.toBlob((b) => resolve(b ?? file), "image/jpeg", quality));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const encode = (type: string) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+  const webp = await encode("image/webp");
+  if (webp && webp.type === "image/webp") return webp;
+  return encode("image/jpeg");
+}
+
+/** Foto principal (até 1600 px) + miniatura (480 px) para listas e catálogo. */
+async function prepare(file: File): Promise<{ main: Blob; thumb: Blob | null }> {
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) return { main: file, thumb: null };
+  try {
+    const main = (await resize(bitmap, 1600, 0.82)) ?? file;
+    const thumb = await resize(bitmap, 480, 0.74);
+    return { main, thumb };
+  } finally {
+    bitmap.close();
+  }
 }
 
 async function upload(file: File): Promise<string> {
-  const blob = await compress(file);
+  const { main, thumb } = await prepare(file);
   const body = new FormData();
-  body.append("file", blob, "foto.jpg");
+  body.append("file", main, main.type === "image/webp" ? "foto.webp" : "foto.jpg");
+  if (thumb) body.append("thumb", thumb, "mini");
   const res = await fetch("/api/fotos", { method: "POST", body });
   const json = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
   if (!res.ok || !json.id) throw new Error(json.error ?? "Falha ao enviar a foto.");
@@ -71,9 +88,9 @@ export function PhotoInput({
       ))}
       <div className="flex flex-wrap gap-2">
         {ids.map((id) => (
-          <div key={id} className="relative h-20 w-20 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
+          <div key={id} className="relative h-20 w-20 animate-rise overflow-hidden rounded-lg border border-line bg-canvas">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/fotos/${id}`} alt="Foto anexada" className="h-full w-full object-cover" />
+            <img src={`/api/fotos/${id}?s=t`} alt="Foto anexada" className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => setIds((prev) => prev.filter((x) => x !== id))}
@@ -87,7 +104,7 @@ export function PhotoInput({
         {multiple || ids.length === 0 ? (
           <label
             htmlFor={inputId}
-            className={`flex h-20 min-w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-zinc-300 px-3 text-xs text-zinc-600 hover:border-zinc-400 ${busy ? "opacity-50" : ""}`}
+            className={`flex h-20 min-w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line-strong bg-paper px-3 text-xs text-muted transition-colors hover:border-ink/40 hover:text-graphite ${busy ? "animate-pulse opacity-60" : ""}`}
           >
             <Icon name="camera" className="h-5 w-5" />
             {busy ? "Enviando…" : label}
@@ -105,7 +122,7 @@ export function PhotoInput({
         onChange={(e) => onFiles(e.target.files)}
       />
       {!multiple && ids.length > 0 ? (
-        <button type="button" onClick={() => inputRef.current?.click()} className="mt-2 text-xs text-zinc-600 underline">
+        <button type="button" onClick={() => inputRef.current?.click()} className="mt-2 text-xs text-muted underline">
           Trocar foto
         </button>
       ) : null}

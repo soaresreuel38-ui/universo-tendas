@@ -25,7 +25,7 @@ function Block({ title, tipo, qs, children }: { title: string; tipo: string; qs:
       title={title}
       padded={false}
       actions={
-        <a href={`/api/relatorios/${tipo}?${qs}`} className="inline-flex items-center gap-1 text-sm text-zinc-600 underline hover:text-zinc-900">
+        <a href={`/api/relatorios/${tipo}?${qs}`} className="inline-flex items-center gap-1 text-sm text-muted underline hover:text-graphite">
           <Icon name="download" className="h-4 w-4" /> CSV/Excel
         </a>
       }
@@ -45,23 +45,23 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     <div className="space-y-4">
       <PageHeader title="Relatórios" description={`Período: ${period.label}`} />
       <form className="flex flex-wrap items-end gap-2">
-        <div className="inline-flex overflow-hidden rounded-md border border-zinc-300 bg-white text-sm">
+        <div className="inline-flex overflow-hidden rounded-lg border border-line-strong bg-white text-sm">
           {PERIODS.filter((p) => p.key !== "personalizado").map((p) => (
-            <Link key={p.key} href={`/admin/relatorios?periodo=${p.key}`} className={`px-3 py-2 ${period.key === p.key ? "bg-ink text-white" : "hover:bg-zinc-50"}`}>
+            <Link key={p.key} href={`/admin/relatorios?periodo=${p.key}`} className={`px-3 py-2 ${period.key === p.key ? "bg-ink text-white" : "hover:bg-paper"}`}>
               {p.label}
             </Link>
           ))}
         </div>
         <input type="hidden" name="periodo" value="personalizado" />
-        <label className="text-xs text-zinc-500">
+        <label className="text-xs text-faint">
           De
-          <input type="date" name="de" defaultValue={period.from} className="mt-0.5 block h-10 rounded-md border border-zinc-300 bg-white px-2 text-sm" />
+          <input type="date" name="de" defaultValue={period.from} className="mt-0.5 block h-10 rounded-lg border border-line-strong bg-white px-2 text-sm" />
         </label>
-        <label className="text-xs text-zinc-500">
+        <label className="text-xs text-faint">
           Até
-          <input type="date" name="ate" defaultValue={period.to} className="mt-0.5 block h-10 rounded-md border border-zinc-300 bg-white px-2 text-sm" />
+          <input type="date" name="ate" defaultValue={period.to} className="mt-0.5 block h-10 rounded-lg border border-line-strong bg-white px-2 text-sm" />
         </label>
-        <button className={`h-10 rounded-md px-4 text-sm font-medium ${period.key === "personalizado" ? "bg-ink text-white" : "border border-zinc-300 bg-white"}`}>
+        <button className={`h-10 rounded-md px-4 text-sm font-medium ${period.key === "personalizado" ? "bg-ink text-white" : "border border-line-strong bg-white"}`}>
           Aplicar período
         </button>
       </form>

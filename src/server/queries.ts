@@ -7,7 +7,7 @@ import { prisma } from "./db";
 
 export const rentalListInclude = {
   customer: { select: { id: true, name: true, phone: true, whatsapp: true } },
-  items: { select: { quantity: true, product: { select: { name: true, unit: true } } } },
+  items: { select: { quantity: true, product: { select: { id: true, name: true, unit: true, photoId: true } } } },
 } satisfies Prisma.RentalInclude;
 
 export type RentalListRow = Prisma.RentalGetPayload<{ include: typeof rentalListInclude }>;
@@ -27,49 +27,21 @@ export async function stockOverview(where: Prisma.ProductWhereInput = { active: 
 }
 
 export async function dashboardData(now = new Date()) {
-  const today = todayKey(now);
-  const { start, end } = dayRange(today);
-  const tomorrow = dayRange(addDays(today, 1));
-
-  const [stock, departuresToday, returnsToday, overdue, happeningToday, tomorrowDepartures, awaitingCheck, openMaintenance] =
-    await Promise.all([
-      stockOverview(),
-      prisma.rental.findMany({
-        where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { lt: end } },
-        include: rentalListInclude,
-        orderBy: { departureAt: "asc" },
-      }),
-      prisma.rental.findMany({
-        where: { status: { in: [...ACTIVE_OUT] }, expectedReturnAt: { gte: now, lt: end } },
-        include: rentalListInclude,
-        orderBy: { expectedReturnAt: "asc" },
-      }),
-      prisma.rental.findMany({
-        where: { status: { in: [...ACTIVE_OUT] }, expectedReturnAt: { lt: now } },
-        include: rentalListInclude,
-        orderBy: { expectedReturnAt: "asc" },
-      }),
-      prisma.rental.findMany({
-        where: {
-          status: { in: COMMITTING_STATUSES },
-          OR: [{ eventAt: { gte: start, lt: end } }, { departureAt: { lt: end }, expectedReturnAt: { gte: start } }],
-        },
-        include: rentalListInclude,
-        orderBy: { departureAt: "asc" },
-      }),
-      prisma.rental.findMany({
-        where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { gte: tomorrow.start, lt: tomorrow.end } },
-        include: rentalListInclude,
-        orderBy: { departureAt: "asc" },
-      }),
-      prisma.rental.findMany({ where: { status: "RETORNADA" }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
-      prisma.maintenance.count({ where: { status: "ABERTA" } }),
-    ]);
-  const work = await pendingContractWork();
-
+  const tomorrow = dayRange(addDays(todayKey(now), 1));
+  const [stock, ops, tomorrowDepartures, openMaintenance] = await Promise.all([
+    stockOverview(),
+    todayOperations(now),
+    prisma.rental.findMany({
+      where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { gte: tomorrow.start, lt: tomorrow.end } },
+      include: rentalListInclude,
+      orderBy: { departureAt: "asc" },
+    }),
+    prisma.maintenance.count({ where: { status: "ABERTA" } }),
+  ]);
   const sum = (f: (p: (typeof stock)[number]) => number) => stock.reduce((s, p) => s + f(p), 0);
   return {
-    today,
+    ...ops,
+    stock,
     totals: {
       products: stock.length,
       total: sum((p) => p.total),
@@ -81,16 +53,25 @@ export async function dashboardData(now = new Date()) {
       sold: sum((p) => p.qtySold),
     },
     lowStock: stock.filter((p) => p.low),
-    departuresToday,
-    returnsToday,
-    overdue,
-    happeningToday,
     tomorrowDepartures,
-    awaitingCheck,
     openMaintenance,
-    overdueUnits: overdue.reduce((t, r) => t + r.items.reduce((u, i) => u + i.quantity, 0), 0),
-    ...work,
+    overdueUnits: ops.overdue.reduce((t, r) => t + r.items.reduce((u, i) => u + i.quantity, 0), 0),
   };
+}
+
+/** Locações com valor em aberto (total maior que os pagamentos registrados). */
+export async function pendingPayments() {
+  const rentals = await prisma.rental.findMany({
+    where: { status: { in: [...RESERVING_STATUSES, ...ACTIVE_OUT, "RETORNADA", "CONFERIDA"] }, totalCents: { gt: 0 } },
+    include: rentalListInclude,
+    orderBy: { departureAt: "asc" },
+    take: 300,
+  });
+  const paid = await prisma.payment.groupBy({ by: ["rentalId"], where: { rentalId: { in: rentals.map((r) => r.id) } }, _sum: { amountCents: true } });
+  const map = new Map(paid.map((p) => [p.rentalId, p._sum.amountCents ?? 0]));
+  return rentals
+    .map((r) => ({ rental: r, openCents: r.totalCents - (map.get(r.id) ?? 0) }))
+    .filter((x) => x.openCents > 0);
 }
 
 /** Pendências de documentação: o que falta para a locação sair com contrato assinado. */
@@ -114,7 +95,7 @@ export async function pendingContractWork() {
 /** Operação do dia: saídas, retornos, montagens, desmontagens, contratos e atrasados. */
 export async function todayOperations(now = new Date()) {
   const { start, end } = dayRange(todayKey(now));
-  const [departures, returns, setups, teardowns, overdue, awaitingCheck, work] = await Promise.all([
+  const [departures, returns, setups, teardowns, overdue, awaitingCheck, work, events, payments] = await Promise.all([
     prisma.rental.findMany({
       where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { lt: end } },
       include: rentalListInclude,
@@ -138,6 +119,12 @@ export async function todayOperations(now = new Date()) {
     prisma.rental.findMany({ where: { status: { in: [...ACTIVE_OUT] }, expectedReturnAt: { lt: now } }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
     prisma.rental.findMany({ where: { status: "RETORNADA" }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
     pendingContractWork(),
+    prisma.rental.findMany({
+      where: { status: { in: COMMITTING_STATUSES }, eventAt: { gte: start, lt: end } },
+      include: rentalListInclude,
+      orderBy: { eventAt: "asc" },
+    }),
+    pendingPayments(),
   ]);
-  return { departures, returns, setups, teardowns, overdue, awaitingCheck, ...work };
+  return { departures, returns, setups, teardowns, overdue, awaitingCheck, events, pendingPayments: payments, ...work };
 }

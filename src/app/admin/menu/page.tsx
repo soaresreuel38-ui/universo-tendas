@@ -12,27 +12,33 @@ export const metadata: Metadata = { title: "Menu" };
 export default async function MenuPage() {
   const user = await requireUser();
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="text-lg font-semibold">{user.name}</p>
-        <Link href="/admin/conta" className="text-sm text-zinc-600 underline">Minha conta</Link>
-      </div>
+    <div className="space-y-6">
+      <Link href="/admin/conta" className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white">
+          {user.name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("")}
+        </span>
+        <span className="flex-1">
+          <span className="block font-semibold text-graphite">{user.name}</span>
+          <span className="block text-xs text-faint">Minha conta</span>
+        </span>
+        <Icon name="chevronRight" className="h-4 w-4 text-faint" />
+      </Link>
       {NAV_GROUPS.map((g, i) => {
         const items = g.items.filter((it) => !it.permission || can(user.role, it.permission));
         if (!items.length) return null;
         return (
           <section key={i}>
-            {g.title ? <h2 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">{g.title}</h2> : null}
-            <ul className="divide-y divide-zinc-100 overflow-hidden rounded-lg border border-zinc-200 bg-white">
+            {g.title ? <h2 className="eyebrow mb-2 px-1">{g.title}</h2> : null}
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
               {items.map((it) => (
                 <li key={it.href}>
-                  <Link href={it.href} className="flex items-center gap-3 px-4 py-3.5 active:bg-zinc-50">
-                    <Icon name={it.icon} className="h-5 w-5 text-zinc-500" />
+                  <Link href={it.href} className="flex items-center gap-3 px-4 py-3.5 active:bg-paper">
+                    <Icon name={it.icon} className="h-5 w-5 text-ink" />
                     <span className="flex-1">
-                      <span className="block font-medium">{it.label}</span>
-                      {it.hint ? <span className="block text-xs text-zinc-500">{it.hint}</span> : null}
+                      <span className="block text-[15px] font-medium text-graphite">{it.label}</span>
+                      {it.hint ? <span className="block text-xs text-faint">{it.hint}</span> : null}
                     </span>
-                    <Icon name="chevronRight" className="h-4 w-4 text-zinc-400" />
+                    <Icon name="chevronRight" className="h-4 w-4 text-faint" />
                   </Link>
                 </li>
               ))}
@@ -41,7 +47,7 @@ export default async function MenuPage() {
         );
       })}
       <form action={logout}>
-        <button className="h-12 w-full rounded-lg border border-zinc-300 bg-white font-medium text-red-700">Sair</button>
+        <button className="h-12 w-full rounded-2xl border border-line bg-white font-medium text-accent">Sair</button>
       </form>
     </div>
   );

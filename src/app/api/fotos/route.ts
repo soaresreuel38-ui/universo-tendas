@@ -25,9 +25,19 @@ export async function POST(request: NextRequest) {
   const mime = sniff(bytes);
   if (!mime) return NextResponse.json({ error: "Formato não suportado. Use JPG, PNG ou WebP." }, { status: 415 });
 
+  // Miniatura gerada no navegador (opcional): também conferida pela assinatura do arquivo.
+  let thumb: Uint8Array | null = null;
+  let thumbMime: string | null = null;
+  const t = form?.get("thumb");
+  if (t instanceof File && t.size > 0 && t.size <= 400 * 1024) {
+    const tb = new Uint8Array(await t.arrayBuffer());
+    thumbMime = sniff(tb);
+    if (thumbMime) thumb = tb;
+  }
+
   const caption = String(form?.get("caption") ?? "").slice(0, 200) || null;
   const photo = await prisma.photo.create({
-    data: { mime, size: bytes.byteLength, data: Buffer.from(bytes), caption, uploadedById: user.id },
+    data: { mime, size: bytes.byteLength, data: Buffer.from(bytes), thumb: thumb ? Buffer.from(thumb) : null, thumbMime, caption, uploadedById: user.id },
     select: { id: true },
   });
   return NextResponse.json({ id: photo.id });

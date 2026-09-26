@@ -64,7 +64,7 @@ export function TemplateEditor({ action, initial }: { action: (s: ActionState, f
           <Input name="instagram" required defaultValue={initial.instagram} />
         </Field>
       </div>
-      <p className="mt-2 text-xs text-zinc-500">O logo usado nos documentos é o logo oficial da Universo Tendas.</p>
+      <p className="mt-2 text-xs text-faint">O logo usado nos documentos é o logo oficial da Universo Tendas.</p>
 
       <h2 className="mt-6 text-sm font-semibold">Condições e textos</h2>
       <div className="mt-3 grid gap-3">
@@ -80,28 +80,28 @@ export function TemplateEditor({ action, initial }: { action: (s: ActionState, f
         <h2 className="text-sm font-semibold">Cláusulas ({clauses.length})</h2>
         <div className="flex flex-wrap gap-2">
           {missing.length ? (
-            <button type="button" onClick={() => setClauses((cs) => [...cs, ...missing.map((t) => withKey({ title: t, body: "" }))])} className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm">
+            <button type="button" onClick={() => setClauses((cs) => [...cs, ...missing.map((t) => withKey({ title: t, body: "" }))])} className="rounded-md border border-line-strong px-3 py-1.5 text-sm">
               Adicionar tópicos sugeridos (sem texto)
             </button>
           ) : null}
-          <button type="button" onClick={() => setClauses((cs) => [...cs, withKey({ title: "", body: "" })])} className="rounded-md bg-ink px-3 py-1.5 text-sm text-white">
+          <button type="button" onClick={() => setClauses((cs) => [...cs, withKey({ title: "", body: "" })])} className="rounded-lg bg-graphite px-3 py-1.5 text-sm font-medium text-white hover:bg-black">
             + Nova cláusula
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-xs text-faint">
         O sistema não escreve cláusulas. Cláusulas sem texto não aparecem no contrato. Separe parágrafos com uma linha em branco.
       </p>
       <ol className="mt-3 space-y-3">
         {clauses.map((c, i) => (
-          <li key={c.key} className="rounded-lg border border-zinc-200 p-3">
+          <li key={c.key} className="rounded-lg border border-line p-3">
             <div className="flex items-center gap-2">
-              <span className="w-24 shrink-0 text-xs font-semibold uppercase text-zinc-500">Cláusula {i + 1}ª</span>
+              <span className="w-24 shrink-0 text-xs font-semibold uppercase text-faint">Cláusula {i + 1}ª</span>
               <Input value={c.title} onChange={(e) => update(c.key, { title: e.target.value })} placeholder="Título" aria-label="Título da cláusula" required className="mt-0" />
-              <button type="button" onClick={() => move(i, -1)} className="rounded p-2 hover:bg-zinc-100" aria-label="Subir">
+              <button type="button" onClick={() => move(i, -1)} className="rounded p-2 hover:bg-canvas" aria-label="Subir">
                 <Icon name="chevronLeft" className="h-4 w-4 rotate-90" />
               </button>
-              <button type="button" onClick={() => move(i, 1)} className="rounded p-2 hover:bg-zinc-100" aria-label="Descer">
+              <button type="button" onClick={() => move(i, 1)} className="rounded p-2 hover:bg-canvas" aria-label="Descer">
                 <Icon name="chevronRight" className="h-4 w-4 rotate-90" />
               </button>
               <button type="button" onClick={() => setClauses((cs) => cs.filter((x) => x.key !== c.key))} className="rounded p-2 text-red-700 hover:bg-red-50" aria-label="Remover">

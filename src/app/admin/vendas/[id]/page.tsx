@@ -33,7 +33,7 @@ export default async function SalePage({ params, searchParams }: { params: Promi
       />
       {salvo ? <Notice tone="ok">Venda registrada. Os produtos foram retirados do estoque.</Notice> : null}
       <div className="flex flex-wrap gap-2">
-        <a href={`/api/pdf/venda/${s.id}`} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium">
+        <a href={`/api/pdf/venda/${s.id}`} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line-strong bg-white px-4 text-sm font-medium">
           Comprovante em PDF
         </a>
       </div>
@@ -48,8 +48,8 @@ export default async function SalePage({ params, searchParams }: { params: Promi
             { header: "Subtotal", align: "right", cell: (i) => money(i.quantity * i.unitPriceCents) },
           ]}
         />
-        <div className="border-t border-zinc-200 px-4 py-3 text-right text-sm">
-          {s.discountCents ? <p className="text-zinc-500">Subtotal {money(gross)} · Desconto −{money(s.discountCents)}</p> : null}
+        <div className="border-t border-line px-4 py-3 text-right text-sm">
+          {s.discountCents ? <p className="text-faint">Subtotal {money(gross)} · Desconto −{money(s.discountCents)}</p> : null}
           <p className="text-lg font-semibold">Total {money(s.totalCents)}</p>
         </div>
       </Section>

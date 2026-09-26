@@ -69,7 +69,7 @@ export function SearchSelect({
     <div ref={boxRef} className="relative mt-1">
       {name ? <input type="hidden" name={name} value={value} /> : null}
       <div className="relative">
-        <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+        <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
         <input
           type="text"
           role="combobox"
@@ -102,17 +102,17 @@ export function SearchSelect({
               setOpen(false);
             }
           }}
-          className="block w-full rounded-md border border-zinc-300 bg-white py-2 pl-9 pr-3 text-zinc-900 outline-none placeholder:text-zinc-500 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          className="block w-full rounded-lg border border-line-strong bg-white py-2 pl-9 pr-3 text-graphite outline-none placeholder:text-faint focus:border-ink focus:ring-4 focus:ring-ink/10"
         />
       </div>
-      {selected && !open && selected.sub ? <p className="mt-1 text-xs text-zinc-500">{selected.sub}</p> : null}
+      {selected && !open && selected.sub ? <p className="mt-1 text-xs text-faint">{selected.sub}</p> : null}
       {open ? (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-40 mt-1 max-h-72 w-full overflow-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg"
+          className="absolute z-40 mt-1 max-h-72 w-full overflow-auto rounded-md border border-line bg-white py-1 shadow-lg"
         >
-          {filtered.length === 0 ? <li className="px-3 py-2 text-sm text-zinc-500">{emptyText}</li> : null}
+          {filtered.length === 0 ? <li className="px-3 py-2 text-sm text-faint">{emptyText}</li> : null}
           {filtered.map((o, i) => (
             <li
               key={o.value}
@@ -125,14 +125,14 @@ export function SearchSelect({
               }}
               onMouseEnter={() => setActive(i)}
               className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm ${
-                o.disabled ? "cursor-not-allowed opacity-50" : i === active ? "bg-zinc-100" : ""
+                o.disabled ? "cursor-not-allowed opacity-50" : i === active ? "bg-canvas" : ""
               }`}
             >
               <span className="min-w-0">
-                <span className="block truncate font-medium text-zinc-900">{o.label}</span>
-                {o.sub ? <span className="block truncate text-xs text-zinc-500">{o.sub}</span> : null}
+                <span className="block truncate font-medium text-graphite">{o.label}</span>
+                {o.sub ? <span className="block truncate text-xs text-faint">{o.sub}</span> : null}
               </span>
-              {o.right ? <span className="shrink-0 text-xs text-zinc-500">{o.right}</span> : null}
+              {o.right ? <span className="shrink-0 text-xs text-faint">{o.right}</span> : null}
             </li>
           ))}
         </ul>

@@ -15,6 +15,7 @@ import { resolvePendingAction } from "../../estoque/actions";
 import { changeStatusAction, registerPaymentAction } from "../actions";
 import { createContractAction } from "../../contratos/actions";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
+import { ProductThumb } from "@/components/products/ProductThumb";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Locação" };
@@ -78,7 +79,7 @@ export default async function RentalPage({
         back={{ href: "/admin/locacoes", label: "Locações" }}
         title={
           <span className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-zinc-500">#{seq(r.number)}</span> {r.eventName} <RentalStatusBadge rental={r} />
+            <span className="font-mono text-faint">#{seq(r.number)}</span> {r.eventName} <RentalStatusBadge rental={r} />
           </span>
         }
         description={`${r.customer.name} · criada por ${r.createdBy.name} em ${fmtDateTime(r.createdAt)}`}
@@ -96,8 +97,8 @@ export default async function RentalPage({
 
       {/* Próximo passo em destaque */}
       {canDepart || canCheck ? (
-        <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-zinc-700">
+        <div className="flex flex-col gap-2 rounded-lg border border-line bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted">
             {canDepart ? "Próximo passo: separar os produtos e registrar a saída do estoque." : "Próximo passo: quando os produtos voltarem, fazer a conferência."}
           </p>
           {canDepart ? (
@@ -112,7 +113,7 @@ export default async function RentalPage({
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
         <Section title="Produtos" padded={false}>
           <DataTable
             rows={r.items}
@@ -122,13 +123,16 @@ export default async function RentalPage({
                 header: "Produto",
                 mobile: "title",
                 cell: (i) => (
-                  <span>
-                    <Link href={`/admin/produtos/${i.productId}`} className="hover:underline">{i.product.name}</Link>
+                  <span className="flex items-center gap-3">
+                    <ProductThumb photoId={i.product.photoId} name={i.product.name} />
+                    <span className="min-w-0">
+                    <Link href={`/admin/produtos/${i.productId}`} className="font-medium hover:underline">{i.product.name}</Link>
                     {i.units.length ? (
-                      <span className="block font-mono text-xs font-normal text-zinc-500">
+                      <span className="block font-mono text-xs font-normal text-faint">
                         {i.units.map((u) => `#${u.unit.code}${u.returnState && u.returnState !== "OK" ? ` (${u.returnState.toLowerCase()})` : ""}`).join(", ")}
                       </span>
                     ) : null}
+                    </span>
                   </span>
                 ),
               },
@@ -146,7 +150,7 @@ export default async function RentalPage({
                             {diff ? "⚠" : "☑"} {i.qtyReturned}/{i.quantity} ok
                             {i.qtyDamaged ? ` · ${i.qtyDamaged} danif.` : ""}
                             {i.qtyMissing ? ` · ${i.qtyMissing} falt.` : ""}
-                            {i.checkNote ? <span className="block text-xs text-zinc-500">{i.checkNote}</span> : null}
+                            {i.checkNote ? <span className="block text-xs text-faint">{i.checkNote}</span> : null}
                           </span>
                         );
                       },
@@ -155,11 +159,11 @@ export default async function RentalPage({
                 : []),
             ]}
           />
-          <div className="space-y-0.5 border-t border-zinc-200 px-4 py-3 text-right text-sm">
+          <div className="space-y-0.5 border-t border-line px-4 py-3 text-right text-sm">
             {r.discountCents ? (
               <>
-                <p className="text-zinc-500">Subtotal {money(gross)}</p>
-                <p className="text-zinc-500">Desconto −{money(r.discountCents)}</p>
+                <p className="text-faint">Subtotal {money(gross)}</p>
+                <p className="text-faint">Desconto −{money(r.discountCents)}</p>
               </>
             ) : null}
             <p className="tabular text-lg font-semibold">Total {money(r.totalCents)}</p>
@@ -169,7 +173,7 @@ export default async function RentalPage({
         <div className="space-y-4">
           <Section title="Contrato e documentos">
             {activeContract ? (
-              <Link href={`/admin/contratos/${activeContract.id}`} className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50">
+              <Link href={`/admin/contratos/${activeContract.id}`} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-sm hover:bg-paper">
                 <span className="font-medium">Contrato #{seq(activeContract.number)}</span>
                 <ContractStatusBadge contract={{ ...activeContract, rental: r }} />
               </Link>
@@ -180,23 +184,23 @@ export default async function RentalPage({
                 </InlineAction>
               </div>
             ) : (
-              <p className="text-sm text-zinc-500">Sem contrato.</p>
+              <p className="text-sm text-faint">Sem contrato.</p>
             )}
             {r.status === "ORCAMENTO" && !activeContract ? (
-              <p className="mt-2 text-xs text-zinc-500">Gerar o contrato reserva o estoque para o período (se houver disponibilidade).</p>
+              <p className="mt-2 text-xs text-faint">Gerar o contrato reserva o estoque para o período (se houver disponibilidade).</p>
             ) : null}
-            <a href={`/api/pdf/orcamento/${r.id}`} target="_blank" rel="noopener" className="mt-3 inline-flex items-center gap-1 text-sm text-zinc-700 underline">
+            <a href={`/api/pdf/orcamento/${r.id}`} target="_blank" rel="noopener" className="mt-3 inline-flex items-center gap-1 text-sm text-muted underline">
               <Icon name="download" className="h-4 w-4" /> PDF do orçamento
             </a>
           </Section>
 
-          <Section title="Pagamentos">
+          <Section id="pagamentos" title="Pagamentos">
             <p className="text-sm">
               Recebido <b>{money(paid)}</b> de {money(r.totalCents)}
               {paid < r.totalCents ? <span className="text-amber-700"> · falta {money(r.totalCents - paid)}</span> : <span className="text-emerald-700"> · quitado</span>}
             </p>
             {r.payments.length ? (
-              <ul className="mt-2 space-y-1 text-xs text-zinc-600">
+              <ul className="mt-2 space-y-1 text-xs text-muted">
                 {r.payments.map((p) => (
                   <li key={p.id}>
                     {fmtDateTime(p.paidAt)} · {PAYMENT_METHOD_LABEL[p.method]} · {money(p.amountCents)} · {p.user.name}
@@ -214,7 +218,7 @@ export default async function RentalPage({
                       <Input name="amount" inputMode="decimal" required defaultValue={((r.totalCents - paid) / 100).toFixed(2).replace(".", ",")} />
                     </Field>
                     <Field label="Forma">
-                      <select name="method" className="mt-1 block h-10 w-full rounded-md border border-zinc-300 bg-white px-2">
+                      <select name="method" className="mt-1 block h-10 w-full rounded-lg border border-line-strong bg-white px-2">
                         {Object.entries(PAYMENT_METHOD_LABEL).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
                         ))}
@@ -232,23 +236,23 @@ export default async function RentalPage({
             </p>
             {phone ? (
               <p className="mt-1 flex flex-wrap gap-3 text-sm">
-                <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-zinc-700 underline">
+                <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-muted underline">
                   <Icon name="phone" className="h-4 w-4" /> {phone}
                 </a>
               </p>
             ) : (
-              <p className="mt-1 text-sm text-zinc-500">Sem telefone cadastrado.</p>
+              <p className="mt-1 text-sm text-faint">Sem telefone cadastrado.</p>
             )}
             {waLink && !["ORCAMENTO", "CANCELADA"].includes(r.status) ? (
               <details className="mt-3">
                 <summary className={`${buttonClass("secondary", "md")} w-full list-none`}>
                   <Icon name="whatsapp" className="h-4 w-4 text-emerald-600" /> Enviar confirmação pelo WhatsApp
                 </summary>
-                <pre className="mt-2 whitespace-pre-wrap rounded-md bg-zinc-50 p-3 font-sans text-sm text-zinc-800">{message}</pre>
+                <pre className="mt-2 whitespace-pre-wrap rounded-md bg-paper p-3 font-sans text-sm text-graphite">{message}</pre>
                 <a href={waLink} target="_blank" rel="noopener noreferrer" className={`${buttonClass("primary", "md")} mt-2 w-full`}>
                   Abrir WhatsApp com esta mensagem
                 </a>
-                <p className="mt-1 text-xs text-zinc-500">Nada é enviado automaticamente: você revisa e envia no WhatsApp.</p>
+                <p className="mt-1 text-xs text-faint">Nada é enviado automaticamente: você revisa e envia no WhatsApp.</p>
               </details>
             ) : null}
           </Section>
@@ -337,8 +341,8 @@ export default async function RentalPage({
                 <p className="font-medium">
                   {d.product.name} × {d.quantity} — {d.damageType}
                 </p>
-                <p className="text-zinc-700">{d.description}</p>
-                {d.responsible ? <p className="text-xs text-zinc-500">Responsável: {d.responsible}</p> : null}
+                <p className="text-muted">{d.description}</p>
+                {d.responsible ? <p className="text-xs text-faint">Responsável: {d.responsible}</p> : null}
                 {d.photos.length ? (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {d.photos.map((p) => (

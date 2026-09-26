@@ -40,22 +40,22 @@ export default async function UsersPage() {
         </ActionForm>
       </Section>
       <Section title={`Usuários (${users.length})`} padded={false}>
-        <ul className="divide-y divide-zinc-100">
+        <ul className="divide-y divide-line">
           {users.map((u) => (
             <li key={u.id} className="p-4">
               <details>
                 <summary className="flex flex-wrap items-center justify-between gap-2">
                   <span>
-                    <span className="font-medium">{u.name}</span> <span className="text-sm text-zinc-500">{u.email}</span>
-                    {u.id === me.id ? <span className="ml-1 text-xs text-zinc-500">(você)</span> : null}
+                    <span className="font-medium">{u.name}</span> <span className="text-sm text-faint">{u.email}</span>
+                    {u.id === me.id ? <span className="ml-1 text-xs text-faint">(você)</span> : null}
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-zinc-500">
+                  <span className="flex items-center gap-2 text-xs text-faint">
                     <Badge tone={u.role === "ADMIN" ? "accent" : "neutral"}>{ROLE_LABEL[u.role]}</Badge>
                     {!u.active ? <Badge tone="muted">Desativado</Badge> : null}
                     Último acesso: {fmtDateTime(u.lastLoginAt)}
                   </span>
                 </summary>
-                <div className="mt-3 rounded-md border border-zinc-200 p-3">
+                <div className="mt-3 rounded-md border border-line p-3">
                   <ActionForm action={updateUserAction} submitLabel="Salvar" submitVariant="secondary">
                     <input type="hidden" name="id" value={u.id} />
                     <div className="grid gap-3 md:grid-cols-3">

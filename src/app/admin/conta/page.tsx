@@ -32,7 +32,7 @@ export default async function AccountPage() {
         </ActionForm>
       </Section>
       <form action={logout}>
-        <button className="h-11 w-full rounded-md border border-zinc-300 bg-white text-sm font-medium text-red-700">Sair do sistema</button>
+        <button className="h-11 w-full rounded-lg border border-line-strong bg-white text-sm font-medium text-red-700">Sair do sistema</button>
       </form>
     </div>
   );

@@ -79,34 +79,34 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader title="Documentos" description="Contratos, orçamentos, comprovantes e documentos assinados — tudo em PDF." />
       <form className="mb-3 grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_auto_auto]" role="search">
-        <input name="q" defaultValue={q} type="search" placeholder="Buscar por cliente, CPF/CNPJ ou telefone" className="col-span-2 h-10 rounded-md border border-zinc-300 bg-white px-3 text-sm sm:col-span-1" />
-        <select name="tipo" defaultValue={tipo} className="h-10 rounded-md border border-zinc-300 bg-white px-2 text-sm">
+        <input name="q" defaultValue={q} type="search" placeholder="Buscar por cliente, CPF/CNPJ ou telefone" className="col-span-2 h-10 rounded-lg border border-line-strong bg-white px-3 text-sm sm:col-span-1" />
+        <select name="tipo" defaultValue={tipo} className="h-10 rounded-lg border border-line-strong bg-white px-2 text-sm">
           {KINDS.map((k) => (
             <option key={k.key} value={k.key}>{k.label}</option>
           ))}
         </select>
-        <button className="h-10 rounded-md bg-ink px-4 text-sm font-medium text-white">Filtrar</button>
+        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Filtrar</button>
       </form>
       <Section padded={false}>
         {rows.length === 0 ? (
           <EmptyState>Nenhum documento encontrado.</EmptyState>
         ) : (
-          <ul className="divide-y divide-zinc-100">
+          <ul className="divide-y divide-line">
             {rows.map((r) => (
               <li key={r.key} className="flex items-center gap-3 px-4 py-3">
                 <Link href={r.href} className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm">
                     <Badge>{r.kind}</Badge>
-                    <span className="font-medium text-zinc-900">{r.title}</span>
+                    <span className="font-medium text-graphite">{r.title}</span>
                     {r.badge}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-zinc-500">
+                  <p className="mt-0.5 truncate text-xs text-faint">
                     {r.customer} · {fmtDateTime(r.date)}
                     {r.detail ? ` · ${r.detail}` : ""}
                   </p>
                 </Link>
                 {r.open ? (
-                  <a href={r.open} target="_blank" rel="noopener" className="shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium hover:bg-zinc-50">
+                  <a href={r.open} target="_blank" rel="noopener" className="shrink-0 rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-paper">
                     PDF
                   </a>
                 ) : null}

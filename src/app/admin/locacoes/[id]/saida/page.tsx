@@ -64,7 +64,7 @@ export default async function DeparturePage({ params }: { params: Promise<{ id: 
           units: i.product.units.map((u) => ({ id: u.id, code: u.code })),
         }))}
       />
-      <p className="mt-3 text-sm text-zinc-600">
+      <p className="mt-3 text-sm text-muted">
         Retorno previsto: <b>{fmtDateTime(r.expectedReturnAt)}</b>
       </p>
     </div>

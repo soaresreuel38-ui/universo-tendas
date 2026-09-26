@@ -26,7 +26,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
     prisma.product.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.user.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
-  const select = "h-10 rounded-md border border-zinc-300 bg-white px-2 text-sm";
+  const select = "h-10 rounded-lg border border-line-strong bg-white px-2 text-sm";
   return (
     <div>
       <PageHeader
@@ -55,12 +55,12 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
         </select>
         <input type="date" name="de" defaultValue={sp.de} className={select} aria-label="De" />
         <input type="date" name="ate" defaultValue={sp.ate} className={select} aria-label="Até" />
-        <button className="col-span-2 h-10 rounded-md bg-ink px-4 text-sm font-medium text-white md:col-span-1">Filtrar</button>
+        <button className="col-span-2 h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black md:col-span-1">Filtrar</button>
       </form>
       <Section padded={false}>
         <MovementTable rows={rows} />
       </Section>
-      {rows.length === 300 ? <p className="mt-2 text-xs text-zinc-500">Mostrando as 300 mais recentes. Use os filtros ou exporte em Relatórios.</p> : null}
+      {rows.length === 300 ? <p className="mt-2 text-xs text-faint">Mostrando as 300 mais recentes. Use os filtros ou exporte em Relatórios.</p> : null}
     </div>
   );
 }

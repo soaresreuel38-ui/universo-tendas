@@ -121,8 +121,8 @@ export function RentalForm({
     <form onSubmit={submit} className="space-y-5">
       {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
 
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-zinc-900">Cliente</legend>
+      <fieldset className="rounded-lg border border-line bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-graphite">Cliente</legend>
         {newCustomer ? (
           <div className="grid gap-3 md:grid-cols-2">
             <input type="hidden" name="newCustomer" value="1" />
@@ -133,7 +133,7 @@ export function RentalForm({
               <Input name="newCustomerPhone" required maxLength={30} inputMode="tel" placeholder="(66) 9 0000-0000" />
             </Field>
             {customers.length ? (
-              <button type="button" onClick={() => setNewCustomer(false)} className="text-left text-sm text-zinc-600 underline md:col-span-2">
+              <button type="button" onClick={() => setNewCustomer(false)} className="text-left text-sm text-muted underline md:col-span-2">
                 Escolher cliente já cadastrado
               </button>
             ) : null}
@@ -142,7 +142,7 @@ export function RentalForm({
           <div>
             <SearchSelect name="customerId" options={customers} value={customerId} onChange={setCustomerId} placeholder="Nome, telefone ou CPF/CNPJ" required />
             {!isEdit ? (
-              <button type="button" onClick={() => setNewCustomer(true)} className="mt-2 text-sm text-zinc-600 underline">
+              <button type="button" onClick={() => setNewCustomer(true)} className="mt-2 text-sm text-muted underline">
                 + Cliente novo
               </button>
             ) : null}
@@ -150,8 +150,8 @@ export function RentalForm({
         )}
       </fieldset>
 
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-zinc-900">Evento e datas</legend>
+      <fieldset className="rounded-lg border border-line bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-graphite">Evento e datas</legend>
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Evento" required>
             <Input name="eventName" required maxLength={120} defaultValue={initial.eventName} placeholder="Ex.: Casamento" />
@@ -175,9 +175,9 @@ export function RentalForm({
         </div>
       </fieldset>
 
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-zinc-900">Produtos</legend>
-        <p className="mb-3 text-xs text-zinc-500">
+      <fieldset className="rounded-lg border border-line bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-graphite">Produtos</legend>
+        <p className="mb-3 text-xs text-faint">
           A disponibilidade considera o período entre a saída e o retorno previsto.{checking ? " Verificando…" : ""}
         </p>
         <ul className="space-y-3">
@@ -186,10 +186,10 @@ export function RentalForm({
             const f = r.productId ? free[r.productId] : undefined;
             const over = f !== undefined && Number(r.quantity) > f;
             return (
-              <li key={r.key} className={`rounded-md border p-3 ${over ? "border-red-300 bg-red-50/50" : "border-zinc-200"}`}>
+              <li key={r.key} className={`rounded-md border p-3 ${over ? "border-red-300 bg-red-50/50" : "border-line"}`}>
                 <div className="grid gap-3 md:grid-cols-[1fr_7rem_9rem_auto] md:items-end">
                   <div>
-                    <span className="text-sm font-medium text-zinc-700">Produto</span>
+                    <span className="text-sm font-medium text-muted">Produto</span>
                     <SearchSelect
                       options={products}
                       value={r.productId}
@@ -209,14 +209,14 @@ export function RentalForm({
                   <button
                     type="button"
                     onClick={() => setRows((prev) => (prev.length > 1 ? prev.filter((x) => x.key !== r.key) : prev))}
-                    className="inline-flex h-10 items-center justify-center rounded-md px-2 text-zinc-500 hover:bg-zinc-100 hover:text-red-700"
+                    className="inline-flex h-10 items-center justify-center rounded-md px-2 text-faint hover:bg-canvas hover:text-red-700"
                     aria-label="Remover produto"
                   >
                     <Icon name="trash" className="h-4 w-4" />
                   </button>
                 </div>
                 {r.productId ? (
-                  <p className={`mt-2 text-sm ${over ? "font-medium text-red-700" : "text-zinc-600"}`}>
+                  <p className={`mt-2 text-sm ${over ? "font-medium text-red-700" : "text-muted"}`}>
                     {f === undefined
                       ? "Informe as datas para ver a disponibilidade."
                       : over
@@ -231,25 +231,25 @@ export function RentalForm({
         <button
           type="button"
           onClick={() => setRows((prev) => [...prev, { key: newKey(), productId: "", quantity: "1", unitPrice: "" }])}
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-zinc-800 underline"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-graphite underline"
         >
           <Icon name="plus" className="h-4 w-4" /> Adicionar produto
         </button>
         {duplicate ? <p className="mt-2 text-sm text-red-700">O mesmo produto aparece duas vezes. Some as quantidades em uma linha.</p> : null}
 
-        <div className="mt-4 grid gap-3 border-t border-zinc-200 pt-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 border-t border-line pt-4 md:grid-cols-3">
           <Field label="Desconto (R$)">
             <Input name="discount" inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0,00" />
           </Field>
           <div className="md:col-span-2 md:text-right">
-            <p className="text-sm text-zinc-500">Subtotal {money(gross)}</p>
-            <p className="tabular text-2xl font-semibold text-zinc-900">Total {money(total)}</p>
+            <p className="text-sm text-faint">Subtotal {money(gross)}</p>
+            <p className="tabular text-2xl font-semibold text-graphite">Total {money(total)}</p>
           </div>
         </div>
       </fieldset>
 
-      <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
-        <legend className="px-1 text-sm font-semibold text-zinc-900">Outros</legend>
+      <fieldset className="rounded-lg border border-line bg-white p-4">
+        <legend className="px-1 text-sm font-semibold text-graphite">Outros</legend>
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Responsável pela retirada" hint="Quem vai buscar/levar os produtos.">
             <Input name="pickupBy" maxLength={120} defaultValue={initial.pickupBy} />
@@ -261,17 +261,17 @@ export function RentalForm({
       </fieldset>
 
       {!isEdit ? (
-        <fieldset className="rounded-lg border border-zinc-200 bg-white p-4">
-          <legend className="px-1 text-sm font-semibold text-zinc-900">Situação</legend>
+        <fieldset className="rounded-lg border border-line bg-white p-4">
+          <legend className="px-1 text-sm font-semibold text-graphite">Situação</legend>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {STATUS_CHOICES.map((s) => (
               <label
                 key={s.value}
-                className={`cursor-pointer rounded-md border px-3 py-2 ${status === s.value ? "border-ink bg-ink text-white" : "border-zinc-300 hover:border-zinc-400"}`}
+                className={`cursor-pointer rounded-md border px-3 py-2 ${status === s.value ? "border-graphite bg-graphite text-white" : "border-line-strong hover:border-line-strong"}`}
               >
                 <input type="radio" name="status" value={s.value} checked={status === s.value} onChange={() => setStatus(s.value)} className="sr-only" />
                 <span className="block text-sm font-semibold">{s.label}</span>
-                <span className={`block text-xs ${status === s.value ? "text-zinc-300" : "text-zinc-500"}`}>{s.hint}</span>
+                <span className={`block text-xs ${status === s.value ? "text-faint" : "text-faint"}`}>{s.hint}</span>
               </label>
             ))}
           </div>
@@ -281,7 +281,7 @@ export function RentalForm({
         </fieldset>
       ) : null}
 
-      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-line bg-canvas/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
         <SubmitButton pending={pending} disabled={blocked} variant={status === "SAIU" && !isEdit ? "accent" : "primary"}>
           {isEdit ? "Salvar alterações" : status === "SAIU" ? "Registrar saída" : status === "ORCAMENTO" ? "Salvar orçamento" : "Salvar locação"}
         </SubmitButton>

@@ -9,9 +9,10 @@ import { InlineAction } from "@/components/ui/forms";
 import { addImagesAction, mainImageAction, removeImageAction, removeModelAction, saveModelViewAction } from "../media-actions";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
 import { MovementTable, movementInclude } from "@/components/stock/MovementTable";
-import { StockBreakdown } from "@/components/stock/StockBreakdown";
+import { StockBar, StockLegend } from "@/components/stock/StockBar";
+import { Icon } from "@/components/ui/icons";
 import { ActionForm } from "@/components/ui/forms";
-import { Badge, DataTable, DefinitionList, Field, Input, LinkButton, Notice, Section } from "@/components/ui/primitives";
+import { Badge, DataTable, DefinitionList, Field, Input, LinkButton, Notice, Section, buttonClass } from "@/components/ui/primitives";
 import { COMMITTING_STATUSES, KIND_LABEL, TRACKING_LABEL, can } from "@/lib/domain";
 import { fmtDateTime, money, seq } from "@/lib/format";
 import { addDays, fromLocalInput, toLocalInput, todayKey, zonedToUtc, TZ } from "@/lib/time";
@@ -72,74 +73,132 @@ export default async function ProductPage({
   const photoIds = [...new Set([...(p.photoId ? [p.photoId] : []), ...p.images.map((i) => i.photoId)])];
   const modelViewData = modelView(p.id, p.model3d);
 
+  const total = p.qtyAvailable + p.qtyRented + p.qtyMaintenance + p.qtyPending;
+  const parts = { free, reserved: Math.min(reserved, p.qtyAvailable), rented: p.qtyRented, maintenance: p.qtyMaintenance };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-10">
       {sp.salvo ? <Notice tone="ok">Produto salvo.</Notice> : null}
-      <Link href="/admin/produtos" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800">← Estoque</Link>
 
-      <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
-        <ProductMedia name={p.name} photoIds={photoIds} model={modelViewData} />
+      <nav className="flex items-center gap-1.5 text-[13px] text-faint" aria-label="Caminho">
+        <Link href="/admin/produtos" className="hover:text-graphite">
+          Catálogo
+        </Link>
+        <Icon name="chevronRight" className="h-3.5 w-3.5" />
+        <Link href={`/admin/produtos?categoria=${encodeURIComponent(p.category)}`} className="hover:text-graphite">
+          {p.category}
+        </Link>
+        <Icon name="chevronRight" className="h-3.5 w-3.5" />
+        <span className="truncate text-muted">{p.name}</span>
+      </nav>
 
-        <div className="flex flex-col">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">{p.category}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 md:text-3xl">{p.name}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-            <span className="font-mono">{p.sku}</span>
+      <div className="grid animate-rise gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-12">
+        <div>
+          <ProductMedia name={p.name} photoIds={photoIds} model={modelViewData} />
+          {isAdmin && photoIds.length === 0 ? (
+            <p className="mt-3 text-xs text-faint">
+              Sem fotos ainda. Envie as fotos reais em <a href="#galeria" className="font-medium text-ink underline">Galeria de fotos</a>
+              {modelViewData ? "" : " — a área 3D fica pronta para receber um arquivo .glb quando houver"}.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="lg:sticky lg:top-8 lg:self-start">
+          <p className="eyebrow">{p.category}</p>
+          <h1 className="mt-2 text-[30px] font-semibold leading-[1.1] tracking-[-0.025em] text-graphite md:text-[36px]">{p.name}</h1>
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+            <span className="font-mono text-[13px]">{p.sku}</span>
             {p.dimensions ? <span>· {p.dimensions}</span> : null}
-            <Badge>{KIND_LABEL[p.kind]}</Badge>
+            <span>· {KIND_LABEL[p.kind]}</span>
+            {modelViewData ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs font-medium text-graphite">
+                <Icon name="cube" className="h-3.5 w-3.5 text-ink" /> Modelo 3D
+              </span>
+            ) : null}
             {!p.active ? <Badge tone="muted">Desativado</Badge> : null}
           </p>
 
-          <div className="mt-5 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
-            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Disponível agora</p>
-            <p className={`tabular mt-0.5 text-4xl font-semibold ${free > 0 ? "text-zinc-900" : "text-red-700"}`}>
-              {free} <span className="text-base font-normal text-zinc-500">{p.unit}</span>
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Total {p.qtyAvailable + p.qtyRented + p.qtyMaintenance + p.qtyPending} · reservado {reserved} · em locação {p.qtyRented} · manutenção {p.qtyMaintenance}
+          <div className="mt-7 border-t border-line pt-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow">Disponível agora</p>
+                <p className={`tabular mt-1.5 text-[44px] font-semibold leading-none tracking-[-0.03em] ${free > 0 ? "text-graphite" : "text-accent"}`}>
+                  {free}
+                  <span className="ml-1.5 text-base font-normal tracking-normal text-faint">
+                    de {total} {p.unit}
+                  </span>
+                </p>
+              </div>
+              <span className={`mb-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${free > 0 ? "bg-emerald-50 text-emerald-800" : "bg-accent-soft text-accent"}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${free > 0 ? "bg-st-free" : "bg-st-late"}`} />
+                {free > 0 ? "Pronto para locação" : "Sem unidades livres"}
+              </span>
+            </div>
+            <StockBar className="mt-4" parts={parts} />
+            <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-st-reserved" />{parts.reserved} reservado</span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-st-rented" />{p.qtyRented} em locação</span>
+              <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-st-maint" />{p.qtyMaintenance} manutenção</span>
             </p>
           </div>
 
-          <dl className="mt-4 grid grid-cols-2 gap-3">
+          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-6">
             {p.kind !== "SALE" ? (
               <div>
-                <dt className="text-xs text-zinc-500">Locação</dt>
-                <dd className="tabular text-xl font-semibold">{money(p.rentalPriceCents)}</dd>
+                <dt className="eyebrow">Locação</dt>
+                <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-graphite">{p.rentalPriceCents != null ? money(p.rentalPriceCents) : <span className="text-base font-normal text-faint">A definir</span>}</dd>
               </div>
             ) : null}
             {p.kind !== "RENTAL" ? (
               <div>
-                <dt className="text-xs text-zinc-500">Venda</dt>
-                <dd className="tabular text-xl font-semibold">{money(p.salePriceCents)}</dd>
+                <dt className="eyebrow">Venda</dt>
+                <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-graphite">{p.salePriceCents != null ? money(p.salePriceCents) : <span className="text-base font-normal text-faint">A definir</span>}</dd>
               </div>
             ) : null}
           </dl>
 
           {p.active ? (
-            <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="mt-6 grid gap-2">
               {p.kind !== "SALE" ? (
-                <>
-                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&saida=1`} variant="primary" size="lg" className="w-full">Alugar</LinkButton>
-                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}`} size="lg" className="w-full">Reservar</LinkButton>
-                </>
+                <div className="grid grid-cols-2 gap-2">
+                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}`} variant="primary" size="lg" className="w-full" icon="calendar">
+                    Reservar
+                  </LinkButton>
+                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&orcamento=1`} size="lg" className="w-full" icon="money">
+                    Fazer orçamento
+                  </LinkButton>
+                </div>
               ) : null}
-              {p.kind !== "RENTAL" ? <LinkButton href={`/admin/vendas/nova?produto=${p.id}`} size="lg" className="w-full">Vender</LinkButton> : null}
+              <div className="grid grid-cols-2 gap-2">
+                {p.kind !== "SALE" ? (
+                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&saida=1`} className="w-full" icon="truck">
+                    Alugar agora
+                  </LinkButton>
+                ) : null}
+                {p.kind !== "RENTAL" ? (
+                  <LinkButton href={`/admin/vendas/nova?produto=${p.id}`} variant={p.kind === "SALE" ? "primary" : "secondary"} className="w-full" icon="cart">
+                    Vender
+                  </LinkButton>
+                ) : null}
+              </div>
             </div>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <LinkButton href={`/admin/estoque/entrada?produto=${p.id}`} icon="arrowIn" size="sm">Entrada</LinkButton>
-            <LinkButton href={`/admin/estoque/saida?produto=${p.id}`} icon="arrowOut" size="sm">Saída</LinkButton>
-            {isAdmin ? <LinkButton href={`/admin/produtos/${p.id}/editar`} icon="edit" size="sm">Editar cadastro</LinkButton> : null}
+
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
+            <Link href={`/admin/estoque/entrada?produto=${p.id}`} className="inline-flex items-center gap-1.5 text-muted hover:text-graphite"><Icon name="arrowIn" className="h-4 w-4" />Entrada</Link>
+            <Link href={`/admin/estoque/saida?produto=${p.id}`} className="inline-flex items-center gap-1.5 text-muted hover:text-graphite"><Icon name="arrowOut" className="h-4 w-4" />Saída</Link>
+            <Link href={`/admin/calendario?produto=${p.id}`} className="inline-flex items-center gap-1.5 text-muted hover:text-graphite"><Icon name="calendar" className="h-4 w-4" />Calendário</Link>
+            {isAdmin ? <Link href={`/admin/produtos/${p.id}/editar`} className="inline-flex items-center gap-1.5 text-muted hover:text-graphite"><Icon name="edit" className="h-4 w-4" />Editar cadastro</Link> : null}
           </div>
-          {p.description ? <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-zinc-700">{p.description}</p> : null}
+          {p.description ? <p className="mt-6 whitespace-pre-line border-t border-line pt-6 text-sm leading-relaxed text-muted">{p.description}</p> : null}
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Section title="Situação do estoque">
-          <StockBreakdown free={free} reserved={Math.min(reserved, p.qtyAvailable)} rented={p.qtyRented} maintenance={p.qtyMaintenance} pending={p.qtyPending} unit={p.unit} />
-          <p className="mt-3 text-xs text-zinc-500">
-            No depósito agora: <b>{p.qtyAvailable}</b> (inclui {reserved} reservado(s) para próximas locações) · Vendidos: {p.qtySold} · Perdidos/baixados: {p.qtyLost}
+          <StockLegend parts={parts} total={total} />
+          <p className="mt-4 text-xs text-faint">
+            No depósito agora: <b className="text-graphite">{p.qtyAvailable}</b> (inclui {reserved} reservado(s) para próximas locações) · Pendentes: {p.qtyPending} · Vendidos: {p.qtySold} · Perdidos/baixados: {p.qtyLost}
           </p>
         </Section>
 
@@ -151,17 +210,17 @@ export default async function ProductPage({
             <Field label="Até">
               <Input type="datetime-local" name="ate" defaultValue={toLocalInput(to)} />
             </Field>
-            <button className="h-10 w-full rounded-md border border-zinc-300 text-sm font-medium hover:bg-zinc-50">Consultar</button>
+            <button className={`${buttonClass("secondary", "md")} w-full`}>Consultar período</button>
           </form>
           {!periodOk ? (
-            <p className="mt-3 text-sm text-red-700">A data final precisa ser depois da inicial.</p>
+            <p className="mt-3 text-sm text-accent">A data final precisa ser depois da inicial.</p>
           ) : period ? (
-            <div className="mt-4 rounded-md bg-zinc-50 p-3 text-sm">
-              <p className="text-zinc-600">Livre no período:</p>
-              <p className={`tabular text-3xl font-semibold ${period.free > 0 ? "text-emerald-700" : "text-red-700"}`}>
-                {period.free} <span className="text-base font-normal text-zinc-500">{p.unit}</span>
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="eyebrow">Livre no período</p>
+              <p className={`tabular mt-1 text-3xl font-semibold tracking-tight ${period.free > 0 ? "text-st-free" : "text-accent"}`}>
+                {period.free} <span className="text-base font-normal text-faint">{p.unit}</span>
               </p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-faint">
                 Capacidade {period.capacity} (depósito + alugados que voltam) − pico comprometido {period.peak}. Itens em manutenção não contam.
               </p>
             </div>
@@ -189,11 +248,11 @@ export default async function ProductPage({
       {p.trackingMode === "UNIT" ? (
         <Section title={`Unidades numeradas (${units.length})`}>
           {units.length === 0 ? (
-            <p className="text-sm text-zinc-500">Nenhuma unidade. Registre uma entrada para criar unidades.</p>
+            <p className="text-sm text-faint">Nenhuma unidade. Registre uma entrada para criar unidades.</p>
           ) : (
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
               {units.map((u) => (
-                <li key={u.id} className="flex items-center justify-between rounded-md border border-zinc-200 px-2.5 py-2 text-sm">
+                <li key={u.id} className="flex items-center justify-between rounded-md border border-line px-2.5 py-2 text-sm">
                   <span className="font-mono font-medium">#{u.code}</span>
                   <Badge tone={UNIT_STATUS[u.status].tone}>{UNIT_STATUS[u.status].label}</Badge>
                 </li>
@@ -204,7 +263,7 @@ export default async function ProductPage({
       ) : null}
 
       {isAdmin ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           <Section title="Modelo 3D">
             <ModelManager
               productId={p.id}
@@ -213,18 +272,18 @@ export default async function ProductPage({
               removeAction={removeModelAction}
             />
           </Section>
-          <Section title={`Galeria de fotos (${photoIds.length})`}>
+          <Section id="galeria" title={`Galeria de fotos (${photoIds.length})`}>
             {photoIds.length ? (
               <ul className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {photoIds.map((ph) => (
                   <li key={ph} className="space-y-1">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/api/fotos/${ph}`} alt="" className={`aspect-square w-full rounded-lg object-cover ${ph === p.photoId ? "ring-2 ring-ink" : ""}`} loading="lazy" />
+                    <img src={`/api/fotos/${ph}?s=t`} alt="" className={`aspect-square w-full rounded-xl border border-line object-cover ${ph === p.photoId ? "ring-2 ring-ink ring-offset-2" : ""}`} loading="lazy" />
                     <div className="flex flex-wrap gap-1">
                       {ph !== p.photoId && p.images.some((i) => i.photoId === ph) ? (
                         <InlineAction action={mainImageAction} fields={{ productId: p.id, photoId: ph }}>Principal</InlineAction>
                       ) : ph === p.photoId ? (
-                        <span className="text-xs text-zinc-500">Principal</span>
+                        <span className="text-xs text-faint">Principal</span>
                       ) : null}
                       {p.images.some((i) => i.photoId === ph) ? (
                         <InlineAction action={removeImageAction} fields={{ productId: p.id, photoId: ph }} variant="danger" confirm="Remover esta foto da galeria?">×</InlineAction>
@@ -242,7 +301,7 @@ export default async function ProductPage({
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         <Section title="Cadastro">
           <DefinitionList
             items={[
@@ -261,9 +320,9 @@ export default async function ProductPage({
         {isAdmin ? (
           <Section title="Administração">
             {p.trackingMode === "QUANTITY" && p.active ? (
-              <details className="mb-4 rounded-md border border-zinc-200 p-3">
+              <details className="mb-4 rounded-xl border border-line p-3">
                 <summary className="text-sm font-medium">Ajuste de inventário</summary>
-                <p className="mt-2 text-xs text-zinc-500">
+                <p className="mt-2 text-xs text-faint">
                   Use após uma contagem física. Informe quantas unidades há no depósito agora (sem contar as alugadas e em manutenção). Saldo atual: {p.qtyAvailable}.
                 </p>
                 <ActionForm action={adjustInventoryAction} submitLabel="Aplicar ajuste" submitVariant="secondary" confirm="Confirmar o ajuste de inventário?">
@@ -287,7 +346,7 @@ export default async function ProductPage({
                 confirm="Produtos com histórico são apenas desativados. Continuar?"
               >
                 <input type="hidden" name="id" value={p.id} />
-                <p className="text-xs text-zinc-500">Produtos com movimentações são desativados (o histórico é mantido). Sem histórico, o cadastro é excluído.</p>
+                <p className="text-xs text-faint">Produtos com movimentações são desativados (o histórico é mantido). Sem histórico, o cadastro é excluído.</p>
               </ActionForm>
             ) : (
               <ActionForm action={reactivateProductAction} submitLabel="Reativar produto" submitVariant="secondary">
@@ -299,9 +358,10 @@ export default async function ProductPage({
       </div>
 
       <Section
+        id="historico"
         title="Histórico do estoque"
         padded={false}
-        actions={<Link href={`/admin/movimentacoes?produto=${p.id}`} className="text-sm text-zinc-600 underline">Ver tudo</Link>}
+        actions={<Link href={`/admin/movimentacoes?produto=${p.id}`} className="text-[13px] font-medium text-ink hover:underline">Ver tudo</Link>}
       >
         <MovementTable rows={movements} showProduct={false} />
       </Section>

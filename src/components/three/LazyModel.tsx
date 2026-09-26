@@ -13,7 +13,7 @@ const ModelViewer = dynamic(() => import("./ModelViewer"), {
 function ViewerSkeleton() {
   return (
     <div className="flex h-[360px] w-full items-center justify-center rounded-xl bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#e9edf3_75%)] md:h-[460px]">
-      <p className="text-xs font-medium text-zinc-500">Preparando visualização 3D…</p>
+      <p className="text-xs font-medium text-faint">Preparando visualização 3D…</p>
     </div>
   );
 }

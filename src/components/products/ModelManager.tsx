@@ -79,12 +79,12 @@ export function ModelManager({
               </button>
             </div>
           </div>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-faint">
             Arquivo: {model.fileName} · {model.size < 1024 * 1024 ? `${Math.max(1, Math.round(model.size / 1024))} KB` : `${(model.size / 1024 / 1024).toFixed(1)} MB`}
           </p>
         </>
       ) : (
-        <p className="text-sm text-zinc-500">Nenhum modelo 3D. Sem modelo, o catálogo mostra a foto principal do produto.</p>
+        <p className="text-sm text-faint">Nenhum modelo 3D. Sem modelo, o catálogo mostra a foto principal do produto.</p>
       )}
       <div className="flex flex-wrap items-center gap-2">
         <label className={`${buttonClass("secondary", "md")} cursor-pointer ${busy ? "opacity-50" : ""}`}>
@@ -97,7 +97,7 @@ export function ModelManager({
           </InlineAction>
         ) : null}
       </div>
-      <p className="text-xs text-zinc-500">Formato .glb (recomendado) até 4 MB. Otimize texturas (ex.: 1024 px, WebP) e geometria antes de enviar.</p>
+      <p className="text-xs text-faint">Formato .glb (recomendado) até 4 MB. Otimize texturas (ex.: 1024 px, WebP) e geometria antes de enviar.</p>
       {msg ? <p className={`text-sm ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>{msg.text}</p> : null}
     </div>
   );

@@ -9,7 +9,7 @@ import { RentalWizard } from "./RentalWizard";
 
 export const metadata: Metadata = { title: "Nova locação" };
 
-export default async function NewRentalPage({ searchParams }: { searchParams: Promise<{ saida?: string; produto?: string; cliente?: string }> }) {
+export default async function NewRentalPage({ searchParams }: { searchParams: Promise<{ saida?: string; produto?: string; cliente?: string; orcamento?: string }> }) {
   await requirePermission("rental.manage");
   const sp = await searchParams;
   const [customers, products, template] = await Promise.all([
@@ -33,7 +33,8 @@ export default async function NewRentalPage({ searchParams }: { searchParams: Pr
   return (
     <div className="pb-28">
       <PageHeader
-        title={immediate ? "Saída para locação" : "Nova locação"}
+        eyebrow="Operação"
+        title={immediate ? "Saída para locação" : sp.orcamento === "1" ? "Novo orçamento" : "Nova locação"}
         description="Cliente → período → produtos → revisão. A disponibilidade é conferida em tempo real e de novo ao salvar."
         back={{ href: "/admin/locacoes", label: "Locações" }}
       />
@@ -57,6 +58,7 @@ export default async function NewRentalPage({ searchParams }: { searchParams: Pr
           customerId: customers.some((c) => c.id === sp.cliente) ? sp.cliente : undefined,
           productId: products.some((p) => p.id === sp.produto) ? sp.produto : undefined,
           immediate,
+          quote: sp.orcamento === "1" && !immediate,
           paymentTerms: template?.defaultPaymentTerms ?? "",
         }}
       />

@@ -33,8 +33,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader title="Clientes" actions={<LinkButton href="/admin/clientes/novo" variant="primary" icon="plus">Novo cliente</LinkButton>} />
       <form className="mb-3 flex gap-2" role="search">
-        <input name="q" defaultValue={q} type="search" placeholder="Nome, telefone, CPF/CNPJ ou e-mail" className="h-10 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm" />
-        <button className="h-10 rounded-md bg-ink px-4 text-sm font-medium text-white">Buscar</button>
+        <input name="q" defaultValue={q} type="search" placeholder="Nome, telefone, CPF/CNPJ ou e-mail" className="h-10 flex-1 rounded-lg border border-line-strong bg-white px-3 text-sm" />
+        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Buscar</button>
       </form>
       <Section padded={false}>
         <DataTable

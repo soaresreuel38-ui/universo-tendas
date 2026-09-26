@@ -100,10 +100,10 @@ function Loader() {
   if (!active) return null;
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3">
-      <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-200">
+      <div className="h-1 w-40 overflow-hidden rounded-full bg-canvas">
         <div className="h-full bg-ink transition-[width]" style={{ width: `${Math.max(8, progress)}%` }} />
       </div>
-      <p className="text-xs font-medium text-zinc-500">Carregando modelo 3D… {Math.round(progress)}%</p>
+      <p className="text-xs font-medium text-faint">Carregando modelo 3D… {Math.round(progress)}%</p>
     </div>
   );
 }
@@ -187,7 +187,7 @@ export default function ModelViewer({
       </ErrorBoundary>
       <Loader />
 
-      <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-zinc-600 backdrop-blur">
+      <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur">
         Arraste para girar · role ou pince para aproximar
       </div>
       <div className="absolute bottom-3 right-3 flex gap-1.5">
@@ -195,7 +195,7 @@ export default function ModelViewer({
           <button
             type="button"
             onClick={() => apiRef.current && onCapture(apiRef.current.capture())}
-            className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-zinc-800 shadow-sm ring-1 ring-zinc-200 hover:bg-white"
+            className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-graphite shadow-sm ring-1 ring-line hover:bg-white"
           >
             Usar este ângulo como inicial
           </button>
@@ -203,7 +203,7 @@ export default function ModelViewer({
         <button
           type="button"
           onClick={() => apiRef.current?.reset()}
-          className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-zinc-800 shadow-sm ring-1 ring-zinc-200 hover:bg-white"
+          className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-medium text-graphite shadow-sm ring-1 ring-line hover:bg-white"
         >
           Resetar câmera
         </button>
