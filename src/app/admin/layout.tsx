@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { BottomTabs, SideNav } from "@/components/layout/SideNav";
+import { Shortcuts } from "@/components/layout/Shortcuts";
 import { Icon } from "@/components/ui/icons";
 import { ROLE_LABEL } from "@/lib/domain";
 import { requireUser } from "@/server/auth/session";
@@ -40,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <input
               name="q"
               type="search"
-              placeholder="Buscar produto, código, cliente, telefone, locação…"
+              placeholder="Buscar cliente, CPF/CNPJ, telefone, produto, contrato, evento…  ( / )"
               className="h-9 w-full rounded-md border border-zinc-200 bg-zinc-50 pl-9 pr-3 text-sm outline-none focus:border-zinc-400 focus:bg-white"
               aria-label="Busca global"
             />
@@ -53,6 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       <main className="mx-auto max-w-7xl px-4 pb-28 pt-5 lg:px-6 lg:pb-10">{children}</main>
       <BottomTabs />
+      <Shortcuts />
     </div>
   );
 }

@@ -14,6 +14,7 @@ export type ProductInput = {
   rentalPriceCents?: number | null;
   photoId?: string | null;
   notes?: string | null;
+  dimensions?: string | null;
   minStock: number;
   active: boolean;
 };

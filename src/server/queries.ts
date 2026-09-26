@@ -65,6 +65,7 @@ export async function dashboardData(now = new Date()) {
       prisma.rental.findMany({ where: { status: "RETORNADA" }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
       prisma.maintenance.count({ where: { status: "ABERTA" } }),
     ]);
+  const work = await pendingContractWork();
 
   const sum = (f: (p: (typeof stock)[number]) => number) => stock.reduce((s, p) => s + f(p), 0);
   return {
@@ -87,5 +88,56 @@ export async function dashboardData(now = new Date()) {
     tomorrowDepartures,
     awaitingCheck,
     openMaintenance,
+    overdueUnits: overdue.reduce((t, r) => t + r.items.reduce((u, i) => u + i.quantity, 0), 0),
+    ...work,
   };
+}
+
+/** Pendências de documentação: o que falta para a locação sair com contrato assinado. */
+export async function pendingContractWork() {
+  const [toGenerate, awaitingSignature, quotes] = await Promise.all([
+    prisma.rental.findMany({
+      where: { status: { in: [...RESERVING_STATUSES] }, contracts: { none: { status: { not: "CANCELADO" } } } },
+      include: rentalListInclude,
+      orderBy: { departureAt: "asc" },
+    }),
+    prisma.contract.findMany({
+      where: { status: { in: ["RASCUNHO", "ENVIADO", "AGUARDANDO_ASSINATURA"] } },
+      include: { customer: { select: { name: true } }, rental: { select: { number: true, eventName: true, departureAt: true, departedAt: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.rental.count({ where: { status: "ORCAMENTO" } }),
+  ]);
+  return { contractsToGenerate: toGenerate, contractsAwaiting: awaitingSignature, openQuotes: quotes };
+}
+
+/** Operação do dia: saídas, retornos, montagens, desmontagens, contratos e atrasados. */
+export async function todayOperations(now = new Date()) {
+  const { start, end } = dayRange(todayKey(now));
+  const [departures, returns, setups, teardowns, overdue, awaitingCheck, work] = await Promise.all([
+    prisma.rental.findMany({
+      where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { lt: end } },
+      include: rentalListInclude,
+      orderBy: { departureAt: "asc" },
+    }),
+    prisma.rental.findMany({
+      where: { status: { in: [...ACTIVE_OUT] }, expectedReturnAt: { gte: now, lt: end } },
+      include: rentalListInclude,
+      orderBy: { expectedReturnAt: "asc" },
+    }),
+    prisma.rental.findMany({
+      where: { status: { in: COMMITTING_STATUSES }, setupAt: { gte: start, lt: end } },
+      include: rentalListInclude,
+      orderBy: { setupAt: "asc" },
+    }),
+    prisma.rental.findMany({
+      where: { status: { in: COMMITTING_STATUSES }, teardownAt: { gte: start, lt: end } },
+      include: rentalListInclude,
+      orderBy: { teardownAt: "asc" },
+    }),
+    prisma.rental.findMany({ where: { status: { in: [...ACTIVE_OUT] }, expectedReturnAt: { lt: now } }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
+    prisma.rental.findMany({ where: { status: "RETORNADA" }, include: rentalListInclude, orderBy: { expectedReturnAt: "asc" } }),
+    pendingContractWork(),
+  ]);
+  return { departures, returns, setups, teardowns, overdue, awaitingCheck, ...work };
 }

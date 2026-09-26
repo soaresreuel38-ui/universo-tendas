@@ -22,6 +22,7 @@ const productSchema = z.object({
   minStock: zInt("Estoque mínimo", 0, 100_000),
   photoId: zOptId,
   notes: zOptText(2000),
+  dimensions: zOptText(120),
   active: zCheckbox,
 });
 
@@ -39,6 +40,7 @@ function parseProduct(form: FormData) {
     minStock: str(form, "minStock") || "0",
     photoId: str(form, "photoId"),
     notes: str(form, "notes"),
+    dimensions: str(form, "dimensions"),
     active: form.get("active"),
   });
 }

@@ -8,6 +8,7 @@ export type CustomerInput = {
   whatsapp?: string | null;
   email?: string | null;
   address?: string | null;
+  city?: string | null;
   notes?: string | null;
 };
 

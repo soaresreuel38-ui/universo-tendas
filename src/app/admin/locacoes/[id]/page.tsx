@@ -12,7 +12,10 @@ import { rentalWhatsappMessage } from "@/lib/whatsapp";
 import { requireUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { resolvePendingAction } from "../../estoque/actions";
-import { changeStatusAction } from "../actions";
+import { changeStatusAction, registerPaymentAction } from "../actions";
+import { createContractAction } from "../../contratos/actions";
+import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
+import { PAYMENT_METHOD_LABEL } from "@/lib/domain";
 
 export const metadata: Metadata = { title: "Locação" };
 
@@ -32,7 +35,7 @@ export default async function RentalPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ salvo?: string; saiu?: string; conferida?: string }>;
+  searchParams: Promise<{ salvo?: string; saiu?: string; conferida?: string; erro?: string }>;
 }) {
   const user = await requireUser();
   const { id } = await params;
@@ -46,6 +49,9 @@ export default async function RentalPage({
       items: { include: { product: true, units: { include: { unit: true } } }, orderBy: { product: { name: "asc" } } },
       photos: { select: { id: true } },
       maintenances: { include: { product: { select: { name: true } } } },
+      contracts: { orderBy: { number: "desc" } },
+      payments: { include: { user: { select: { name: true } } }, orderBy: { paidAt: "asc" } },
+      damageReports: { include: { product: { select: { name: true } }, photos: { select: { id: true } } } },
     },
   });
   if (!r) notFound();
@@ -63,6 +69,8 @@ export default async function RentalPage({
   const checked = r.checkedAt != null;
   const gross = r.items.reduce((s, i) => s + i.quantity * i.unitPriceCents, 0);
   const pendingItems = r.items.filter((i) => (i.qtyMissing ?? 0) - i.qtyMissingResolved > 0);
+  const activeContract = r.contracts.find((x) => x.status !== "CANCELADO");
+  const paid = r.payments.reduce((sum, p) => sum + p.amountCents, 0);
 
   return (
     <div className="space-y-4">
@@ -81,6 +89,7 @@ export default async function RentalPage({
         }
       />
       {sp.salvo ? <Notice tone="ok">Locação salva.</Notice> : null}
+      {sp.erro ? <Notice tone="danger">Locação salva como orçamento, mas o contrato não foi gerado: {sp.erro.slice(0, 300)}</Notice> : null}
       {sp.saiu ? <Notice tone="ok">Saída registrada. Os produtos agora constam como alugados.</Notice> : null}
       {sp.conferida ? <Notice tone="ok">Conferência finalizada. O estoque foi atualizado.</Notice> : null}
       {isOverdue(r) ? <Notice tone="danger">Locação atrasada: o retorno estava previsto para {fmtDateTime(r.expectedReturnAt)}.</Notice> : null}
@@ -158,6 +167,65 @@ export default async function RentalPage({
         </Section>
 
         <div className="space-y-4">
+          <Section title="Contrato e documentos">
+            {activeContract ? (
+              <Link href={`/admin/contratos/${activeContract.id}`} className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50">
+                <span className="font-medium">Contrato #{seq(activeContract.number)}</span>
+                <ContractStatusBadge contract={{ ...activeContract, rental: r }} />
+              </Link>
+            ) : r.status !== "CANCELADA" && can(user.role, "contract.manage") ? (
+              <div className="flex flex-wrap gap-2">
+                <InlineAction action={createContractAction} fields={{ rentalId: r.id }} variant="primary" size="md">
+                  {r.status === "ORCAMENTO" ? "Cliente aprovou — gerar contrato" : "Gerar contrato"}
+                </InlineAction>
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500">Sem contrato.</p>
+            )}
+            {r.status === "ORCAMENTO" && !activeContract ? (
+              <p className="mt-2 text-xs text-zinc-500">Gerar o contrato reserva o estoque para o período (se houver disponibilidade).</p>
+            ) : null}
+            <a href={`/api/pdf/orcamento/${r.id}`} target="_blank" rel="noopener" className="mt-3 inline-flex items-center gap-1 text-sm text-zinc-700 underline">
+              <Icon name="download" className="h-4 w-4" /> PDF do orçamento
+            </a>
+          </Section>
+
+          <Section title="Pagamentos">
+            <p className="text-sm">
+              Recebido <b>{money(paid)}</b> de {money(r.totalCents)}
+              {paid < r.totalCents ? <span className="text-amber-700"> · falta {money(r.totalCents - paid)}</span> : <span className="text-emerald-700"> · quitado</span>}
+            </p>
+            {r.payments.length ? (
+              <ul className="mt-2 space-y-1 text-xs text-zinc-600">
+                {r.payments.map((p) => (
+                  <li key={p.id}>
+                    {fmtDateTime(p.paidAt)} · {PAYMENT_METHOD_LABEL[p.method]} · {money(p.amountCents)} · {p.user.name}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {r.status !== "CANCELADA" && can(user.role, "payment.register") && paid < r.totalCents ? (
+              <details className="mt-3">
+                <summary className="text-sm font-medium underline">Registrar pagamento</summary>
+                <ActionForm action={registerPaymentAction} submitLabel="Registrar" submitVariant="secondary" resetOnSuccess>
+                  <input type="hidden" name="rentalId" value={r.id} />
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <Field label="Valor (R$)">
+                      <Input name="amount" inputMode="decimal" required defaultValue={((r.totalCents - paid) / 100).toFixed(2).replace(".", ",")} />
+                    </Field>
+                    <Field label="Forma">
+                      <select name="method" className="mt-1 block h-10 w-full rounded-md border border-zinc-300 bg-white px-2">
+                        {Object.entries(PAYMENT_METHOD_LABEL).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                </ActionForm>
+              </details>
+            ) : null}
+          </Section>
+
           <Section title="Cliente">
             <p className="font-medium">
               <Link href={`/admin/clientes/${r.customer.id}`} className="hover:underline">{r.customer.name}</Link>
@@ -257,6 +325,32 @@ export default async function RentalPage({
                 </li>
               );
             })}
+          </ul>
+        </Section>
+      ) : null}
+
+      {r.damageReports.length ? (
+        <Section title="Ocorrências de danos">
+          <ul className="space-y-3 text-sm">
+            {r.damageReports.map((d) => (
+              <li key={d.id} className="rounded-md border border-amber-200 bg-amber-50/50 p-3">
+                <p className="font-medium">
+                  {d.product.name} × {d.quantity} — {d.damageType}
+                </p>
+                <p className="text-zinc-700">{d.description}</p>
+                {d.responsible ? <p className="text-xs text-zinc-500">Responsável: {d.responsible}</p> : null}
+                {d.photos.length ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {d.photos.map((p) => (
+                      <a key={p.id} href={`/api/fotos/${p.id}`} target="_blank" rel="noopener noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/api/fotos/${p.id}`} alt="Foto do dano" className="h-20 w-20 rounded object-cover" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </li>
+            ))}
           </ul>
         </Section>
       ) : null}

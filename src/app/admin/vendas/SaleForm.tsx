@@ -137,6 +137,18 @@ export function SaleForm({
         <Field label="Data da venda" required>
           <Input type="datetime-local" name="soldAt" required defaultValue={now} />
         </Field>
+        <Field label="Pagamento recebido agora" hint="Deixe em branco se o pagamento será feito depois.">
+          <select name="paymentMethod" defaultValue="PIX" className="mt-1 block h-10 w-full rounded-md border border-zinc-300 bg-white px-2">
+            <option value="">Ainda não pago</option>
+            <option value="PIX">Pix</option>
+            <option value="DINHEIRO">Dinheiro</option>
+            <option value="CARTAO_CREDITO">Cartão de crédito</option>
+            <option value="CARTAO_DEBITO">Cartão de débito</option>
+            <option value="BOLETO">Boleto</option>
+            <option value="TRANSFERENCIA">Transferência</option>
+            <option value="OUTRO">Outro</option>
+          </select>
+        </Field>
         <Field label="Observações" className="md:col-span-2">
           <Textarea name="notes" maxLength={2000} />
         </Field>

@@ -20,6 +20,7 @@ const schema = z.object({
     .pipe(z.union([z.literal(""), z.string().email("E-mail inválido.").max(160)]))
     .transform((v) => v || null),
   address: zOptText(300),
+  city: zOptText(120),
   notes: zOptText(2000),
 });
 
@@ -31,6 +32,7 @@ const parse = (form: FormData) =>
     whatsapp: str(form, "whatsapp"),
     email: str(form, "email"),
     address: str(form, "address"),
+    city: str(form, "city"),
     notes: str(form, "notes"),
   });
 

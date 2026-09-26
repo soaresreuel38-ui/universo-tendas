@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProductThumb } from "@/components/products/ProductThumb";
+import { ModelManager } from "@/components/products/ModelManager";
+import { ProductMedia } from "@/components/products/ProductMedia";
+import { modelView } from "@/lib/model-view";
+import { PhotoInput } from "@/components/photos/PhotoInput";
+import { InlineAction } from "@/components/ui/forms";
+import { addImagesAction, mainImageAction, removeImageAction, removeModelAction, saveModelViewAction } from "../media-actions";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
 import { MovementTable, movementInclude } from "@/components/stock/MovementTable";
 import { StockBreakdown } from "@/components/stock/StockBreakdown";
 import { ActionForm } from "@/components/ui/forms";
-import { Badge, DataTable, DefinitionList, Field, Input, LinkButton, Notice, PageHeader, Section } from "@/components/ui/primitives";
+import { Badge, DataTable, DefinitionList, Field, Input, LinkButton, Notice, Section } from "@/components/ui/primitives";
 import { COMMITTING_STATUSES, KIND_LABEL, TRACKING_LABEL, can } from "@/lib/domain";
 import { fmtDateTime, money, seq } from "@/lib/format";
 import { addDays, fromLocalInput, toLocalInput, todayKey, zonedToUtc, TZ } from "@/lib/time";
@@ -37,7 +42,10 @@ export default async function ProductPage({
   const user = await requireUser();
   const { id } = await params;
   const sp = await searchParams;
-  const p = await prisma.product.findUnique({ where: { id }, include: { units: true } });
+  const p = await prisma.product.findUnique({
+    where: { id },
+    include: { units: true, images: { orderBy: { sortOrder: "asc" } }, model3d: { omit: { data: true } } },
+  });
   if (!p) notFound();
 
   const [reservedMap, movements, commitments] = await Promise.all([
@@ -61,39 +69,78 @@ export default async function ProductPage({
 
   const units = [...p.units].sort((a, b) => a.code.localeCompare(b.code, "pt-BR", { numeric: true }));
   const isAdmin = can(user.role, "product.manage");
+  const photoIds = [...new Set([...(p.photoId ? [p.photoId] : []), ...p.images.map((i) => i.photoId)])];
+  const modelViewData = modelView(p.id, p.model3d);
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        back={{ href: "/admin/produtos", label: "Estoque" }}
-        title={p.name}
-        description={
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="font-mono">{p.sku}</span>· {p.category} <Badge>{KIND_LABEL[p.kind]}</Badge>
-            {!p.active ? <Badge tone="muted">Desativado</Badge> : null}
-          </span>
-        }
-        actions={
-          <>
-            <LinkButton href={`/admin/estoque/entrada?produto=${p.id}`} icon="arrowIn">Entrada</LinkButton>
-            <LinkButton href={`/admin/estoque/saida?produto=${p.id}`} icon="arrowOut">Saída</LinkButton>
-            {isAdmin ? <LinkButton href={`/admin/produtos/${p.id}/editar`} icon="edit" variant="primary">Editar</LinkButton> : null}
-          </>
-        }
-      />
       {sp.salvo ? <Notice tone="ok">Produto salvo.</Notice> : null}
+      <Link href="/admin/produtos" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800">← Estoque</Link>
+
+      <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+        <ProductMedia name={p.name} photoIds={photoIds} model={modelViewData} />
+
+        <div className="flex flex-col">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">{p.category}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 md:text-3xl">{p.name}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+            <span className="font-mono">{p.sku}</span>
+            {p.dimensions ? <span>· {p.dimensions}</span> : null}
+            <Badge>{KIND_LABEL[p.kind]}</Badge>
+            {!p.active ? <Badge tone="muted">Desativado</Badge> : null}
+          </p>
+
+          <div className="mt-5 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Disponível agora</p>
+            <p className={`tabular mt-0.5 text-4xl font-semibold ${free > 0 ? "text-zinc-900" : "text-red-700"}`}>
+              {free} <span className="text-base font-normal text-zinc-500">{p.unit}</span>
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Total {p.qtyAvailable + p.qtyRented + p.qtyMaintenance + p.qtyPending} · reservado {reserved} · em locação {p.qtyRented} · manutenção {p.qtyMaintenance}
+            </p>
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-3">
+            {p.kind !== "SALE" ? (
+              <div>
+                <dt className="text-xs text-zinc-500">Locação</dt>
+                <dd className="tabular text-xl font-semibold">{money(p.rentalPriceCents)}</dd>
+              </div>
+            ) : null}
+            {p.kind !== "RENTAL" ? (
+              <div>
+                <dt className="text-xs text-zinc-500">Venda</dt>
+                <dd className="tabular text-xl font-semibold">{money(p.salePriceCents)}</dd>
+              </div>
+            ) : null}
+          </dl>
+
+          {p.active ? (
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              {p.kind !== "SALE" ? (
+                <>
+                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&saida=1`} variant="primary" size="lg" className="w-full">Alugar</LinkButton>
+                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}`} size="lg" className="w-full">Reservar</LinkButton>
+                </>
+              ) : null}
+              {p.kind !== "RENTAL" ? <LinkButton href={`/admin/vendas/nova?produto=${p.id}`} size="lg" className="w-full">Vender</LinkButton> : null}
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <LinkButton href={`/admin/estoque/entrada?produto=${p.id}`} icon="arrowIn" size="sm">Entrada</LinkButton>
+            <LinkButton href={`/admin/estoque/saida?produto=${p.id}`} icon="arrowOut" size="sm">Saída</LinkButton>
+            {isAdmin ? <LinkButton href={`/admin/produtos/${p.id}/editar`} icon="edit" size="sm">Editar cadastro</LinkButton> : null}
+          </div>
+          {p.description ? <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-zinc-700">{p.description}</p> : null}
+        </div>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Section title="Situação do estoque">
-          <div className="flex flex-col gap-5 sm:flex-row">
-            <ProductThumb photoId={p.photoId} name={p.name} size="lg" />
-            <div className="flex-1">
-              <StockBreakdown free={free} reserved={Math.min(reserved, p.qtyAvailable)} rented={p.qtyRented} maintenance={p.qtyMaintenance} pending={p.qtyPending} unit={p.unit} />
-              <p className="mt-3 text-xs text-zinc-500">
-                No depósito agora: <b>{p.qtyAvailable}</b> (inclui {reserved} reservado(s) para próximas locações) · Vendidos: {p.qtySold} · Perdidos/baixados: {p.qtyLost}
-              </p>
-            </div>
-          </div>
+          <StockBreakdown free={free} reserved={Math.min(reserved, p.qtyAvailable)} rented={p.qtyRented} maintenance={p.qtyMaintenance} pending={p.qtyPending} unit={p.unit} />
+          <p className="mt-3 text-xs text-zinc-500">
+            No depósito agora: <b>{p.qtyAvailable}</b> (inclui {reserved} reservado(s) para próximas locações) · Vendidos: {p.qtySold} · Perdidos/baixados: {p.qtyLost}
+          </p>
         </Section>
 
         <Section title="Disponibilidade por data">
@@ -156,12 +203,52 @@ export default async function ProductPage({
         </Section>
       ) : null}
 
+      {isAdmin ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Section title="Modelo 3D">
+            <ModelManager
+              productId={p.id}
+              model={modelViewData && p.model3d ? { ...modelViewData, fileName: p.model3d.fileName, size: p.model3d.size } : null}
+              saveView={saveModelViewAction}
+              removeAction={removeModelAction}
+            />
+          </Section>
+          <Section title={`Galeria de fotos (${photoIds.length})`}>
+            {photoIds.length ? (
+              <ul className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {photoIds.map((ph) => (
+                  <li key={ph} className="space-y-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/api/fotos/${ph}`} alt="" className={`aspect-square w-full rounded-lg object-cover ${ph === p.photoId ? "ring-2 ring-ink" : ""}`} loading="lazy" />
+                    <div className="flex flex-wrap gap-1">
+                      {ph !== p.photoId && p.images.some((i) => i.photoId === ph) ? (
+                        <InlineAction action={mainImageAction} fields={{ productId: p.id, photoId: ph }}>Principal</InlineAction>
+                      ) : ph === p.photoId ? (
+                        <span className="text-xs text-zinc-500">Principal</span>
+                      ) : null}
+                      {p.images.some((i) => i.photoId === ph) ? (
+                        <InlineAction action={removeImageAction} fields={{ productId: p.id, photoId: ph }} variant="danger" confirm="Remover esta foto da galeria?">×</InlineAction>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <ActionForm action={addImagesAction} submitLabel="Adicionar à galeria" submitVariant="secondary">
+              <input type="hidden" name="productId" value={p.id} />
+              <PhotoInput name="photoIds" multiple label="Fotos" />
+            </ActionForm>
+          </Section>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Section title="Cadastro">
           <DefinitionList
             items={[
               ["Controle", TRACKING_LABEL[p.trackingMode]],
               ["Unidade", p.unit],
+              ["Dimensões", p.dimensions],
               ["Preço de locação", money(p.rentalPriceCents)],
               ["Preço de venda", money(p.salePriceCents)],
               ["Estoque mínimo (alerta)", p.minStock || "Sem alerta"],

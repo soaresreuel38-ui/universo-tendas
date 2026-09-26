@@ -38,15 +38,25 @@ export async function createSaleAction(_: ActionState, form: FormData): Promise<
         soldAt: zDateTime("Data"),
         discountCents: zMoney("Desconto"),
         notes: zOptText(2000),
+        paymentMethod: z.enum(["", "DINHEIRO", "PIX", "CARTAO_CREDITO", "CARTAO_DEBITO", "BOLETO", "TRANSFERENCIA", "OUTRO"]),
       })
       .parse({
+        paymentMethod: str(form, "paymentMethod"),
         customerId: str(form, "customerId"),
         customerName: str(form, "customerName"),
         soldAt: str(form, "soldAt"),
         discountCents: str(form, "discount"),
         notes: str(form, "notes"),
       });
-    const sale = await createSale(prisma, user, { ...data, discountCents: data.discountCents ?? 0, items });
+    const { paymentMethod, ...rest } = data;
+    const discountCents = data.discountCents ?? 0;
+    const total = Math.max(0, items.reduce((s, i) => s + i.quantity * i.unitPriceCents, 0) - discountCents);
+    const sale = await createSale(prisma, user, {
+      ...rest,
+      discountCents,
+      items,
+      payment: paymentMethod && total > 0 ? { method: paymentMethod, amountCents: total } : null,
+    });
     id = sale.id;
   });
   if (!result?.ok) return result;

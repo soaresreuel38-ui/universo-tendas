@@ -11,6 +11,8 @@ import { seq } from "@/lib/format";
 import { availabilityForPeriod, lockProducts } from "./availability";
 import { assertCan, DomainError, type Actor, type Db } from "./errors";
 import { applyStock, pickUnits, setUnitsStatus, withTx } from "./stock";
+import { audit } from "./audit";
+import { syncContractsWithRental } from "./contract-sync";
 
 export type RentalItemInput = { productId: string; quantity: number; unitPriceCents: number };
 
@@ -23,6 +25,8 @@ export type RentalInput = {
   eventAt?: Date | null;
   expectedReturnAt: Date;
   pickupBy?: string | null;
+  teardownAt?: Date | null;
+  paymentTerms?: string | null;
   discountCents?: number;
   notes?: string | null;
   items: RentalItemInput[];
@@ -136,6 +140,14 @@ export async function createRental(
         items: { create: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPriceCents: i.unitPriceCents })) },
       },
     });
+    const qty = items.reduce((s, i) => s + i.quantity, 0);
+    await audit(tx, {
+      userId: actor.id,
+      action: "rental.create",
+      entityType: "Rental",
+      entityId: rental.id,
+      summary: `${status === "ORCAMENTO" ? "Criou o orçamento" : "Reservou"} #${seq(rental.number)} — ${rental.eventName} (${qty} itens)`,
+    });
     if (status === "SAIU") await departInTx(tx, actor, rental.id, { unitSelection });
     return tx.rental.findUniqueOrThrow({ where: { id: rental.id }, include: { items: true } });
   });
@@ -156,6 +168,7 @@ export async function updateRental(db: PrismaClient, actor: Actor, rentalId: str
       await assertBookable(tx, items, input.departureAt, input.expectedReturnAt, rental.id);
     }
     await tx.rentalItem.deleteMany({ where: { rentalId } });
+    await audit(tx, { userId: actor.id, action: "rental.update", entityType: "Rental", entityId: rentalId, summary: `Alterou a locação #${seq(rental.number)}` });
     return tx.rental.update({
       where: { id: rentalId },
       data: {
@@ -222,6 +235,14 @@ async function departInTx(
       },
     );
   }
+  await syncContractsWithRental(tx, rental.id, "departed");
+  await audit(tx, {
+    userId: actor.id,
+    action: "rental.depart",
+    entityType: "Rental",
+    entityId: rental.id,
+    summary: `Registrou a saída da locação #${seq(rental.number)} (${rental.items.reduce((s, i) => s + i.quantity, 0)} itens)`,
+  });
   return tx.rental.update({
     where: { id: rental.id },
     data: {
@@ -259,6 +280,15 @@ export async function changeRentalStatus(db: PrismaClient, actor: Actor, rentalI
       await lockProducts(tx, rental.items.map((i) => i.productId));
       await assertBookable(tx, rental.items, rental.departureAt, rental.expectedReturnAt, rental.id);
     }
+    if (to === "CANCELADA") await syncContractsWithRental(tx, rentalId, "canceled");
+    if (to === "FINALIZADA") await syncContractsWithRental(tx, rentalId, "finalized");
+    await audit(tx, {
+      userId: actor.id,
+      action: "rental.status",
+      entityType: "Rental",
+      entityId: rentalId,
+      summary: `Locação #${seq(rental.number)}: ${RENTAL_STATUS_LABEL[rental.status]} → ${RENTAL_STATUS_LABEL[to]}`,
+    });
     return tx.rental.update({
       where: { id: rentalId },
       data: {
@@ -282,6 +312,8 @@ export type CheckInItem = {
   note?: string | null;
   /** Para produtos numerados: estado de cada unidade que saiu (unitId → estado). */
   unitStates?: Record<string, UnitReturnState>;
+  /** Registro do problema quando há danificados. */
+  damage?: { damageType: string; responsible?: string | null; photoIds?: string[] } | null;
 };
 
 export type CheckInInput = {
@@ -357,6 +389,24 @@ export async function checkInRental(db: PrismaClient, actor: Actor, rentalId: st
           });
         }
         await applyStock(tx, item.productId, { rented: -damaged, maintenance: damaged }, { ...base, type: "DANIFICADO_RETORNO", quantity: damaged });
+        const damageType = check.damage?.damageType?.trim();
+        if (!damageType) throw new DomainError(`Informe o tipo de dano em ${item.product.name}.`);
+        const report = await tx.damageReport.create({
+          data: {
+            rentalId: rental.id,
+            rentalItemId: item.id,
+            productId: item.productId,
+            quantity: damaged,
+            damageType: damageType.slice(0, 80),
+            description: note ?? "",
+            responsible: check.damage?.responsible?.trim() || null,
+            reportedById: actor.id,
+          },
+        });
+        const damagePhotos = check.damage?.photoIds ?? [];
+        if (damagePhotos.length) {
+          await tx.photo.updateMany({ where: { id: { in: damagePhotos }, damageReportId: null }, data: { damageReportId: report.id, rentalId: rental.id } });
+        }
       }
       if (missing > 0) {
         await applyStock(tx, item.productId, { rented: -missing, pending: missing }, { ...base, type: "PENDENCIA", quantity: missing });
@@ -382,6 +432,15 @@ export async function checkInRental(db: PrismaClient, actor: Actor, rentalId: st
       await tx.photo.updateMany({ where: { id: { in: input.photoIds }, rentalId: null }, data: { rentalId: rental.id } });
     }
 
+    await syncContractsWithRental(tx, rental.id, "checked_in");
+    const damagedTotal = input.items.reduce((s, i) => s + (i.damaged || 0), 0);
+    await audit(tx, {
+      userId: actor.id,
+      action: "rental.checkin",
+      entityType: "Rental",
+      entityId: rental.id,
+      summary: `Conferiu o retorno da locação #${seq(rental.number)}${damagedTotal ? " com ocorrências" : " sem ocorrências"}`,
+    });
     return tx.rental.update({
       where: { id: rental.id },
       data: {

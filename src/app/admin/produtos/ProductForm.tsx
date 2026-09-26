@@ -21,6 +21,7 @@ export type ProductFormValues = {
   minStock: number;
   photoId: string | null;
   notes: string | null;
+  dimensions?: string | null;
   active: boolean;
 };
 
@@ -94,6 +95,9 @@ export function ProductForm({
         ) : (
           <input type="hidden" name="salePrice" value={moneyInput(initial?.salePriceCents)} />
         )}
+        <Field label="Tamanho / dimensões" hint="Ex.: 4 x 4 m, pé-direito 3 m">
+          <Input name="dimensions" maxLength={120} defaultValue={initial?.dimensions ?? ""} />
+        </Field>
         <Field label="Unidade de medida" required hint="un, par, jogo, metro…">
           <Input name="unit" required maxLength={20} defaultValue={initial?.unit ?? "un"} />
         </Field>

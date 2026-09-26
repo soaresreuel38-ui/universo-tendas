@@ -81,15 +81,17 @@ export function Section({
   children,
   className = "",
   padded = true,
+  id,
 }: {
   title?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
   padded?: boolean;
+  id?: string;
 }) {
   return (
-    <section className={`rounded-lg border border-zinc-200 bg-white ${className}`}>
+    <section id={id} className={`scroll-mt-20 rounded-lg border border-zinc-200 bg-white ${className}`}>
       {title ? (
         <div className="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3">
           <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>

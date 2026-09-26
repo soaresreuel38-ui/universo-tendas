@@ -4,7 +4,7 @@ import { ActionForm } from "@/components/ui/forms";
 import { Field, Input, Textarea } from "@/components/ui/primitives";
 import type { ActionState } from "@/lib/action-state";
 
-type Values = { id?: string; name: string; document: string | null; phone: string | null; whatsapp: string | null; email: string | null; address: string | null; notes: string | null };
+type Values = { id?: string; name: string; document: string | null; phone: string | null; whatsapp: string | null; email: string | null; address: string | null; city?: string | null; notes: string | null };
 
 export function CustomerForm({ action, initial }: { action: (s: ActionState, f: FormData) => Promise<ActionState>; initial?: Values }) {
   return (
@@ -26,8 +26,11 @@ export function CustomerForm({ action, initial }: { action: (s: ActionState, f: 
         <Field label="WhatsApp">
           <Input name="whatsapp" maxLength={30} inputMode="tel" defaultValue={initial?.whatsapp ?? ""} />
         </Field>
-        <Field label="Endereço" className="md:col-span-2">
+        <Field label="Endereço">
           <Input name="address" maxLength={300} defaultValue={initial?.address ?? ""} />
+        </Field>
+        <Field label="Cidade">
+          <Input name="city" maxLength={120} defaultValue={initial?.city ?? (initial?.id ? "" : "Sinop - MT")} />
         </Field>
         <Field label="Observações" className="md:col-span-2">
           <Textarea name="notes" maxLength={2000} defaultValue={initial?.notes ?? ""} />

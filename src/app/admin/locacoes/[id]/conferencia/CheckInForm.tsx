@@ -5,6 +5,7 @@ import { PhotoInput } from "@/components/photos/PhotoInput";
 import { FormMessage, SubmitButton } from "@/components/ui/forms";
 import { Field, Input, Textarea } from "@/components/ui/primitives";
 import type { ActionState } from "@/lib/action-state";
+import { DAMAGE_TYPES } from "@/lib/domain";
 
 export type CheckItem = {
   id: string;
@@ -15,11 +16,21 @@ export type CheckItem = {
 };
 
 type UnitState = "OK" | "DANIFICADA" | "FALTANTE";
-type ItemState = { good: string; damaged: string; missing: string; note: string; unitStates: Record<string, UnitState> };
+type ItemState = {
+  problem: boolean;
+  good: string;
+  damaged: string;
+  missing: string;
+  note: string;
+  unitStates: Record<string, UnitState>;
+  damageType: string;
+  responsible: string;
+};
 
 const UNIT_LABEL: Record<UnitState, string> = { OK: "OK", DANIFICADA: "Danificada", FALTANTE: "Faltante" };
 
 function counts(item: CheckItem, s: ItemState) {
+  if (!s.problem) return { good: item.quantity, damaged: 0, missing: 0 };
   if (item.units.length) {
     const values = Object.values(s.unitStates);
     return {
@@ -47,7 +58,16 @@ export function CheckInForm({
     Object.fromEntries(
       items.map((i) => [
         i.id,
-        { good: String(i.quantity), damaged: "0", missing: "0", note: "", unitStates: Object.fromEntries(i.units.map((u) => [u.unitId, "OK" as UnitState])) },
+        {
+          problem: false,
+          good: String(i.quantity),
+          damaged: "0",
+          missing: "0",
+          note: "",
+          unitStates: Object.fromEntries(i.units.map((u) => [u.unitId, "OK" as UnitState])),
+          damageType: "",
+          responsible: "",
+        },
       ]),
     ),
   );
@@ -58,7 +78,8 @@ export function CheckInForm({
   for (const item of items) {
     const c = counts(item, values[item.id]);
     if (c.good + c.damaged + c.missing !== item.quantity) problems.push(`${item.name}: a soma precisa dar ${item.quantity}.`);
-    else if ((c.damaged || c.missing) && !values[item.id].note.trim()) problems.push(`${item.name}: justifique a diferença.`);
+    else if ((c.damaged || c.missing) && !values[item.id].note.trim()) problems.push(`${item.name}: descreva o problema.`);
+    else if (c.damaged && !values[item.id].damageType) problems.push(`${item.name}: informe o tipo de dano.`);
   }
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -72,7 +93,14 @@ export function CheckInForm({
         items.map((i) => {
           const s = values[i.id];
           const c = counts(i, s);
-          return { itemId: i.id, ...c, note: s.note, ...(i.units.length ? { unitStates: s.unitStates } : {}) };
+          const photoIds = fd.getAll(`damagePhotos_${i.id}`).map(String);
+          return {
+            itemId: i.id,
+            ...c,
+            note: s.note,
+            ...(i.units.length && s.problem ? { unitStates: s.unitStates } : {}),
+            ...(c.damaged ? { damage: { damageType: s.damageType, responsible: s.responsible, photoIds } } : {}),
+          };
         }),
       ),
     );
@@ -107,7 +135,28 @@ export function CheckInForm({
                 {c.missing ? ` · ${c.missing} faltante(s)` : ""}
               </p>
 
-              {item.units.length ? (
+              <div className="mt-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={`Situação de ${item.name}`}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!s.problem}
+                  onClick={() => set(item.id, { problem: false })}
+                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${!s.problem ? "bg-emerald-600 text-white" : "bg-zinc-100 text-zinc-700"}`}
+                >
+                  🟢 OK
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={s.problem}
+                  onClick={() => set(item.id, { problem: true })}
+                  className={`rounded-lg px-3 py-3 text-sm font-semibold ${s.problem ? "bg-red-600 text-white" : "bg-zinc-100 text-zinc-700"}`}
+                >
+                  🔴 PROBLEMA
+                </button>
+              </div>
+
+              {!s.problem ? null : item.units.length ? (
                 <ul className="mt-3 space-y-1.5">
                   {item.units.map((u) => (
                     <li key={u.unitId} className="flex items-center justify-between gap-2">
@@ -150,9 +199,34 @@ export function CheckInForm({
               )}
               {!sumOk ? <p className="mt-2 text-sm text-red-700">Retornadas + danificadas + faltantes precisa ser {item.quantity}.</p> : null}
               {diff ? (
-                <Field label="Justificativa da diferença" required className="mt-3">
-                  <Textarea value={s.note} onChange={(e) => set(item.id, { note: e.target.value })} rows={2} maxLength={1000} placeholder="O que aconteceu? Ex.: lona rasgada no canto" />
+                <Field label="Descrição do problema" required className="mt-3">
+                  <Textarea value={s.note} onChange={(e) => set(item.id, { note: e.target.value })} rows={2} maxLength={1000} placeholder="O que aconteceu?" />
                 </Field>
+              ) : null}
+              {c.damaged ? (
+                <div className="mt-3 grid gap-3 rounded-lg bg-red-50/60 p-3 sm:grid-cols-2">
+                  <Field label="Tipo de dano" required>
+                    <select
+                      value={s.damageType}
+                      onChange={(e) => set(item.id, { damageType: e.target.value })}
+                      className="h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+                    >
+                      <option value="">Selecione…</option>
+                      {DAMAGE_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Responsável (quem causou / quem responde)">
+                    <Input value={s.responsible} onChange={(e) => set(item.id, { responsible: e.target.value })} maxLength={120} />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <span className="text-sm font-medium text-zinc-700">Fotos do dano</span>
+                    <PhotoInput name={`damagePhotos_${item.id}`} multiple label="Tirar / enviar foto" />
+                  </div>
+                </div>
               ) : null}
             </li>
           );

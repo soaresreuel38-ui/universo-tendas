@@ -193,7 +193,11 @@ export type Permission =
   | "pending.lost"
   | "report.view"
   | "user.manage"
-  | "settings.manage";
+  | "settings.manage"
+  | "contract.manage"
+  | "contract.cancel"
+  | "payment.register"
+  | "catalog.media";
 
 const EMPLOYEE_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
   "stock.entry",
@@ -204,9 +208,72 @@ const EMPLOYEE_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
   "customer.manage",
   "maintenance.close",
   "pending.found",
+  "contract.manage",
+  "payment.register",
 ]);
 
 export function can(role: Role, permission: Permission): boolean {
   if (role === "ADMIN") return true;
   return EMPLOYEE_PERMISSIONS.has(permission);
 }
+
+// ───────────────────────── Contratos ─────────────────────────
+
+export type ContractStatus =
+  | "RASCUNHO"
+  | "ENVIADO"
+  | "AGUARDANDO_ASSINATURA"
+  | "ASSINADO"
+  | "ATIVO"
+  | "FINALIZADO"
+  | "CANCELADO"
+  | "VENCIDO";
+
+export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
+  RASCUNHO: "Rascunho",
+  ENVIADO: "Enviado",
+  AGUARDANDO_ASSINATURA: "Aguardando assinatura",
+  ASSINADO: "Assinado",
+  ATIVO: "Ativo",
+  FINALIZADO: "Finalizado",
+  CANCELADO: "Cancelado",
+  VENCIDO: "Vencido",
+};
+
+export const CONTRACT_STATUS_TONE: Record<ContractStatus, "neutral" | "info" | "accent" | "warn" | "danger" | "ok" | "muted"> = {
+  RASCUNHO: "muted",
+  ENVIADO: "info",
+  AGUARDANDO_ASSINATURA: "warn",
+  ASSINADO: "ok",
+  ATIVO: "accent",
+  FINALIZADO: "neutral",
+  CANCELADO: "muted",
+  VENCIDO: "danger",
+};
+
+/** Ainda sem assinatura completa: pode receber assinaturas. */
+export const CONTRACT_OPEN_STATUSES: ContractStatus[] = ["RASCUNHO", "ENVIADO", "AGUARDANDO_ASSINATURA"];
+
+/**
+ * Contrato não assinado cuja locação já deveria ter saído aparece como VENCIDO.
+ */
+export function effectiveContractStatus(
+  c: { status: ContractStatus; rental?: { departureAt: Date; departedAt: Date | null } | null },
+  now: Date = new Date(),
+): ContractStatus {
+  if (CONTRACT_OPEN_STATUSES.includes(c.status) && c.rental && !c.rental.departedAt && c.rental.departureAt < now) return "VENCIDO";
+  return c.status;
+}
+
+export const PAYMENT_METHOD_LABEL = {
+  DINHEIRO: "Dinheiro",
+  PIX: "Pix",
+  CARTAO_CREDITO: "Cartão de crédito",
+  CARTAO_DEBITO: "Cartão de débito",
+  BOLETO: "Boleto",
+  TRANSFERENCIA: "Transferência",
+  OUTRO: "Outro",
+} as const;
+export type PaymentMethod = keyof typeof PAYMENT_METHOD_LABEL;
+
+export const DAMAGE_TYPES = ["Rasgo / furo na lona", "Estrutura torta / amassada", "Peça quebrada", "Peça faltando", "Sujeira / mancha", "Outro"] as const;

@@ -9,6 +9,8 @@ import { refreshPanel, run, str } from "@/server/action-utils";
 import { requireUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { DomainError } from "@/server/errors";
+import { createContractFromRental } from "@/server/contracts";
+import { registerRentalPayment } from "@/server/payments";
 import {
   changeRentalStatus,
   checkInRental,
@@ -53,6 +55,8 @@ function parseRental(form: FormData): Omit<RentalInput, "customerId"> {
       pickupBy: zOptText(120),
       notes: zOptText(2000),
       discountCents: zMoney("Desconto"),
+      teardownAt: zOptDateTime("Desmontagem"),
+      paymentTerms: zOptText(1000),
     })
     .parse({
       eventName: str(form, "eventName"),
@@ -64,36 +68,63 @@ function parseRental(form: FormData): Omit<RentalInput, "customerId"> {
       pickupBy: str(form, "pickupBy"),
       notes: str(form, "notes"),
       discountCents: str(form, "discount"),
+      teardownAt: str(form, "teardownAt"),
+      paymentTerms: str(form, "paymentTerms"),
     });
   return { ...base, discountCents: base.discountCents ?? 0, items };
 }
 
+const newCustomerSchema = z.object({
+  name: zReqText(120, "Nome do cliente"),
+  document: zOptText(20),
+  phone: zOptText(30),
+  whatsapp: zOptText(30),
+  email: z.string().trim().max(160).transform((v) => v || null).pipe(z.string().email("E-mail do cliente inválido.").nullable()),
+  address: zOptText(300),
+  city: zOptText(120),
+  notes: zOptText(2000),
+});
+
 export async function createRentalAction(_: ActionState, form: FormData): Promise<ActionState> {
   const user = await requireUser();
   let id = "";
+  let contractId = "";
   let createdCustomerId: string | null = null;
   const result = await run(async () => {
     const data = parseRental(form);
     const status = z.enum(["ORCAMENTO", "RESERVADA", "CONFIRMADA", "SAIU"], { message: "Situação inválida." }).parse(str(form, "status"));
+    const andContract = str(form, "andContract") === "1";
     let customerId = str(form, "customerId");
     if (str(form, "newCustomer") === "1") {
-      const c = z
-        .object({ name: zReqText(120, "Nome do cliente"), phone: zReqText(30, "Telefone") })
-        .parse({ name: str(form, "newCustomerName"), phone: str(form, "newCustomerPhone") });
-      const customer = await prisma.customer.create({ data: { name: c.name, phone: c.phone, whatsapp: c.phone } });
+      const c = newCustomerSchema.parse({
+        name: str(form, "newCustomerName"),
+        document: str(form, "newCustomerDocument"),
+        phone: str(form, "newCustomerPhone"),
+        whatsapp: str(form, "newCustomerWhatsapp") || str(form, "newCustomerPhone"),
+        email: str(form, "newCustomerEmail"),
+        address: str(form, "newCustomerAddress"),
+        city: str(form, "newCustomerCity"),
+        notes: str(form, "newCustomerNotes"),
+      });
+      if (!c.phone && !c.whatsapp) throw new DomainError("Informe o telefone ou WhatsApp do cliente.");
+      const customer = await prisma.customer.create({ data: c });
       customerId = createdCustomerId = customer.id;
     }
-    zId.parse(customerId || "x");
     if (!customerId) throw new DomainError("Selecione o cliente.");
-    const rental = await createRental(prisma, user, { ...data, customerId, status });
+    zId.parse(customerId);
+    const rental = await createRental(prisma, user, { ...data, customerId, status: andContract ? "ORCAMENTO" : status });
     id = rental.id;
+    if (andContract) contractId = (await createContractFromRental(prisma, user, rental.id)).id;
   });
   if (!result?.ok) {
     // Não deixa cliente criado "pela metade" se a locação foi recusada.
-    if (createdCustomerId) await prisma.customer.delete({ where: { id: createdCustomerId } }).catch(() => undefined);
+    if (createdCustomerId && !id) await prisma.customer.delete({ where: { id: createdCustomerId } }).catch(() => undefined);
+    // Locação criada mas contrato recusado (ex.: estoque): mantém como orçamento e mostra o motivo.
+    if (id) redirect(`/admin/locacoes/${id}?erro=${encodeURIComponent(result?.message ?? "")}`);
     return result;
   }
   refreshPanel();
+  if (contractId) redirect(`/admin/contratos/${contractId}?gerado=1`);
   redirect(`/admin/locacoes/${id}?salvo=1`);
 }
 
@@ -153,6 +184,13 @@ const checkSchema = z.object({
         missing: zInt("Faltantes", 0),
         note: zOptText(1000),
         unitStates: z.record(zId, z.enum(["OK", "DANIFICADA", "FALTANTE"])).optional(),
+        damage: z
+          .object({
+            damageType: zReqText(80, "Tipo de dano"),
+            responsible: zOptText(120),
+            photoIds: z.array(zId).max(20).default([]),
+          })
+          .optional(),
       }),
     )
     .min(1)
@@ -186,4 +224,21 @@ export async function checkInAction(_: ActionState, form: FormData): Promise<Act
   if (!result?.ok) return result;
   refreshPanel();
   redirect(`/admin/locacoes/${id}?conferida=1`);
+}
+
+export async function registerPaymentAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  return run(async () => {
+    const data = z
+      .object({
+        rentalId: zId,
+        amount: zMoney("Valor"),
+        method: z.enum(["DINHEIRO", "PIX", "CARTAO_CREDITO", "CARTAO_DEBITO", "BOLETO", "TRANSFERENCIA", "OUTRO"]),
+      })
+      .parse({ rentalId: str(form, "rentalId"), amount: str(form, "amount"), method: str(form, "method") });
+    if (!data.amount) throw new DomainError("Informe o valor.");
+    await registerRentalPayment(prisma, user, data.rentalId, { amountCents: data.amount, method: data.method });
+    refreshPanel();
+    return "Pagamento registrado.";
+  });
 }

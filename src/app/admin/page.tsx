@@ -3,23 +3,26 @@ import Link from "next/link";
 import { RentalMiniList } from "@/components/rentals/RentalMiniList";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { EmptyState, Notice, Section, Stat } from "@/components/ui/primitives";
-import { can } from "@/lib/domain";
-import { fmtLongDate, fmtWeekday, plural } from "@/lib/format";
+import { fmtDateTime, fmtLongDate, fmtWeekday, plural, seq } from "@/lib/format";
+import { TZ, zonedParts } from "@/lib/time";
 import { requireUser } from "@/server/auth/session";
 import { dashboardData } from "@/server/queries";
 
 export const metadata: Metadata = { title: "Painel" };
 
-function QuickAction({ href, icon, label, primary }: { href: string; icon: IconName; label: string; primary?: boolean }) {
+function QuickAction({ href, icon, label, primary, kbd }: { href: string; icon: IconName; label: string; primary?: boolean; kbd?: string }) {
   return (
     <Link
       href={href}
-      className={`flex min-h-14 items-center gap-3 rounded-lg border px-3 py-3 text-sm font-semibold uppercase tracking-wide transition active:scale-[0.99] ${
+      className={`relative flex min-h-14 items-center gap-2.5 rounded-lg border px-3 py-3 text-sm font-semibold transition active:scale-[0.99] ${
         primary ? "border-ink bg-ink text-white hover:bg-ink-soft" : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300"
       }`}
     >
       <Icon name={icon} className={`h-5 w-5 ${primary ? "text-white" : "text-zinc-500"}`} />
       {label}
+      {kbd ? (
+        <kbd className={`absolute right-2 top-2 hidden rounded px-1 font-mono text-[10px] lg:block ${primary ? "bg-white/15 text-white/80" : "bg-zinc-100 text-zinc-400"}`}>{kbd}</kbd>
+      ) : null}
     </Link>
   );
 }
@@ -29,6 +32,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const { negado } = await searchParams;
   const d = await dashboardData();
   const now = new Date();
+  const hour = zonedParts(now, TZ).hour;
+  const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
   const alerts: Array<{ tone: "danger" | "warn" | "info"; text: string; href: string }> = [];
   if (d.overdue.length) alerts.push({ tone: "danger", text: `${plural(d.overdue.length, "locação está atrasada", "locações estão atrasadas")}.`, href: "/admin/locacoes?aba=atrasadas" });
@@ -48,40 +53,97 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       {negado ? <Notice tone="danger">Você não tem permissão para acessar aquela área.</Notice> : null}
 
       <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Universo Tendas</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">Olá, {user.name.split(" ")[0]}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+          {greeting}, {user.name.split(" ")[0]}
+        </h1>
         <p className="text-sm text-zinc-500">
-          Hoje — {fmtWeekday(now).replace(/^./, (c) => c.toUpperCase())}, {fmtLongDate(now)}
+          Hoje, {fmtWeekday(now)}, {fmtLongDate(now)}
         </p>
       </header>
 
       <section aria-label="Estoque">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Estoque</h2>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat label="Disponíveis" value={d.totals.free} tone="ok" href="/admin/produtos" hint="livres para uso agora" />
-          <Stat label="Alugados" value={d.totals.rented} tone="accent" href="/admin/locacoes?aba=fora" hint="fora da empresa" />
-          <Stat label="Reservados" value={d.totals.reserved} tone="info" href="/admin/locacoes?aba=reservas" hint="aguardando saída" />
-          <Stat label="Manutenção" value={d.totals.maintenance} tone="warn" href="/admin/manutencao" hint={`${plural(d.openMaintenance, "registro aberto", "registros abertos")}`} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <Stat label="Disponível" value={d.totals.free} tone="ok" href="/admin/produtos" hint="livre para uso agora" />
+          <Stat label="Reservado" value={d.totals.reserved} tone="info" href="/admin/locacoes?aba=reservas" hint="aguardando saída" />
+          <Stat label="Em locação" value={d.totals.rented} tone="accent" href="/admin/locacoes?aba=fora" hint="fora da empresa" />
+          <Stat label="Manutenção" value={d.totals.maintenance} tone="warn" href="/admin/manutencao" hint={plural(d.openMaintenance, "registro aberto", "registros abertos")} />
+          <Stat
+            label="Atrasado"
+            value={d.overdueUnits}
+            tone={d.overdueUnits ? "danger" : "neutral"}
+            href="/admin/locacoes?aba=atrasadas"
+            hint={plural(d.overdue.length, "locação atrasada", "locações atrasadas")}
+          />
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat label="Total de itens" value={d.totals.total} hint={`${plural(d.totals.products, "produto cadastrado", "produtos cadastrados")}`} href="/admin/produtos" />
-          <Stat label="Vendidos" value={d.totals.sold} href="/admin/vendas" hint="acumulado" />
-          <Stat label="Pendências" value={d.totals.pending} tone={d.totals.pending ? "danger" : "neutral"} href="/admin/manutencao#pendencias" hint="faltantes de locações" />
-          <Stat label="Estoque baixo" value={d.lowStock.length} tone={d.lowStock.length ? "danger" : "neutral"} href="/admin/produtos?filtro=baixo" hint="produtos no mínimo" />
-        </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          Total de {d.totals.total} itens em {plural(d.totals.products, "produto", "produtos")} · {d.totals.sold} vendidos ·{" "}
+          {plural(d.totals.pending, "pendência", "pendências")} de faltantes
+          {d.lowStock.length ? (
+            <>
+              {" · "}
+              <Link href="/admin/produtos?filtro=baixo" className="font-medium text-red-700 underline">
+                {plural(d.lowStock.length, "produto", "produtos")} com estoque baixo
+              </Link>
+            </>
+          ) : null}
+        </p>
       </section>
 
       <section aria-label="Ações rápidas">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Ações rápidas</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          <QuickAction href="/admin/estoque/entrada" icon="arrowIn" label="+ Entrada" />
-          <QuickAction href="/admin/estoque/saida" icon="arrowOut" label="− Saída" />
-          <QuickAction href="/admin/locacoes/nova" icon="tent" label="Nova locação" primary />
-          <QuickAction href="/admin/vendas/nova" icon="cart" label="Nova venda" />
-          <QuickAction href="/admin/retorno" icon="undo" label="Retorno" />
-          {can(user.role, "product.manage") ? <QuickAction href="/admin/produtos/novo" icon="plus" label="Novo produto" /> : null}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          <QuickAction href="/admin/locacoes/nova" icon="tent" label="+ Nova locação" primary kbd="N" />
+          <QuickAction href="/admin/vendas/nova" icon="cart" label="+ Nova venda" />
+          <QuickAction href="/admin/clientes/novo" icon="users" label="+ Novo cliente" kbd="C" />
+          <QuickAction href="/admin/estoque/entrada" icon="arrowIn" label="+ Entrada" kbd="E" />
+          <QuickAction href="/admin/estoque/saida" icon="arrowOut" label="+ Saída" kbd="S" />
+          <QuickAction href="/admin/retorno" icon="undo" label="+ Retorno" kbd="R" />
+          <QuickAction href="/admin/contratos/novo" icon="clipboard" label="+ Novo contrato" />
         </div>
       </section>
+
+      {d.contractsToGenerate.length || d.contractsAwaiting.length || d.openQuotes ? (
+        <Section title="O que fazer agora" padded={false}>
+          <ul className="divide-y divide-zinc-100 text-sm">
+            {d.contractsToGenerate.slice(0, 5).map((r) => (
+              <li key={r.id}>
+                <Link href={`/admin/locacoes/${r.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50">
+                  <span className="min-w-0">
+                    <span className="font-medium text-zinc-900">Gerar contrato</span> · #{seq(r.number)} {r.eventName}
+                    <span className="block truncate text-xs text-zinc-500">
+                      {r.customer.name} · saída {fmtDateTime(r.departureAt)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-ink">Abrir →</span>
+                </Link>
+              </li>
+            ))}
+            {d.contractsAwaiting.slice(0, 5).map((c) => (
+              <li key={c.id}>
+                <Link href={`/admin/contratos/${c.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50">
+                  <span className="min-w-0">
+                    <span className="font-medium text-zinc-900">Colher assinatura</span> · contrato #{seq(c.number)}
+                    <span className="block truncate text-xs text-zinc-500">
+                      {c.customer.name}
+                      {c.rental ? ` · saída ${fmtDateTime(c.rental.departureAt)}` : ""}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-ink">Abrir →</span>
+                </Link>
+              </li>
+            ))}
+            {d.openQuotes ? (
+              <li>
+                <Link href="/admin/locacoes?aba=orcamentos" className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50">
+                  <span>
+                    <span className="font-medium text-zinc-900">{plural(d.openQuotes, "orçamento aguardando", "orçamentos aguardando")}</span> aprovação do cliente
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-ink">Ver →</span>
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </Section>
+      ) : null}
 
       {alerts.length ? (
         <section aria-label="Alertas" className="space-y-2">

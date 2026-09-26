@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, PageHeader, Section } from "@/components/ui/primitives";
-import { RENTAL_STATUS_LABEL, effectiveStatus, isOut, type RentalStatus } from "@/lib/domain";
+import { CONTRACT_STATUS_LABEL, RENTAL_STATUS_LABEL, effectiveStatus, isOut, type RentalStatus } from "@/lib/domain";
 import { fmtTime, seq } from "@/lib/format";
 import { DATE_KEY_RE, addDays, addMonths, dayRange, startOfDay, startOfMonthKey, startOfWeekKey, todayKey, weekdayOf } from "@/lib/time";
 import { requireUser } from "@/server/auth/session";
@@ -67,7 +67,11 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         OR: [{ expectedReturnAt: { gte: rangeStart } }, { actualReturnAt: { gte: rangeStart } }, { status: { in: ["SAIU", "EM_EVENTO", "AGUARDANDO_RETORNO", "ATRASADA", "RETORNADA"] } }],
         ...(sp.produto ? { items: { some: { productId: sp.produto } } } : {}),
       },
-      include: { customer: { select: { name: true } }, items: { select: { productId: true, quantity: true } } },
+      include: {
+        customer: { select: { name: true } },
+        items: { select: { productId: true, quantity: true } },
+        contracts: { where: { status: { not: "CANCELADO" } }, select: { number: true, status: true }, take: 1 },
+      },
       orderBy: { departureAt: "asc" },
     }),
     prisma.product.findMany({ where: { active: true, kind: { in: ["RENTAL", "BOTH"] } }, select: { id: true, name: true, qtyAvailable: true, qtyRented: true, unit: true }, orderBy: { name: "asc" } }),
@@ -136,6 +140,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         const list = activeOn(key);
         const f = freeOn(key);
         const { start, end } = dayRange(key);
+        const within = (d: Date | null) => d != null && d >= start && d < end;
         return (
           <li key={key} className={`p-4 ${key === today ? "bg-amber-50/40" : ""}`}>
             <div className="mb-2 flex items-baseline justify-between">
@@ -162,8 +167,19 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                         <span className="min-w-0 truncate">
                           <span className="font-mono text-xs opacity-70">#{seq(r.number)}</span> <b>{r.eventName}</b> — {r.customer.name}
                         </span>
-                        <span className="shrink-0 text-xs">
-                          {departs ? `Sai ${fmtTime(r.departureAt)}` : returns ? `Volta ${fmtTime(r.expectedReturnAt)}` : RENTAL_STATUS_LABEL[s]}
+                        <span className="shrink-0 text-right text-xs">
+                          {[
+                            departs ? `Sai ${fmtTime(r.departureAt)}` : null,
+                            within(r.setupAt) ? `Montagem ${fmtTime(r.setupAt!)}` : null,
+                            within(r.eventAt) ? `Evento ${fmtTime(r.eventAt!)}` : null,
+                            within(r.teardownAt) ? `Desmontagem ${fmtTime(r.teardownAt!)}` : null,
+                            returns ? `Volta ${fmtTime(r.expectedReturnAt)}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || RENTAL_STATUS_LABEL[s]}
+                          <span className="block opacity-70">
+                            {r.contracts[0] ? `Contrato #${seq(r.contracts[0].number)} · ${CONTRACT_STATUS_LABEL[r.contracts[0].status]}` : "Sem contrato"}
+                          </span>
                         </span>
                       </Link>
                     </li>
@@ -179,7 +195,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
   return (
     <div>
-      <PageHeader title="Calendário de locações" description="↑ saída do estoque · ↓ retorno previsto. Toque em uma locação para ver os detalhes." />
+      <PageHeader title="Calendário de locações" description="↑ saída · ↓ retorno. Na visão de dia e semana aparecem também montagem, evento, desmontagem e o contrato." />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="inline-flex overflow-hidden rounded-md border border-zinc-300 bg-white text-sm">
           {(["dia", "semana", "mes"] as const).map((v) => (

@@ -12,7 +12,7 @@ export function RentalMiniList({
   action,
 }: {
   rentals: RentalListRow[];
-  when: "departure" | "return" | "event";
+  when: "departure" | "return" | "event" | "setup" | "teardown";
   empty: string;
   action?: { label: string; href: (id: string) => string };
 }) {
@@ -20,7 +20,16 @@ export function RentalMiniList({
   return (
     <ul className="divide-y divide-zinc-100">
       {rentals.map((r) => {
-        const date = when === "departure" ? r.departureAt : when === "return" ? r.expectedReturnAt : (r.eventAt ?? r.departureAt);
+        const date =
+          when === "departure"
+            ? r.departureAt
+            : when === "return"
+              ? r.expectedReturnAt
+              : when === "setup"
+                ? (r.setupAt ?? r.departureAt)
+                : when === "teardown"
+                  ? (r.teardownAt ?? r.expectedReturnAt)
+                  : (r.eventAt ?? r.departureAt);
         const items = r.items.map((i) => `${i.quantity} ${i.product.name}`).join(", ");
         return (
           <li key={r.id} className="flex items-start gap-3 px-4 py-3">

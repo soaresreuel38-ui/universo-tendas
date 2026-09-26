@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductThumb } from "@/components/products/ProductThumb";
+import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
 import { EmptyState, PageHeader, Section } from "@/components/ui/primitives";
 import { fmtDateTime, money, seq } from "@/lib/format";
@@ -27,7 +28,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const num = /^#?\d{1,9}$/.test(q) ? Number(digits) : null;
   const ci = { contains: q, mode: "insensitive" as const };
 
-  const [products, customers, rentals, sales] = q
+  const [products, customers, rentals, sales, contracts] = q
     ? await Promise.all([
         prisma.product.findMany({ where: { OR: [{ name: ci }, { sku: ci }, { category: ci }] }, orderBy: [{ active: "desc" }, { name: "asc" }], take: 20 }),
         prisma.customer.findMany({
@@ -51,7 +52,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               { eventAddress: ci },
               { customer: { name: ci } },
               { customer: { phone: { contains: q } } },
-              ...(digits.length >= 4 ? [{ customer: { phone: { contains: digits } } }] : []),
+              { customer: { document: { contains: q } } },
+              ...(digits.length >= 4
+                ? [{ customer: { phone: { contains: digits } } }, { customer: { whatsapp: { contains: digits } } }, { customer: { document: { contains: digits } } }]
+                : []),
               ...(num ? [{ number: num }] : []),
             ],
           },
@@ -60,14 +64,28 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           take: 20,
         }),
         num ? prisma.sale.findMany({ where: { number: num }, include: { customer: { select: { name: true } } } }) : Promise.resolve([]),
+        prisma.contract.findMany({
+          where: {
+            OR: [
+              { customer: { name: ci } },
+              { customer: { document: { contains: q } } },
+              ...(digits.length >= 4 ? [{ customer: { document: { contains: digits } } }] : []),
+              { rental: { eventName: ci } },
+              ...(num ? [{ number: num }] : []),
+            ],
+          },
+          include: { customer: { select: { name: true } }, rental: { select: { eventName: true, departureAt: true, departedAt: true } } },
+          orderBy: { number: "desc" },
+          take: 20,
+        }),
       ])
-    : [[], [], [], []];
+    : [[], [], [], [], []];
   const reserved = await reservedByProduct(prisma, products.map((p) => p.id));
-  const total = products.length + customers.length + rentals.length + sales.length;
+  const total = products.length + customers.length + rentals.length + sales.length + contracts.length;
 
   return (
     <div className="max-w-4xl space-y-4">
-      <PageHeader title="Busca" description="Produto, código, cliente, telefone, número da locação ou evento." />
+      <PageHeader title="Busca" description="Cliente, telefone, CPF/CNPJ, produto, código, contrato, locação ou evento." />
       <form role="search" className="flex gap-2">
         <input name="q" defaultValue={q} type="search" autoFocus placeholder="O que você procura?" className="h-12 flex-1 rounded-md border border-zinc-300 bg-white px-3" />
         <button className="h-12 rounded-md bg-ink px-5 text-sm font-medium text-white">Buscar</button>
@@ -105,6 +123,24 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <span className="block text-sm text-zinc-600">{r.customer.name} · {fmtDateTime(r.departureAt)}</span>
                 </span>
                 <RentalStatusBadge rental={r} />
+              </Link>
+            </li>
+          ))}
+        </Group>
+      ) : null}
+      {contracts.length ? (
+        <Group title={`Contratos (${contracts.length})`}>
+          {contracts.map((c) => (
+            <li key={c.id}>
+              <Link href={`/admin/contratos/${c.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50">
+                <span className="min-w-0">
+                  <span className="block font-medium">Contrato #{seq(c.number)}</span>
+                  <span className="block text-sm text-zinc-600">
+                    {c.customer.name}
+                    {c.rental ? ` · ${c.rental.eventName}` : ""}
+                  </span>
+                </span>
+                <ContractStatusBadge contract={c} />
               </Link>
             </li>
           ))}

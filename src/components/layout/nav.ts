@@ -5,17 +5,24 @@ export type NavItem = { href: string; label: string; icon: IconName; hint?: stri
 
 /** Organizado pela lógica do dia a dia: o que temos, o que sai, o que volta, o que foi vendido. */
 export const NAV_GROUPS: Array<{ title?: string; items: NavItem[] }> = [
-  { items: [{ href: "/admin", label: "Painel", icon: "home" }] },
+  {
+    items: [
+      { href: "/admin", label: "Painel", icon: "home" },
+      { href: "/admin/hoje", label: "Hoje", icon: "clock", hint: "Saídas, retornos e pendências do dia" },
+    ],
+  },
   {
     title: "Operação",
     items: [
       { href: "/admin/produtos", label: "Estoque", icon: "box", hint: "O que temos" },
       { href: "/admin/locacoes", label: "Locações", icon: "tent", hint: "Reservas, saídas e em andamento" },
+      { href: "/admin/contratos", label: "Contratos", icon: "clipboard" },
       { href: "/admin/calendario", label: "Calendário", icon: "calendar" },
       { href: "/admin/retorno", label: "Retornos", icon: "undo", hint: "O que deveria voltar" },
       { href: "/admin/manutencao", label: "Manutenção e pendências", icon: "wrench", hint: "O que voltou com problema" },
       { href: "/admin/vendas", label: "Vendas", icon: "cart", hint: "O que foi vendido" },
       { href: "/admin/clientes", label: "Clientes", icon: "users" },
+      { href: "/admin/documentos", label: "Documentos", icon: "list" },
       { href: "/admin/movimentacoes", label: "Movimentações", icon: "history", hint: "Histórico do estoque" },
     ],
   },
@@ -31,9 +38,9 @@ export const NAV_GROUPS: Array<{ title?: string; items: NavItem[] }> = [
 
 export const MOBILE_TABS: NavItem[] = [
   { href: "/admin", label: "Início", icon: "home" },
-  { href: "/admin/produtos", label: "Estoque", icon: "box" },
+  { href: "/admin/hoje", label: "Hoje", icon: "clock" },
   { href: "/admin/locacoes", label: "Locações", icon: "tent" },
-  { href: "/admin/retorno", label: "Retorno", icon: "undo" },
+  { href: "/admin/produtos", label: "Estoque", icon: "box" },
   { href: "/admin/menu", label: "Menu", icon: "menu" },
 ];
 

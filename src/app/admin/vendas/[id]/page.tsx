@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/ui/forms";
 import { Badge, DataTable, DefinitionList, Field, Input, Notice, PageHeader, Section } from "@/components/ui/primitives";
-import { can } from "@/lib/domain";
+import { PAYMENT_METHOD_LABEL, can } from "@/lib/domain";
 import { fmtDateTime, money, seq } from "@/lib/format";
 import { requireUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -17,7 +17,7 @@ export default async function SalePage({ params, searchParams }: { params: Promi
   const { salvo } = await searchParams;
   const s = await prisma.sale.findUnique({
     where: { id },
-    include: { customer: true, user: { select: { name: true } }, items: { include: { product: true } } },
+    include: { customer: true, user: { select: { name: true } }, items: { include: { product: true } }, payments: true },
   });
   if (!s) notFound();
   const gross = s.items.reduce((t, i) => t + i.quantity * i.unitPriceCents, 0);
@@ -32,6 +32,11 @@ export default async function SalePage({ params, searchParams }: { params: Promi
         }
       />
       {salvo ? <Notice tone="ok">Venda registrada. Os produtos foram retirados do estoque.</Notice> : null}
+      <div className="flex flex-wrap gap-2">
+        <a href={`/api/pdf/venda/${s.id}`} target="_blank" rel="noopener" className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium">
+          Comprovante em PDF
+        </a>
+      </div>
       <Section title="Produtos" padded={false}>
         <DataTable
           rows={s.items}
@@ -55,6 +60,7 @@ export default async function SalePage({ params, searchParams }: { params: Promi
             ["Data", fmtDateTime(s.soldAt)],
             ["Responsável", s.user.name],
             ["Registrada em", fmtDateTime(s.createdAt)],
+            ["Pagamento", s.payments.length ? s.payments.map((p) => `${PAYMENT_METHOD_LABEL[p.method]} ${money(p.amountCents)}`).join(" · ") : "Não registrado"],
             ["Observações", s.notes],
             ...(s.canceledAt ? ([["Cancelada em", fmtDateTime(s.canceledAt)]] as Array<[string, string]>) : []),
           ]}

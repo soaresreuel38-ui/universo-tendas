@@ -145,7 +145,7 @@ describe("retorno com diferenças", () => {
   it("boas voltam ao disponível, danificadas vão para manutenção e faltantes viram pendência", async () => {
     const { p, r, item } = await outRental(10);
     await checkInRental(db, users.employee, r.id, {
-      items: [{ itemId: item.id, good: 8, damaged: 1, missing: 1, note: "1 lona rasgada, 1 não devolvida pelo cliente" }],
+      items: [{ itemId: item.id, good: 8, damaged: 1, missing: 1, note: "1 lona rasgada, 1 não devolvida pelo cliente", damage: { damageType: "Rasgo / furo na lona", responsible: "Equipe do cliente" } }],
     });
     expect(await product(p.id)).toMatchObject({ qtyAvailable: 18, qtyRented: 0, qtyMaintenance: 1, qtyPending: 1 });
     const m = await db.maintenance.findFirstOrThrow({ where: { productId: p.id } });
@@ -188,7 +188,7 @@ describe("retorno com diferenças", () => {
 
     const [u1, u2, u3] = links;
     await checkInRental(db, users.employee, r.id, {
-      items: [{ itemId: item.id, good: 0, damaged: 0, missing: 0, note: "Unidade com haste torta", unitStates: { [u1.unitId]: "OK", [u2.unitId]: "OK", [u3.unitId]: "DANIFICADA" } }],
+      items: [{ itemId: item.id, good: 0, damaged: 0, missing: 0, note: "Unidade com haste torta", damage: { damageType: "Estrutura torta / amassada" }, unitStates: { [u1.unitId]: "OK", [u2.unitId]: "OK", [u3.unitId]: "DANIFICADA" } }],
     });
     expect(await product(p.id)).toMatchObject({ qtyAvailable: 4, qtyMaintenance: 1, qtyRented: 0 });
     expect((await db.productUnit.findUniqueOrThrow({ where: { id: u3.unitId } })).status).toBe("MAINTENANCE");

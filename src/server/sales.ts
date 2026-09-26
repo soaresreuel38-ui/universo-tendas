@@ -3,6 +3,8 @@ import { seq } from "@/lib/format";
 import { lockProducts } from "./availability";
 import { assertCan, DomainError, type Actor } from "./errors";
 import { applyStock, assertRemovable, pickUnits, setUnitsStatus, withTx } from "./stock";
+import { audit } from "./audit";
+import { addPaymentInTx, type PaymentInput } from "./payments";
 
 export type SaleInput = {
   customerId?: string | null;
@@ -11,6 +13,8 @@ export type SaleInput = {
   discountCents?: number;
   notes?: string | null;
   items: Array<{ productId: string; quantity: number; unitPriceCents: number; unitIds?: string[] | null }>;
+  /** Pagamento recebido no ato (opcional). */
+  payment?: PaymentInput | null;
 };
 
 /**
@@ -73,7 +77,15 @@ export async function createSale(db: PrismaClient, actor: Actor, input: SaleInpu
         { type: "VENDA", quantity: item.quantity, userId: actor.id, saleId: sale.id, reason: `Venda #${seq(sale.number)}`, notes, occurredAt: sale.soldAt },
       );
     }
-    return tx.sale.findUniqueOrThrow({ where: { id: sale.id }, include: { items: true } });
+    if (input.payment) await addPaymentInTx(tx, actor, { saleId: sale.id }, input.payment);
+    await audit(tx, {
+      userId: actor.id,
+      action: "sale.create",
+      entityType: "Sale",
+      entityId: sale.id,
+      summary: `Registrou a venda #${seq(sale.number)} (${input.items.reduce((s, i) => s + i.quantity, 0)} itens)`,
+    });
+    return tx.sale.findUniqueOrThrow({ where: { id: sale.id }, include: { items: true, payments: true } });
   });
 }
 
@@ -103,6 +115,7 @@ export async function cancelSale(db: PrismaClient, actor: Actor, saleId: string,
         { type: "VENDA_CANCELADA", quantity: item.quantity, userId: actor.id, saleId, reason: `Cancelamento da venda #${seq(sale.number)}`, notes: reason },
       );
     }
+    await audit(tx, { userId: actor.id, action: "sale.cancel", entityType: "Sale", entityId: saleId, summary: `Cancelou a venda #${seq(sale.number)}: ${reason}` });
     return tx.sale.update({
       where: { id: saleId },
       data: { status: "CANCELADA", canceledAt: new Date(), notes: [sale.notes, `Cancelada: ${reason}`].filter(Boolean).join(" — ") },

@@ -90,28 +90,38 @@ enum MaintenanceStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         Role      @default(EMPLOYEE)
-  active       Boolean   @default(true)
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  passwordHash   String
+  role           Role      @default(EMPLOYEE)
+  active         Boolean   @default(true)
   /// Incrementado ao trocar senha/desativar: invalida sessões antigas.
-  sessionVersion Int     @default(0)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  sessionVersion Int       @default(0)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  movements    StockMovement[]
-  rentals      Rental[]           @relation("RentalCreatedBy")
-  checkedIn    Rental[]           @relation("RentalCheckedBy")
-  sales        Sale[]
-  maintenances Maintenance[]
-  adjustments  InventoryAdjustment[]
-  photos       Photo[]
+  movements           StockMovement[]
+  rentals             Rental[]              @relation("RentalCreatedBy")
+  checkedIn           Rental[]              @relation("RentalCheckedBy")
+  sales               Sale[]
+  maintenances        Maintenance[]
+  adjustments         InventoryAdjustment[]
+  photos              Photo[]
+  contractsCreated    Contract[]            @relation("ContractCreatedBy")
+  signaturesCollected ContractSignature[]
+  documents           Document[]
+  damageReports       DamageReport[]
+  payments            Payment[]
+  auditLogs           AuditLog[]
+  templatesEdited     ContractTemplate[]
+  models3d            ProductModel3D[]
 }
 
-/** Tentativas de login com falha — rate limit persistente (funciona em serverless). */
+/**
+ * Tentativas de login com falha — rate limit persistente (funciona em serverless).
+ */
 model LoginAttempt {
   id        String   @id @default(cuid())
   key       String
@@ -128,13 +138,16 @@ model Customer {
   whatsapp  String?
   email     String?
   address   String?
+  city      String?
   notes     String?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  rentals Rental[]
-  sales   Sale[]
+  rentals   Rental[]
+  sales     Sale[]
+  contracts Contract[]
+  documents Document[]
 
   @@index([name])
   @@index([phone])
@@ -154,6 +167,8 @@ model Product {
   rentalPriceCents Int?
   photoId          String?
   notes            String?
+  /// Tamanho/dimensões informados pelo administrador (ex.: 4 x 4 m).
+  dimensions       String?
   /// Alerta de estoque baixo quando o livre para uso ficar igual ou abaixo deste valor.
   minStock         Int          @default(0)
   active           Boolean      @default(true)
@@ -168,20 +183,25 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  photo        Photo?                @relation(fields: [photoId], references: [id], onDelete: SetNull)
-  units        ProductUnit[]
-  movements    StockMovement[]
-  rentalItems  RentalItem[]
-  saleItems    SaleItem[]
-  maintenances Maintenance[]
-  adjustments  InventoryAdjustment[]
+  photo         Photo?                @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  units         ProductUnit[]
+  movements     StockMovement[]
+  rentalItems   RentalItem[]
+  saleItems     SaleItem[]
+  maintenances  Maintenance[]
+  adjustments   InventoryAdjustment[]
+  images        ProductImage[]
+  model3d       ProductModel3D?
+  damageReports DamageReport[]
 
   @@index([name])
   @@index([category])
   @@index([active, kind])
 }
 
-/** Unidade física identificada individualmente (ex.: Tenda 5x5 #001). */
+/**
+ * Unidade física identificada individualmente (ex.: Tenda 5x5 #001).
+ */
 model ProductUnit {
   id        String     @id @default(cuid())
   productId String
@@ -191,7 +211,7 @@ model ProductUnit {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  product      Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product      Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
   rentalUnits  RentalItemUnit[]
   movements    StockMovement[]
   maintenances Maintenance[]
@@ -201,25 +221,25 @@ model ProductUnit {
 }
 
 model StockMovement {
-  id        String       @id @default(cuid())
-  productId String
-  unitId    String?
-  type      MovementType
+  id             String       @id @default(cuid())
+  productId      String
+  unitId         String?
+  type           MovementType
   /// Variação no estoque disponível (depósito). Ex.: +5 entrada, -3 saída para locação.
-  delta     Int
+  delta          Int
   /// Quantidade envolvida na operação (sempre positiva).
-  quantity  Int
-  reason    String?
-  notes     String?
-  userId    String
-  rentalId  String?
-  saleId    String?
+  quantity       Int
+  reason         String?
+  notes          String?
+  userId         String
+  rentalId       String?
+  saleId         String?
   /// Saldo após a operação (depósito / total), para auditoria.
   availableAfter Int
   totalAfter     Int
   /// Data informada pelo usuário (ex.: data da compra). createdAt é o registro no sistema.
-  occurredAt DateTime @default(now())
-  createdAt  DateTime @default(now())
+  occurredAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
 
   product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
   unit    ProductUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
@@ -240,6 +260,10 @@ model Rental {
   eventName        String
   eventAddress     String?
   setupAt          DateTime?
+  /// Desmontagem no local do evento.
+  teardownAt       DateTime?
+  /// Condição / prazo de pagamento combinado.
+  paymentTerms     String?
   departureAt      DateTime
   eventAt          DateTime?
   expectedReturnAt DateTime
@@ -258,13 +282,17 @@ model Rental {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  customer  Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  createdBy User            @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  checkedBy User?           @relation("RentalCheckedBy", fields: [checkedById], references: [id], onDelete: SetNull)
-  items     RentalItem[]
-  movements StockMovement[]
-  photos    Photo[]
-  maintenances Maintenance[]
+  customer      Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdBy     User            @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  checkedBy     User?           @relation("RentalCheckedBy", fields: [checkedById], references: [id], onDelete: SetNull)
+  items         RentalItem[]
+  movements     StockMovement[]
+  photos        Photo[]
+  maintenances  Maintenance[]
+  contracts     Contract[]
+  damageReports DamageReport[]
+  payments      Payment[]
+  documents     Document[]
 
   @@index([status])
   @@index([departureAt])
@@ -273,29 +301,31 @@ model Rental {
 }
 
 model RentalItem {
-  id             String @id @default(cuid())
-  rentalId       String
-  productId      String
-  quantity       Int
-  unitPriceCents Int    @default(0)
-  qtyReturned    Int?
-  qtyDamaged     Int?
-  qtyMissing     Int?
+  id                 String  @id @default(cuid())
+  rentalId           String
+  productId          String
+  quantity           Int
+  unitPriceCents     Int     @default(0)
+  qtyReturned        Int?
+  qtyDamaged         Int?
+  qtyMissing         Int?
   /// Faltantes já resolvidos (encontrados ou baixados como perda).
-  qtyMissingResolved Int @default(0)
-  checkNote      String?
+  qtyMissingResolved Int     @default(0)
+  checkNote          String?
 
-  rental Rental           @relation(fields: [rentalId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
-  units  RentalItemUnit[]
+  rental  Rental           @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  product Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  units   RentalItemUnit[]
 
   @@unique([rentalId, productId])
   @@index([productId])
 }
 
-/** Quais unidades identificadas saíram em cada item de locação. */
+/**
+ * Quais unidades identificadas saíram em cada item de locação.
+ */
 model RentalItemUnit {
-  id           String      @id @default(cuid())
+  id           String  @id @default(cuid())
   rentalItemId String
   unitId       String
   /// OK, DANIFICADA ou FALTANTE — preenchido na conferência.
@@ -326,6 +356,8 @@ model Sale {
   user      User            @relation(fields: [userId], references: [id], onDelete: Restrict)
   items     SaleItem[]
   movements StockMovement[]
+  payments  Payment[]
+  documents Document[]
 
   @@index([soldAt])
   @@index([customerId])
@@ -382,34 +414,317 @@ model InventoryAdjustment {
   @@index([productId])
 }
 
-/** Fotos de produtos e de conferências (armazenadas no próprio banco, já comprimidas no navegador). */
+/**
+ * Fotos de produtos e de conferências (armazenadas no próprio banco, já comprimidas no navegador).
+ */
 model Photo {
-  id         String   @id @default(cuid())
-  mime       String
-  size       Int
-  data       Bytes
-  caption    String?
-  rentalId   String?
+  id           String   @id @default(cuid())
+  mime         String
+  size         Int
+  data         Bytes
+  caption      String?
+  rentalId     String?
   uploadedById String
-  createdAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
 
-  rental     Rental?   @relation(fields: [rentalId], references: [id], onDelete: SetNull)
-  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
-  products   Product[]
+  damageReportId String?
+  rental         Rental?        @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  damageReport   DamageReport?  @relation(fields: [damageReportId], references: [id], onDelete: SetNull)
+  uploadedBy     User           @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  products       Product[]
+  productImages  ProductImage[]
 
   @@index([rentalId])
 }
 
-/** Configurações da empresa (linha única, id = "default"). */
+/**
+ * Configurações da empresa (linha única, id = "default").
+ */
 model BusinessSettings {
+  id              String   @id @default("default")
+  companyName     String   @default("Universo Tendas")
+  city            String   @default("Sinop - MT")
+  phones          String   @default("(66) 3531-4760 · (66) 9 9982-4544")
+  whatsappNumber  String   @default("5566999824544")
+  instagram       String   @default("@universotendas")
+  address         String?
+  defaultMinStock Int      @default(0)
+  whatsappFooter  String   @default("Universo Tendas")
+  updatedAt       DateTime @updatedAt
+}
+
+// ─────────────────────────── Catálogo ───────────────────────────
+
+/**
+ * Galeria de fotos do produto (a foto principal continua em Product.photoId).
+ */
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  photoId   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  photo   Photo   @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, photoId])
+  @@index([productId, sortOrder])
+}
+
+/**
+ * Modelo 3D (GLB/GLTF) do produto e a apresentação inicial no visualizador.
+ */
+model ProductModel3D {
+  id             String   @id @default(cuid())
+  productId      String   @unique
+  fileName       String
+  mime           String
+  size           Int
+  /// Arquivo guardado no banco (até 4 MB) …
+  data           Bytes?
+  /// … ou em armazenamento externo (Vercel Blob) quando configurado.
+  blobUrl        String?
+  /// Câmera inicial [x, y, z] e alvo [x, y, z].
+  cameraPosition Json?
+  cameraTarget   Json?
+  scale          Float    @default(1)
+  /// Rotação inicial em graus (eixo vertical).
+  rotationY      Float    @default(0)
+  uploadedById   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+}
+
+// ─────────────────────────── Contratos ───────────────────────────
+
+enum ContractStatus {
+  RASCUNHO
+  ENVIADO
+  AGUARDANDO_ASSINATURA
+  ASSINADO
+  ATIVO
+  FINALIZADO
+  CANCELADO
+  VENCIDO
+}
+
+enum SignatureParty {
+  CLIENTE
+  EMPRESA
+}
+
+enum SignatureMethod {
+  DIGITAL
+  MANUAL
+}
+
+model Contract {
+  id                 String         @id @default(cuid())
+  number             Int            @unique @default(autoincrement())
+  rentalId           String?
+  customerId         String
+  status             ContractStatus @default(RASCUNHO)
+  /// Cópia congelada de todos os dados do contrato no momento da geração/envio.
+  snapshot           Json
+  /// SHA-256 do snapshot — identifica o documento no PDF.
+  contentHash        String
+  createdById        String
+  sentAt             DateTime?
+  signedAt           DateTime?
+  canceledAt         DateTime?
+  cancelReason       String?
+  /// Link de assinatura remota (token aleatório, guardado como hash).
+  signTokenHash      String?        @unique
+  signTokenExpiresAt DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  rental     Rental?             @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+  customer   Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdBy  User                @relation("ContractCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  items      ContractItem[]
+  signatures ContractSignature[]
+  documents  Document[]
+
+  @@index([status])
+  @@index([rentalId])
+  @@index([customerId])
+}
+
+model ContractItem {
+  id             String  @id @default(cuid())
+  contractId     String
+  productId      String?
+  code           String
+  name           String
+  unit           String
+  quantity       Int
+  unitPriceCents Int
+  totalCents     Int
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+}
+
+/**
+ * Modelo de contrato editável pelo administrador (linha única, id = "default").
+ */
+model ContractTemplate {
   id                  String   @id @default("default")
   companyName         String   @default("Universo Tendas")
+  cnpj                String?
+  address             String?
   city                String   @default("Sinop - MT")
   phones              String   @default("(66) 3531-4760 · (66) 9 9982-4544")
-  whatsappNumber      String   @default("5566999824544")
+  email               String?
   instagram           String   @default("@universotendas")
-  address             String?
-  defaultMinStock     Int      @default(0)
-  whatsappFooter      String   @default("Universo Tendas")
+  /// Texto introdutório (opcional), exibido antes das cláusulas.
+  intro               String?
+  /// Cláusulas: [{ "title": "...", "body": "..." }]. Nada é inventado: vem vazio até a empresa preencher.
+  clauses             Json     @default("[]")
+  /// Texto padrão de condição/prazo de pagamento (pode ser sobrescrito na locação).
+  defaultPaymentTerms String?
+  footer              String?
   updatedAt           DateTime @updatedAt
+  updatedById         String?
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+model ContractSignature {
+  id             String          @id @default(cuid())
+  contractId     String
+  party          SignatureParty
+  method         SignatureMethod
+  signerName     String
+  signerDocument String?
+  /// Imagem da assinatura desenhada (PNG).
+  imageData      Bytes?
+  /// Contrato assinado em papel e digitalizado.
+  documentId     String?
+  ip             String?
+  userAgent      String?
+  collectedById  String?
+  signedAt       DateTime        @default(now())
+
+  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  collectedBy User?     @relation(fields: [collectedById], references: [id], onDelete: SetNull)
+
+  @@unique([contractId, party])
+}
+
+enum DocumentKind {
+  CONTRATO_ASSINADO
+  COMPROVANTE
+  OUTRO
+}
+
+/**
+ * Arquivos enviados (contrato assinado digitalizado, comprovantes…). PDFs gerados são produzidos na hora.
+ */
+model Document {
+  id           String       @id @default(cuid())
+  kind         DocumentKind
+  title        String
+  fileName     String
+  mime         String
+  size         Int
+  data         Bytes
+  customerId   String?
+  rentalId     String?
+  saleId       String?
+  contractId   String?
+  uploadedById String
+  createdAt    DateTime     @default(now())
+
+  customer   Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  rental     Rental?             @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  sale       Sale?               @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  contract   Contract?           @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  uploadedBy User                @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  signatures ContractSignature[]
+
+  @@index([customerId])
+  @@index([contractId])
+}
+
+// ─────────────────────────── Danos, pagamentos e histórico ───────────────────────────
+
+model DamageReport {
+  id            String   @id @default(cuid())
+  rentalId      String
+  rentalItemId  String?
+  productId     String
+  quantity      Int
+  /// Tipo informado pelo usuário (ex.: rasgo, amassado, peça faltando).
+  damageType    String
+  description   String
+  /// Quem causou / responsável (texto livre).
+  responsible   String?
+  maintenanceId String?
+  reportedById  String
+  createdAt     DateTime @default(now())
+
+  rental     Rental  @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+  product    Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  reportedBy User    @relation(fields: [reportedById], references: [id], onDelete: Restrict)
+  photos     Photo[]
+
+  @@index([rentalId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum PaymentMethod {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+  TRANSFERENCIA
+  OUTRO
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  rentalId    String?
+  saleId      String?
+  amountCents Int
+  method      PaymentMethod
+  paidAt      DateTime      @default(now())
+  notes       String?
+  userId      String
+  createdAt   DateTime      @default(now())
+
+  rental Rental? @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+  sale   Sale?   @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([rentalId])
+  @@index([saleId])
+  @@index([paidAt])
+}
+
+/**
+ * Histórico de ações importantes: quem fez, quando e o quê. Nunca é apagado.
+ */
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  summary    String
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }

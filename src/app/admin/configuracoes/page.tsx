@@ -14,7 +14,11 @@ export default async function SettingsPage() {
     (await prisma.businessSettings.create({ data: { id: "default" } }));
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Configurações da empresa" description="Usadas nas mensagens de WhatsApp e no cadastro de produtos." />
+      <PageHeader
+        title="Configurações da empresa"
+        description="Usadas nas mensagens de WhatsApp e no cadastro de produtos."
+        actions={<a href="/admin/configuracoes/contratos" className="inline-flex h-10 items-center rounded-md bg-ink px-4 text-sm font-medium text-white">Modelo de contrato</a>}
+      />
       <Section>
         <ActionForm action={saveSettingsAction}>
           <div className="grid gap-4 md:grid-cols-2">

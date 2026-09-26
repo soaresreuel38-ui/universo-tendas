@@ -1,0 +1,97 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+/**
+ * Campo para desenhar a assinatura com o dedo (celular/tablet) ou o mouse.
+ * Grava a imagem PNG em um input oculto.
+ */
+export function SignaturePad({ name = "signature", onChange }: { name?: string; onChange?: (hasInk: boolean) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const last = useRef<{ x: number; y: number } | null>(null);
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const resize = () => {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(ratio, ratio);
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#0b1f3f";
+      setValue("");
+      onChange?.(false);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, [onChange]);
+
+  const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const r = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  const commit = () => {
+    const url = canvasRef.current!.toDataURL("image/png");
+    setValue(url);
+    onChange?.(true);
+  };
+
+  return (
+    <div>
+      <input type="hidden" name={name} value={value} />
+      <div className="relative rounded-lg border border-zinc-300 bg-white">
+        <canvas
+          ref={canvasRef}
+          aria-label="Área para assinar"
+          className="block h-44 w-full touch-none cursor-crosshair"
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            drawing.current = true;
+            last.current = point(e);
+          }}
+          onPointerMove={(e) => {
+            if (!drawing.current || !last.current) return;
+            const ctx = canvasRef.current!.getContext("2d")!;
+            const p = point(e);
+            ctx.beginPath();
+            ctx.moveTo(last.current.x, last.current.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            last.current = p;
+          }}
+          onPointerUp={() => {
+            if (drawing.current) commit();
+            drawing.current = false;
+            last.current = null;
+          }}
+          onPointerLeave={() => {
+            if (drawing.current) commit();
+            drawing.current = false;
+          }}
+        />
+        <span className="pointer-events-none absolute bottom-8 left-6 right-6 border-b border-dashed border-zinc-300" />
+        <span className="pointer-events-none absolute bottom-2 left-6 text-xs text-zinc-400">Assine acima da linha</span>
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          const c = canvasRef.current!;
+          c.getContext("2d")!.clearRect(0, 0, c.width, c.height);
+          setValue("");
+          onChange?.(false);
+        }}
+        className="mt-1 text-sm text-zinc-600 underline"
+      >
+        Limpar assinatura
+      </button>
+    </div>
+  );
+}
