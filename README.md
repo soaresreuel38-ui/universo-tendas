@@ -23,7 +23,6 @@ ESTOQUE → RESERVA → SAÍDA → LOCAÇÃO → RETORNO → CONFERÊNCIA → ES
 Requisitos: Node.js 20.9+ e PostgreSQL 14+.
 
 ```bash
-cd universo-tendas
 npm install
 cp .env.example .env          # preencha DATABASE_URL, DIRECT_URL e AUTH_SECRET
 npm run db:deploy             # cria as tabelas
@@ -59,13 +58,11 @@ Segredos ficam apenas no `.env` (ignorado pelo git) ou no painel da Vercel. Nada
    *Transaction pooler* (6543) e a *Session pooler / Direct* (5432).
 2. Crie as tabelas e o administrador a partir do seu computador (uma vez):
    ```bash
-   cd universo-tendas
    DATABASE_URL="…5432…" DIRECT_URL="…5432…" npm run db:deploy
    DATABASE_URL="…5432…" DIRECT_URL="…5432…" npm run db:seed
    DATABASE_URL="…5432…" ADMIN_EMAIL=… ADMIN_PASSWORD=… ADMIN_NAME=… npm run admin:create
    ```
-3. **Vercel** → *Add New Project* → importe este repositório → em **Root Directory** escolha
-   `universo-tendas` → cadastre `DATABASE_URL`, `DIRECT_URL` e `AUTH_SECRET` → *Deploy*.
+3. **Vercel** → *Add New Project* → importe este repositório → **Build Command** `npm run vercel-build` → cadastre `DATABASE_URL`, `DIRECT_URL` e `AUTH_SECRET` → *Deploy*.
    O build roda `prisma generate && next build`.
 4. A cada mudança de schema, rode `npm run db:deploy` apontando para o banco de produção.
 
