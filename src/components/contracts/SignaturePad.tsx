@@ -14,9 +14,14 @@ export function SignaturePad({ name = "signature", onChange }: { name?: string; 
 
   useEffect(() => {
     const canvas = canvasRef.current!;
+    let width = 0;
     const resize = () => {
-      const ratio = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
+      // No celular a barra de endereço dispara "resize" só na altura: não apaga a assinatura por isso.
+      if (Math.round(rect.width) === width) return;
+      const previous = width ? canvas.toDataURL("image/png") : null;
+      width = Math.round(rect.width);
+      const ratio = window.devicePixelRatio || 1;
       canvas.width = Math.round(rect.width * ratio);
       canvas.height = Math.round(rect.height * ratio);
       const ctx = canvas.getContext("2d")!;
@@ -25,13 +30,16 @@ export function SignaturePad({ name = "signature", onChange }: { name?: string; 
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.strokeStyle = "#0b1f3f";
-      setValue("");
-      onChange?.(false);
+      if (previous) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        img.src = previous;
+      }
     };
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, [onChange]);
+  }, []);
 
   const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = canvasRef.current!.getBoundingClientRect();

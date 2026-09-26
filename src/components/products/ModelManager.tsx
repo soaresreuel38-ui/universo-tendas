@@ -66,7 +66,7 @@ export function ModelManager({
             <Field label="Rotação inicial (graus)">
               <Input type="number" step="15" min="-360" max="360" value={view.rotationY} onChange={(e) => setView({ ...view, rotationY: Number(e.target.value) || 0 })} />
             </Field>
-            <div className="flex items-end gap-2">
+            <div className="flex flex-wrap items-end gap-2 sm:col-span-3">
               <button type="button" className={buttonClass("primary", "md")} onClick={() => persist(view, "Escala e rotação salvas.")}>
                 Salvar ajustes
               </button>
@@ -80,7 +80,7 @@ export function ModelManager({
             </div>
           </div>
           <p className="text-xs text-zinc-500">
-            Arquivo: {model.fileName} · {(model.size / 1024 / 1024).toFixed(2)} MB
+            Arquivo: {model.fileName} · {model.size < 1024 * 1024 ? `${Math.max(1, Math.round(model.size / 1024))} KB` : `${(model.size / 1024 / 1024).toFixed(1)} MB`}
           </p>
         </>
       ) : (

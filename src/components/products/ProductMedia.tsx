@@ -15,7 +15,9 @@ export function ProductMedia({
   photoIds: string[];
   model: { url: string; settings: ModelViewSettings } | null;
 }) {
-  const [active, setActive] = useState<"3d" | string>(model ? "3d" : (photoIds[0] ?? ""));
+  const [chosen, setActive] = useState<"3d" | string>("");
+  // Recalcula quando o modelo/fotos mudam (ex.: após enviar um modelo), sem ficar preso ao estado inicial.
+  const active = chosen && (chosen === "3d" ? model : photoIds.includes(chosen)) ? chosen : model ? "3d" : (photoIds[0] ?? "");
   const photoFallback = photoIds[0] ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={`/api/fotos/${photoIds[0]}`} alt={name} className="h-full w-full rounded-xl object-contain" />

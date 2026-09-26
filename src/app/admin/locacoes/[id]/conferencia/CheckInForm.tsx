@@ -252,7 +252,7 @@ export function CheckInForm({
         </p>
       </div>
 
-      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-zinc-200 bg-zinc-100/95 px-4 py-3 backdrop-blur lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur lg:bottom-0">
         {problems.length ? (
           <ul className="text-sm text-red-700">
             {problems.map((p) => (

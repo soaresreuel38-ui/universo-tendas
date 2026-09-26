@@ -136,12 +136,7 @@ export async function createContractFromRental(db: PrismaClient, actor: Actor, r
 
     if (rental.status === "ORCAMENTO") {
       await lockProducts(tx, rental.items.map((i) => i.productId));
-      try {
-        await assertBookable(tx, rental.items, rental.departureAt, rental.expectedReturnAt, rental.id);
-      } catch (e) {
-        if (e instanceof DomainError) throw new DomainError(`Não há estoque suficiente para o período selecionado. ${e.message}`);
-        throw e;
-      }
+      await assertBookable(tx, rental.items, rental.departureAt, rental.expectedReturnAt, rental.id);
       await tx.rental.update({ where: { id: rental.id }, data: { status: "RESERVADA" } });
       await audit(tx, { userId: actor.id, action: "rental.reserve", entityType: "Rental", entityId: rental.id, summary: `Orçamento #${seq(rental.number)} aprovado e reservado` });
     }

@@ -71,7 +71,7 @@ describe("prevenção de dupla reserva", () => {
 
     await expect(
       createRental(db, users.employee, { ...rentalInput(p.id, 5, at(2), at(3)), status: "RESERVADA" }),
-    ).rejects.toThrow("Estoque insuficiente para esta data — Tenda 5x5. Disponibilidade atual: 2 unidades.");
+    ).rejects.toThrow("Não há estoque suficiente para o período selecionado — Tenda 5x5. Disponibilidade atual: 2 unidades.");
 
     await createRental(db, users.employee, { ...rentalInput(p.id, 2, at(2), at(3)), status: "RESERVADA" });
     await expect(

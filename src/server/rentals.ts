@@ -96,7 +96,7 @@ export async function assertBookable(
     const free = a?.free ?? 0;
     if (item.quantity > free) {
       throw new DomainError(
-        `Estoque insuficiente para esta data${a ? ` — ${a.name}` : ""}. Disponibilidade atual: ${free} ${free === 1 ? "unidade" : "unidades"}.`,
+        `Não há estoque suficiente para o período selecionado${a ? ` — ${a.name}` : ""}. Disponibilidade atual: ${free} ${free === 1 ? "unidade" : "unidades"}.`,
       );
     }
   }

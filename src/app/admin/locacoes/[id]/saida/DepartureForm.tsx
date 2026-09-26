@@ -102,7 +102,7 @@ export function DepartureForm({
       <Field label="Responsável pela retirada" hint="Quem está levando os produtos.">
         <Input name="pickupBy" maxLength={120} defaultValue={pickupBy} />
       </Field>
-      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-zinc-200 bg-zinc-100/95 px-4 py-3 backdrop-blur lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 space-y-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur lg:bottom-0">
         {!all ? <p className="text-sm text-zinc-600">Marque todos os itens separados para liberar a saída.</p> : null}
         <SubmitButton pending={pending} disabled={!all || blocked} variant="accent" className="h-14 w-full text-base tracking-wide">
           CONFIRMAR SAÍDA

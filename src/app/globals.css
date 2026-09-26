@@ -8,7 +8,9 @@
   --color-accent: #c62b34;
   --color-accent-strong: #a8222a;
   --color-accent-soft: #fde8ea;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-graphite: #1f2430;
+  --color-canvas: #f4f6f9;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -21,11 +23,12 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    background: var(--color-zinc-100);
-    color: var(--color-zinc-900);
+    background: var(--color-canvas);
+    color: var(--color-graphite);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "tnum" 0;
+    font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.005em;
   }
   button,
   [role="button"],

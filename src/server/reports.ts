@@ -1,5 +1,5 @@
 import "server-only";
-import { MOVEMENT_LABEL, RENTAL_STATUS_LABEL, effectiveStatus } from "@/lib/domain";
+import { CONTRACT_STATUS_LABEL, MOVEMENT_LABEL, RENTAL_STATUS_LABEL, effectiveContractStatus, effectiveStatus } from "@/lib/domain";
 import { fmtDateTime, seq } from "@/lib/format";
 import { DATE_KEY_RE, addDays, startOfDay, startOfMonthKey, startOfWeekKey, todayKey } from "@/lib/time";
 import { prisma } from "./db";
@@ -33,7 +33,7 @@ const BILLABLE = { notIn: ["ORCAMENTO", "CANCELADA"] as ("ORCAMENTO" | "CANCELAD
 
 export async function reportData(period: Period) {
   const range = { gte: period.start, lt: period.end };
-  const [rentals, sales, movements, topRented, topSold, maintenanceOpen, losses] = await Promise.all([
+  const [rentals, sales, movements, topRented, topSold, maintenanceOpen, losses, contracts, damages] = await Promise.all([
     prisma.rental.findMany({
       where: { departureAt: range, status: BILLABLE },
       include: { customer: { select: { name: true } }, items: { include: { product: { select: { name: true } } } } },
@@ -65,6 +65,25 @@ export async function reportData(period: Period) {
       where: { occurredAt: range, type: { in: ["PERDA", "PENDENCIA", "PENDENCIA_PERDIDA", "DANIFICADO_RETORNO", "DESCARTE_MANUTENCAO"] } },
       include: { product: { select: { name: true } }, user: { select: { name: true } }, rental: { select: { number: true } } },
       orderBy: { occurredAt: "asc" },
+    }),
+    prisma.contract.findMany({
+      where: { createdAt: range },
+      include: {
+        customer: { select: { name: true } },
+        rental: { select: { number: true, departureAt: true, departedAt: true } },
+        signatures: { select: { party: true, method: true, signedAt: true } },
+      },
+      orderBy: { number: "asc" },
+    }),
+    prisma.damageReport.findMany({
+      where: { createdAt: range },
+      include: {
+        product: { select: { name: true } },
+        rental: { select: { number: true } },
+        reportedBy: { select: { name: true } },
+        _count: { select: { photos: true } },
+      },
+      orderBy: { createdAt: "asc" },
     }),
   ]);
 
@@ -114,6 +133,8 @@ export async function reportData(period: Period) {
       .sort((a, b) => b.qty - a.qty),
     maintenanceOpen,
     losses,
+    contracts,
+    damages,
     customers: [...customers.values()].sort((a, b) => b.total - a.total),
     rentalRevenue: rentals.reduce((s, r) => s + r.totalCents, 0),
     saleRevenue: sales.filter((s) => s.status === "CONCLUIDA").reduce((s, x) => s + x.totalCents, 0),
@@ -189,6 +210,43 @@ export function reportTable(kind: string, d: ReportData): { name: string; header
         name: "perdidos-danificados",
         header: ["Data", "Produto", "Ocorrência", "Quantidade", "Locação", "Usuário", "Observação"],
         rows: d.losses.map((m) => [fmtDateTime(m.occurredAt), m.product.name, MOVEMENT_LABEL[m.type], m.quantity, m.rental ? `#${seq(m.rental.number)}` : "", m.user.name, m.notes ?? m.reason ?? ""]),
+      };
+    case "contratos":
+      return {
+        name: "contratos",
+        header: ["Nº", "Emitido em", "Cliente", "Locação", "Situação", "Assinatura cliente", "Assinatura empresa", "Valor (R$)"],
+        rows: d.contracts.map((c) => {
+          const sig = (party: "CLIENTE" | "EMPRESA") => {
+            const x = c.signatures.find((s) => s.party === party);
+            return x ? `${x.method === "DIGITAL" ? "Eletrônica" : "Papel"} ${fmtDateTime(x.signedAt)}` : "Pendente";
+          };
+          return [
+            seq(c.number),
+            fmtDateTime(c.createdAt),
+            c.customer.name,
+            c.rental ? `#${seq(c.rental.number)}` : "",
+            CONTRACT_STATUS_LABEL[effectiveContractStatus(c)],
+            sig("CLIENTE"),
+            sig("EMPRESA"),
+            money((c.snapshot as { totalCents?: number } | null)?.totalCents ?? 0),
+          ];
+        }),
+      };
+    case "danos":
+      return {
+        name: "ocorrencias-de-danos",
+        header: ["Data", "Locação", "Produto", "Quantidade", "Tipo de dano", "Descrição", "Responsável", "Fotos", "Registrado por"],
+        rows: d.damages.map((x) => [
+          fmtDateTime(x.createdAt),
+          `#${seq(x.rental.number)}`,
+          x.product.name,
+          x.quantity,
+          x.damageType,
+          x.description,
+          x.responsible ?? "",
+          x._count.photos,
+          x.reportedBy.name,
+        ]),
       };
     case "clientes":
       return { name: "clientes", header: ["Cliente", "Locações", "Compras", "Total (R$)"], rows: d.customers.map((c) => [c.name, c.rentals, c.sales, money(c.total)]) };

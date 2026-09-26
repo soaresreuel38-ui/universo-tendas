@@ -371,7 +371,7 @@ export function RentalWizard({
                         {inCart ? `Adicionar (+${inCart} na lista)` : "Adicionar"}
                       </button>
                     </div>
-                    {left !== undefined && draft > left ? <p className="mt-1 text-xs font-medium text-red-700">Estoque insuficiente para o período. Disponível: {Math.max(0, left)}.</p> : null}
+                    {left !== undefined && draft > left ? <p className="mt-1 text-xs font-medium text-red-700">Não há estoque suficiente para o período selecionado. Disponível: {Math.max(0, left)}.</p> : null}
                   </div>
                 </li>
               );
@@ -420,7 +420,7 @@ export function RentalWizard({
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{p.name}</span>
                     <span className={`block text-xs ${bad ? "font-medium text-red-700" : "text-zinc-500"}`}>
-                      {bad ? `Estoque insuficiente. Disponível: ${f}` : `Disponível no período: ${f ?? "—"}`}
+                      {bad ? `Não há estoque suficiente para o período selecionado. Disponível: ${f}` : `Disponível no período: ${f ?? "—"}`}
                     </span>
                   </span>
                   <span className="flex items-center rounded-lg ring-1 ring-zinc-300">

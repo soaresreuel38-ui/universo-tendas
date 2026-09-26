@@ -281,7 +281,7 @@ export function RentalForm({
         </fieldset>
       ) : null}
 
-      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-zinc-200 bg-zinc-100/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
+      <div className="sticky bottom-16 z-10 -mx-4 flex flex-col gap-2 border-t border-zinc-200 bg-canvas/95 px-4 py-3 backdrop-blur sm:flex-row sm:items-center lg:bottom-0">
         <SubmitButton pending={pending} disabled={blocked} variant={status === "SAIU" && !isEdit ? "accent" : "primary"}>
           {isEdit ? "Salvar alterações" : status === "SAIU" ? "Registrar saída" : status === "ORCAMENTO" ? "Salvar orçamento" : "Salvar locação"}
         </SubmitButton>

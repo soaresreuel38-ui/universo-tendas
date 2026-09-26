@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
 import { Icon } from "@/components/ui/icons";
 import { DataTable, PageHeader, Section, Stat } from "@/components/ui/primitives";
@@ -169,6 +170,33 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               { header: "Qtd.", align: "right", cell: (m) => m.quantity },
               { header: "Motivo", cell: (m) => m.reason },
               { header: "Desde", cell: (m) => fmtDateTime(m.openedAt) },
+            ]}
+          />
+        </Block>
+        <Block qs={qs} title={`Contratos emitidos (${d.contracts.length})`} tipo="contratos">
+          <DataTable
+            rows={d.contracts}
+            rowKey={(c) => c.id}
+            empty="Nenhum contrato emitido no período."
+            columns={[
+              { header: "Contrato", mobile: "title", cell: (c) => <Link href={`/admin/contratos/${c.id}`} className="underline">#{seq(c.number)}</Link> },
+              { header: "Cliente", cell: (c) => c.customer.name },
+              { header: "Situação", cell: (c) => <ContractStatusBadge contract={c} /> },
+              { header: "Assinaturas", align: "right", cell: (c) => `${c.signatures.length}/2` },
+            ]}
+          />
+        </Block>
+        <Block qs={qs} title={`Ocorrências de danos (${d.damages.length})`} tipo="danos">
+          <DataTable
+            rows={d.damages}
+            rowKey={(x) => x.id}
+            empty="Nenhum dano registrado no período."
+            columns={[
+              { header: "Produto", mobile: "title", cell: (x) => x.product.name },
+              { header: "Tipo", cell: (x) => x.damageType },
+              { header: "Qtd.", align: "right", cell: (x) => x.quantity },
+              { header: "Locação", cell: (x) => `#${seq(x.rental.number)}` },
+              { header: "Responsável", cell: (x) => x.responsible ?? "—" },
             ]}
           />
         </Block>
