@@ -1,15 +1,17 @@
-export function Logo({ compact = false }: { compact?: boolean }) {
+/* eslint-disable @next/next/no-img-element */
+
+/** Logo oficial da Universo Tendas (arquivo em public/brand/universo-logo.png). */
+export function Logo({ compact = false, size = "md" }: { compact?: boolean; size?: "md" | "lg" }) {
+  if (size === "lg") {
+    return <img src="/brand/universo-logo.png" alt="Universo Locação de Tendas" width={150} height={150} className="h-36 w-36 rounded-xl" />;
+  }
   return (
     <span className="inline-flex items-center gap-2.5">
-      <svg viewBox="0 0 64 64" className="h-8 w-8 shrink-0" aria-hidden>
-        <rect width="64" height="64" rx="14" fill="currentColor" className="text-white/10" />
-        <path d="M12 44 32 18l20 26" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-        <path d="M32 18v26M22 44l10-13 10 13" fill="none" stroke="#d97706" strokeWidth="4" strokeLinejoin="round" />
-      </svg>
+      <img src="/brand/universo-logo.png" alt="Universo Locação de Tendas" width={36} height={36} className="h-9 w-9 shrink-0 rounded-md ring-1 ring-white/20" />
       {compact ? null : (
         <span className="leading-tight">
-          <span className="block text-sm font-semibold tracking-wide">UNIVERSO TENDAS</span>
-          <span className="block text-[11px] uppercase tracking-[0.18em] opacity-60">Gestão</span>
+          <span className="block text-sm font-extrabold tracking-wide">UNIVERSO</span>
+          <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] opacity-75">Locação de Tendas</span>
         </span>
       )}
     </span>

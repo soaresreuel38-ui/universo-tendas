@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/admin",
     display: "standalone",
     background_color: "#f4f4f5",
-    theme_color: "#16171a",
-    icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
+    theme_color: "#0c3f80",
+    icons: [{ src: "/brand/universo-logo.png", sizes: "150x150", type: "image/png" }],
   };
 }

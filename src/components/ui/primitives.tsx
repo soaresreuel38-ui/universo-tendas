@@ -186,7 +186,7 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
 export function Checkbox({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
   return (
     <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm text-zinc-800">
-      <input type="checkbox" {...props} className="h-4 w-4 rounded border-zinc-300 accent-[#16171a]" />
+      <input type="checkbox" {...props} className="h-4 w-4 rounded border-zinc-300 accent-[#0c3f80]" />
       {label}
     </label>
   );
@@ -306,7 +306,7 @@ export function Stat({
 }) {
   const bar = {
     neutral: "bg-zinc-300",
-    accent: "bg-accent",
+    accent: "bg-amber-500",
     danger: "bg-red-500",
     ok: "bg-emerald-500",
     info: "bg-sky-500",

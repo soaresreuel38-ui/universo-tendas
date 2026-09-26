@@ -17,12 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         <SideNav role={user.role} />
         <div className="border-t border-white/10 p-3">
-          <Link href="/admin/conta" className="block rounded-md px-2 py-1.5 hover:bg-white/5">
+          <Link href="/admin/conta" className="block rounded-md px-2 py-1.5 hover:bg-white/10">
             <p className="truncate text-sm font-medium">{user.name}</p>
-            <p className="text-xs text-zinc-400">{ROLE_LABEL[user.role]}</p>
+            <p className="text-xs text-blue-100/70">{ROLE_LABEL[user.role]}</p>
           </Link>
           <form action={logout}>
-            <button className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-400 hover:bg-white/5 hover:text-white">
+            <button className="mt-1 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-blue-100/80 hover:bg-white/10 hover:text-white">
               <Icon name="logout" className="h-4 w-4" /> Sair
             </button>
           </form>
@@ -32,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Barra superior */}
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
-          <Link href="/admin" className="rounded-md bg-ink p-1 text-white lg:hidden" aria-label="Início">
+          <Link href="/admin" className="lg:hidden" aria-label="Início">
             <Logo compact />
           </Link>
           <form action="/admin/busca" className="relative flex-1 lg:max-w-md" role="search">

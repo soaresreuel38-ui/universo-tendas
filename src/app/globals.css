@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
-/* Universo Tendas — grafite, branco e cinzas, com um único destaque âmbar. */
+/* Universo Tendas — identidade da marca: azul Universo, branco e cinzas, com o vermelho do logo como destaque. */
 @theme {
-  --color-ink: #16171a;
-  --color-ink-soft: #232429;
-  --color-accent: #d97706;
-  --color-accent-strong: #b45309;
-  --color-accent-soft: #fef3c7;
+  --color-ink: #0c3f80;
+  --color-ink-soft: #0f4a96;
+  --color-ink-deep: #082c5c;
+  --color-accent: #c62b34;
+  --color-accent-strong: #a8222a;
+  --color-accent-soft: #fde8ea;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

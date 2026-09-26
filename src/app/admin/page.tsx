@@ -18,7 +18,7 @@ function QuickAction({ href, icon, label, primary }: { href: string; icon: IconN
         primary ? "border-ink bg-ink text-white hover:bg-ink-soft" : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300"
       }`}
     >
-      <Icon name={icon} className={`h-5 w-5 ${primary ? "text-accent" : "text-zinc-500"}`} />
+      <Icon name={icon} className={`h-5 w-5 ${primary ? "text-white" : "text-zinc-500"}`} />
       {label}
     </Link>
   );

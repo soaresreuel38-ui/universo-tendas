@@ -25,15 +25,15 @@ export default async function LoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-ink px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center text-white">
-          <Logo />
+        <div className="mb-6 flex justify-center">
+          <Logo size="lg" />
         </div>
         <div className="rounded-xl bg-white p-6 shadow-xl">
           <h1 className="text-lg font-semibold text-zinc-900">Acesso ao sistema</h1>
           <p className="mb-5 mt-1 text-sm text-zinc-500">Estoque, locações e vendas.</p>
           <LoginForm />
         </div>
-        <p className="mt-6 text-center text-xs text-zinc-500">Sinop - MT · Uso interno</p>
+        <p className="mt-6 text-center text-xs text-blue-100/70">Sinop - MT · Uso interno</p>
       </div>
     </main>
   );

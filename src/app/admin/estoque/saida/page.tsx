@@ -45,10 +45,10 @@ export default async function ExitPage({ searchParams }: { searchParams: Promise
               className={`rounded-lg border px-3 py-3 transition ${active ? "border-ink bg-ink text-white" : "border-zinc-200 bg-white hover:border-zinc-300"}`}
             >
               <span className="flex items-center gap-2 font-semibold">
-                <Icon name={t.icon} className={`h-5 w-5 ${active ? "text-accent" : "text-zinc-500"}`} />
+                <Icon name={t.icon} className={`h-5 w-5 ${active ? "text-white" : "text-zinc-500"}`} />
                 {EXIT_TYPES[t.type]}
               </span>
-              <span className={`mt-0.5 block text-xs ${active ? "text-zinc-300" : "text-zinc-500"}`}>{t.hint}</span>
+              <span className={`mt-0.5 block text-xs ${active ? "text-blue-100" : "text-zinc-500"}`}>{t.hint}</span>
             </Link>
           );
         })}
