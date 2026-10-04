@@ -46,7 +46,7 @@ export function ProductMedia({
 
   return (
     <div>
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-[#efece6]">
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-white">
         {showing === "3d" && model ? (
           <LazyModel url={model.url} settings={model.settings} fallback={photo ? <Photo id={photo} name={name} /> : <ProductPlaceholder name={name} />} />
         ) : photo ? (

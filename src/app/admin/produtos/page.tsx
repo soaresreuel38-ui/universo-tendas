@@ -123,8 +123,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             className="h-10 w-full rounded-lg border border-line-strong bg-white pl-9 pr-3 text-sm outline-none transition focus:border-ink focus:ring-4 focus:ring-ink/10"
           />
         </form>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] lg:ml-auto">
-          <span className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-col gap-2 text-[13px] sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 lg:ml-auto">
+          <span className="-mx-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap px-4 sm:mx-0 sm:px-0">
             <span className="eyebrow mr-1">Disponibilidade</span>
             {[
               ["", "Todas"],
@@ -137,7 +137,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               </Link>
             ))}
           </span>
-          <span className="flex items-center gap-1">
+          <span className="-mx-4 flex items-center gap-1 overflow-x-auto whitespace-nowrap px-4 sm:mx-0 sm:px-0">
             <span className="eyebrow mr-1">Tipo</span>
             {[
               ["", "Todos"],
@@ -150,7 +150,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             ))}
           </span>
           {canManage ? (
-            <Link href={qs(sp, { status: sp.status === "todos" ? undefined : "todos" })} className="text-faint underline-offset-4 hover:text-graphite hover:underline">
+            <Link href={qs(sp, { status: sp.status === "todos" ? undefined : "todos" })} className="text-faint underline-offset-4 hover:text-graphite hover:underline max-sm:hidden">
               {sp.status === "todos" ? "Ocultar desativados" : "Mostrar desativados"}
             </Link>
           ) : null}

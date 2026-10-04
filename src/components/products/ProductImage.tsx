@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { TentDrawing } from "@/components/brand/TentDrawing";
 
 /**
  * Foto real do produto. Nunca distorce (object-fit), carrega sob demanda e usa a miniatura em listas.
@@ -44,10 +45,7 @@ export function ProductPlaceholder({ name, className = "", compact = false }: { 
         <rect width="100%" height="100%" fill="url(#ut-grid)" />
       </svg>
       <div className="relative flex flex-col items-center gap-2 text-[#a39d92]">
-        <svg viewBox="0 0 120 70" className={compact ? "h-6 w-10" : "h-auto w-[55%] max-w-24 @[180px]:w-24"} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden>
-          <path d="M8 62 60 10l52 52M60 10v52M34 62l26-26 26 26M8 62h104" />
-          <path d="M60 10V4" strokeLinecap="round" />
-        </svg>
+        <TentDrawing className={compact ? "h-7 w-9" : "h-auto w-[52%] max-w-28 @[180px]:w-28"} />
         {compact ? null : <span className="hidden text-[11px] font-semibold uppercase tracking-[0.12em] @[180px]:block">Foto a cadastrar</span>}
       </div>
     </div>

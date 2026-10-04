@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { isDatabaseConfigured } from "@/server/db";
 import { LoginForm } from "./LoginForm";
 import { Logo } from "@/components/Logo";
+import { TentDrawing } from "@/components/brand/TentDrawing";
 
 export const metadata: Metadata = { title: "Entrar" };
 
@@ -34,14 +35,16 @@ export default async function LoginPage() {
           </defs>
           <rect width="100%" height="100%" fill="url(#login-grid)" />
         </svg>
-        <svg viewBox="0 0 600 340" className="absolute left-1/2 top-[20%] w-[74%] -translate-x-1/2 text-white/25" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden>
-          <path d="M40 300 300 60l260 240M300 60v240M170 300l130-120 130 120M40 300h520" />
-          <path d="M300 60V24M40 300v-40M560 300v-40M110 300l190-176 190 176" strokeDasharray="4 6" />
-          <path d="M40 318h520M40 312v12M560 312v12M300 312v12" />
-          <text x="300" y="336" textAnchor="middle" fill="currentColor" stroke="none" fontSize="11" letterSpacing="3">
-            ESTRUTURA · LOCAÇÃO DE TENDAS
-          </text>
-        </svg>
+        <div className="absolute inset-x-12 top-[17%] grid grid-cols-2 items-end gap-10 text-white/30" aria-hidden>
+          <figure>
+            <TentDrawing variant="piramide" strokeWidth={1.1} className="w-full" />
+            <figcaption className="mt-3 border-t border-white/15 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">Perspectiva</figcaption>
+          </figure>
+          <figure>
+            <TentDrawing variant="articulada" strokeWidth={1.1} className="w-full" />
+            <figcaption className="mt-3 border-t border-white/15 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">Vista frontal</figcaption>
+          </figure>
+        </div>
         <div className="relative">
           <Logo tone="light" />
         </div>
