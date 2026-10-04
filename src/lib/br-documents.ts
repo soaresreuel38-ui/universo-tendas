@@ -48,3 +48,9 @@ export const UF_LIST = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB",
   "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ] as const;
+
+/** Exibição pública: "5566999824544" → "(66) 9 9982-4544" (formato divulgado pela empresa). */
+export function formatPhoneDisplay(value: string): string {
+  const d = normalizePhone(value) ?? onlyDigits(value);
+  return d.length === 11 ? d.replace(/^(\d{2})(\d)(\d{4})(\d{4})$/, "($1) $2 $3-$4") : formatPhone(value);
+}

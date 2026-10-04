@@ -3,6 +3,9 @@ import { cache } from "react";
 import { prisma } from "./db";
 import { bookingSettings } from "./public-booking";
 
+/** Endereço público fornecido pela Universo Tendas (04/10/2026). */
+export const PUBLIC_ADDRESS = "R. das Nogueiras, 33 - Centro";
+
 /** Dados da empresa exibidos no site — exatamente o que está em Configurações (nada inventado). */
 export const getSiteSettings = cache(async () => {
   const s = await prisma.businessSettings.findUnique({ where: { id: "default" } });
@@ -13,7 +16,8 @@ export const getSiteSettings = cache(async () => {
     phones: s?.phones ?? null,
     whatsappNumber: s?.whatsappNumber ?? null,
     instagram: s?.instagram ?? null,
-    address: s?.address ?? null,
+    // Endereço público informado pela empresa; o cadastrado em Configurações tem prioridade.
+    address: s?.address ?? PUBLIC_ADDRESS,
     booking,
   };
 });
