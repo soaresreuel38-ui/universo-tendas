@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, RentalSource } from "@prisma/client";
 import {
   CHECKIN_STATUSES,
   COMMITTING_STATUSES,
@@ -16,13 +16,26 @@ import { syncContractsWithRental } from "./contract-sync";
 
 export type RentalItemInput = { productId: string; quantity: number; unitPriceCents: number };
 
-export type RentalInput = {
+/** Endereço estruturado do evento (o site preenche; no painel continua opcional). */
+export type EventAddressFields = {
+  eventZipCode?: string | null;
+  eventStreet?: string | null;
+  eventNumber?: string | null;
+  eventComplement?: string | null;
+  eventDistrict?: string | null;
+  eventCity?: string | null;
+  eventState?: string | null;
+  eventNotes?: string | null;
+};
+
+export type RentalInput = EventAddressFields & {
   customerId: string;
   eventName: string;
   eventAddress?: string | null;
   setupAt?: Date | null;
   departureAt: Date;
   eventAt?: Date | null;
+  eventEndAt?: Date | null;
   expectedReturnAt: Date;
   pickupBy?: string | null;
   teardownAt?: Date | null;
@@ -120,40 +133,69 @@ async function lockRental(tx: Db, rentalId: string) {
 
 // ───────────────────────── Criar / editar ─────────────────────────
 
+/** Origem e metadados de quem registra a locação (painel ou site). */
+export type RentalOrigin = {
+  /** Usuário do painel; null quando a reserva vem do site. */
+  createdById: string | null;
+  source: RentalSource;
+  pricePending?: boolean;
+  publicTokenHash?: string | null;
+};
+
+/**
+ * Núcleo único de criação de locação — usado pelo painel (createRental) e pelo site
+ * (createOnlineReservation). Trava os produtos e valida a disponibilidade com a mesma regra.
+ * Deve rodar dentro de uma transação.
+ */
+export async function insertRentalInTx(
+  tx: Db,
+  input: RentalInput & { status: Exclude<NewRentalStatus, "SAIU"> },
+  origin: RentalOrigin,
+) {
+  validateInput(input);
+  const { status, items, discountCents = 0, ...data } = input;
+  const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+  if (!customer) throw new DomainError("Cliente não encontrado.");
+  await assertRentableProducts(tx, items);
+  if (status !== "ORCAMENTO") {
+    await lockProducts(tx, items.map((i) => i.productId));
+    await assertBookable(tx, items, input.departureAt, input.expectedReturnAt);
+  }
+  const rental = await tx.rental.create({
+    data: {
+      ...data,
+      discountCents,
+      totalCents: totalFor(items, discountCents),
+      status,
+      createdById: origin.createdById,
+      source: origin.source,
+      pricePending: origin.pricePending ?? false,
+      publicTokenHash: origin.publicTokenHash ?? null,
+      items: { create: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPriceCents: i.unitPriceCents })) },
+    },
+  });
+  const qty = items.reduce((s, i) => s + i.quantity, 0);
+  const verb = status === "ORCAMENTO" ? "Criou o orçamento" : origin.source === "SITE" ? "Reserva recebida pelo site" : "Reservou";
+  await audit(tx, {
+    userId: origin.createdById,
+    action: origin.source === "SITE" ? "rental.create_online" : "rental.create",
+    entityType: "Rental",
+    entityId: rental.id,
+    summary: `${verb} #${seq(rental.number)} — ${rental.eventName} (${qty} itens)`,
+  });
+  return rental;
+}
+
 export async function createRental(
   db: PrismaClient,
   actor: Actor,
-  input: RentalInput & { status: NewRentalStatus; unitSelection?: UnitSelection },
+  input: RentalInput & { status: NewRentalStatus; unitSelection?: UnitSelection; source?: RentalSource },
 ) {
   assertCan(actor, "rental.manage");
   validateInput(input);
-  const { status, unitSelection, items, discountCents = 0, ...data } = input;
+  const { status, unitSelection, source = "ADMIN", ...rest } = input;
   return withTx(db, async (tx) => {
-    const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
-    if (!customer) throw new DomainError("Cliente não encontrado.");
-    await assertRentableProducts(tx, items);
-    if (status !== "ORCAMENTO") {
-      await lockProducts(tx, items.map((i) => i.productId));
-      await assertBookable(tx, items, input.departureAt, input.expectedReturnAt);
-    }
-    const rental = await tx.rental.create({
-      data: {
-        ...data,
-        discountCents,
-        totalCents: totalFor(items, discountCents),
-        status: status === "SAIU" ? "CONFIRMADA" : status,
-        createdById: actor.id,
-        items: { create: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPriceCents: i.unitPriceCents })) },
-      },
-    });
-    const qty = items.reduce((s, i) => s + i.quantity, 0);
-    await audit(tx, {
-      userId: actor.id,
-      action: "rental.create",
-      entityType: "Rental",
-      entityId: rental.id,
-      summary: `${status === "ORCAMENTO" ? "Criou o orçamento" : "Reservou"} #${seq(rental.number)} — ${rental.eventName} (${qty} itens)`,
-    });
+    const rental = await insertRentalInTx(tx, { ...rest, status: status === "SAIU" ? "CONFIRMADA" : status }, { createdById: actor.id, source });
     if (status === "SAIU") await departInTx(tx, actor, rental.id, { unitSelection });
     return tx.rental.findUniqueOrThrow({ where: { id: rental.id }, include: { items: true } });
   });
@@ -181,6 +223,8 @@ export async function updateRental(db: PrismaClient, actor: Actor, rentalId: str
         ...data,
         discountCents,
         totalCents: totalFor(items, discountCents),
+        // Quem edita no painel revisa os valores: "valor a consultar" deixa de valer.
+        pricePending: false,
         items: { create: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPriceCents: i.unitPriceCents })) },
       },
       include: { items: true },
@@ -303,6 +347,23 @@ export async function changeRentalStatus(db: PrismaClient, actor: Actor, rentalI
         ...(to === "RETORNADA" ? { actualReturnAt: rental.actualReturnAt ?? new Date() } : {}),
       },
     });
+  });
+}
+
+/** O cliente pediu cancelamento pelo site, mas a empresa decidiu manter a locação. */
+export async function dismissCancelRequest(db: PrismaClient, actor: Actor, rentalId: string) {
+  assertCan(actor, "rental.manage");
+  return withTx(db, async (tx) => {
+    const rental = await lockRental(tx, rentalId);
+    if (!rental.cancelRequestedAt) throw new DomainError("Não há pedido de cancelamento nesta locação.");
+    await audit(tx, {
+      userId: actor.id,
+      action: "rental.cancel_request_dismissed",
+      entityType: "Rental",
+      entityId: rentalId,
+      summary: `Manteve a locação #${seq(rental.number)} (pedido de cancelamento do cliente recusado)`,
+    });
+    return tx.rental.update({ where: { id: rentalId }, data: { cancelRequestedAt: null } });
   });
 }
 

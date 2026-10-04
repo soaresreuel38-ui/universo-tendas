@@ -24,6 +24,9 @@ export type ProductFormValues = {
   notes: string | null;
   dimensions?: string | null;
   active: boolean;
+  slug?: string | null;
+  showOnSite?: boolean;
+  featured?: boolean;
 };
 
 export function ProductForm({
@@ -136,6 +139,21 @@ export function ProductForm({
           <Checkbox name="active" label="Produto ativo (aparece para novas locações e vendas)" defaultChecked={initial?.active ?? true} />
         </div>
       </div>
+      {kind !== "SALE" ? (
+        <fieldset className="mt-6 grid gap-4 border-t border-line pt-5 md:grid-cols-2">
+          <legend className="sr-only">Site público</legend>
+          <p className="text-sm font-semibold text-graphite md:col-span-2">Site público</p>
+          <Field label="Endereço da página" hint="Ex.: piramidal → site/tendas/piramidal. Vazio = gerado a partir do nome.">
+            <Input name="slug" maxLength={80} defaultValue={initial?.slug ?? ""} pattern="[a-z0-9\-]*" placeholder="gerado automaticamente" className="lowercase" />
+          </Field>
+          <div className="flex flex-col justify-end gap-1">
+            <Checkbox name="showOnSite" label="Mostrar no site (catálogo e reservas)" defaultChecked={initial?.showOnSite ?? true} />
+            <Checkbox name="featured" label="Destaque na página inicial (a 1ª foto vira capa)" defaultChecked={initial?.featured ?? false} />
+          </div>
+        </fieldset>
+      ) : (
+        <input type="hidden" name="showOnSite" value="" />
+      )}
     </ActionForm>
   );
 }

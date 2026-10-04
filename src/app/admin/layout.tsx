@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { CommandPalette } from "@/components/layout/CommandPalette";
@@ -7,6 +8,12 @@ import { Icon } from "@/components/ui/icons";
 import { ROLE_LABEL } from "@/lib/domain";
 import { requireUser } from "@/server/auth/session";
 import { logout } from "../login/actions";
+
+export const metadata: Metadata = {
+  title: { default: "Universo Tendas — Gestão", template: "%s · Universo Tendas" },
+  description: "Sistema interno de estoque, locações e vendas da Universo Tendas (Sinop - MT).",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();

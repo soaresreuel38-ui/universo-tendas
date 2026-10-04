@@ -7,13 +7,13 @@ import { MovementTable, movementInclude } from "@/components/stock/MovementTable
 import { ActionForm, InlineAction } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/icons";
 import { DataTable, DefinitionList, Field, Input, LinkButton, Notice, PageHeader, Section, buttonClass } from "@/components/ui/primitives";
-import { EDITABLE_STATUSES, RENTAL_STATUS_LABEL, RENTAL_TRANSITIONS, can, isOut, isOverdue, type RentalStatus } from "@/lib/domain";
+import { EDITABLE_STATUSES, RENTAL_STATUS_LABEL, RENTAL_TRANSITIONS, SOURCE_LABEL, can, isOut, isOverdue, type RentalStatus } from "@/lib/domain";
 import { fmtDateTime, money, seq, whatsappLink } from "@/lib/format";
 import { rentalWhatsappMessage } from "@/lib/whatsapp";
 import { requireUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { resolvePendingAction } from "../../estoque/actions";
-import { changeStatusAction, registerPaymentAction } from "../actions";
+import { changeStatusAction, dismissCancelRequestAction, registerPaymentAction } from "../actions";
 import { createContractAction } from "../../contratos/actions";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { ProductThumb } from "@/components/products/ProductThumb";
@@ -86,7 +86,7 @@ export default async function RentalPage({
             </span>
           </span>
         }
-        description={`${r.customer.name} · criada por ${r.createdBy.name} em ${fmtDateTime(r.createdAt)}`}
+        description={`${r.customer.name} · ${r.createdBy ? `criada por ${r.createdBy.name}` : `recebida pelo ${SOURCE_LABEL[r.source].toLowerCase()}`} em ${fmtDateTime(r.createdAt)}`}
         actions={
           EDITABLE_STATUSES.includes(r.status) && can(user.role, "rental.manage") ? (
             <LinkButton href={`/admin/locacoes/${r.id}/editar`} icon="edit">Editar</LinkButton>
@@ -98,6 +98,64 @@ export default async function RentalPage({
       {sp.saiu ? <Notice tone="ok">Saída registrada. Os produtos agora constam como alugados.</Notice> : null}
       {sp.conferida ? <Notice tone="ok">Conferência finalizada. O estoque foi atualizado.</Notice> : null}
       {isOverdue(r) ? <Notice tone="danger">Locação atrasada: o retorno estava previsto para {fmtDateTime(r.expectedReturnAt)}.</Notice> : null}
+
+      {/* Reserva feita pelo site aguardando análise da empresa */}
+      {r.source === "SITE" && r.status === "RESERVADA" && can(user.role, "rental.manage") ? (
+        <div className="rounded-lg border border-ink/25 bg-ink-tint p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink">Nova reserva online</p>
+          <p className="mt-1 text-sm text-graphite">
+            Recebida pelo site em {fmtDateTime(r.createdAt)}. O estoque já está reservado para o período enquanto aguarda sua aprovação.
+          </p>
+          {r.pricePending ? (
+            <p className="mt-1 text-sm text-amber-800">Há itens sem preço cadastrado (&ldquo;valor a consultar&rdquo;): defina os valores em <b>Editar</b> antes de aprovar ou gerar o contrato.</p>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <InlineAction action={changeStatusAction} fields={{ id: r.id, to: "CONFIRMADA" }} variant="primary" size="md">
+              Aprovar reserva
+            </InlineAction>
+            <InlineAction
+              action={changeStatusAction}
+              fields={{ id: r.id, to: "CANCELADA" }}
+              variant="danger"
+              size="md"
+              confirm="Recusar esta reserva? Ela será cancelada e o estoque do período será liberado."
+            >
+              Recusar
+            </InlineAction>
+          </div>
+        </div>
+      ) : null}
+      {r.pricePending && !(r.source === "SITE" && r.status === "RESERVADA") ? (
+        <Notice tone="warn">Valor a definir: o cliente pediu itens sem preço cadastrado. Ajuste os valores em Editar.</Notice>
+      ) : null}
+
+      {/* Pedido de cancelamento feito pelo cliente no site */}
+      {r.cancelRequestedAt && r.status !== "CANCELADA" ? (
+        <div className="rounded-lg border border-accent/30 bg-accent-soft p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">Cliente solicitou cancelamento</p>
+          <p className="mt-1 text-sm text-graphite">
+            Pedido feito em {fmtDateTime(r.cancelRequestedAt)}.{r.cancelRequestReason ? ` Motivo: “${r.cancelRequestReason}”` : ""} O estoque só é liberado se você cancelar.
+          </p>
+          {can(user.role, "rental.manage") ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {RENTAL_TRANSITIONS[r.status].includes("CANCELADA") ? (
+                <InlineAction
+                  action={changeStatusAction}
+                  fields={{ id: r.id, to: "CANCELADA" }}
+                  variant="danger"
+                  size="md"
+                  confirm="Cancelar esta locação? A reserva de estoque será liberada."
+                >
+                  Cancelar locação
+                </InlineAction>
+              ) : null}
+              <InlineAction action={dismissCancelRequestAction} fields={{ id: r.id }} variant="secondary" size="md">
+                Manter locação
+              </InlineAction>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Próximo passo em destaque */}
       {canDepart || canCheck ? (
@@ -287,11 +345,14 @@ export default async function RentalPage({
             ["Modalidade", `${BILLING_LABEL[r.billingMode]} — ${periodLabel(r.billingMode, r.periodCount)}`],
             ["Montagem", fmtDateTime(r.setupAt)],
             ["Saída", fmtDateTime(r.departureAt)],
-            ["Data do evento", fmtDateTime(r.eventAt)],
+            ["Início do evento", fmtDateTime(r.eventAt)],
+            ["Fim do evento", fmtDateTime(r.eventEndAt)],
+            ["Origem", SOURCE_LABEL[r.source]],
             ["Retorno previsto", fmtDateTime(r.expectedReturnAt)],
             ["Saída registrada em", fmtDateTime(r.departedAt)],
             ["Retorno real", fmtDateTime(r.actualReturnAt)],
             ["Endereço do evento", r.eventAddress],
+            ["Observações sobre o local", r.eventNotes],
             ["Responsável pela retirada", r.pickupBy],
             ["Conferido por", r.checkedBy ? `${r.checkedBy.name} em ${fmtDateTime(r.checkedAt)}` : null],
             ["Observações", r.notes],

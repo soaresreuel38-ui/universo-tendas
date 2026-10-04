@@ -5,6 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Universo Tendas — Gestão",
     short_name: "Universo Tendas",
     start_url: "/admin",
+    scope: "/admin",
     display: "standalone",
     background_color: "#f4f4f5",
     theme_color: "#0c3f80",

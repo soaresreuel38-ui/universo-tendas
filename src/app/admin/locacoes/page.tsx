@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
 import { DataTable, LinkButton, PageHeader, Section } from "@/components/ui/primitives";
-import { COMMITTING_STATUSES, RENTAL_STATUS_LABEL, RESERVING_STATUSES, type RentalStatus } from "@/lib/domain";
+import { COMMITTING_STATUSES, RENTAL_STATUS_LABEL, RESERVING_STATUSES, SOURCE_LABEL, type RentalStatus } from "@/lib/domain";
 import { fmtDateTime, money, seq } from "@/lib/format";
 import { addDays, dayRange, todayKey } from "@/lib/time";
 import { requireUser } from "@/server/auth/session";
@@ -17,6 +17,8 @@ const OUT = ["SAIU", "EM_EVENTO", "AGUARDANDO_RETORNO", "ATRASADA"] as RentalSta
 
 const TABS = [
   { key: "ativas", label: "Ativas", hint: "Tudo que ainda não terminou" },
+  { key: "site", label: "Do site", hint: "Reservas feitas pelos clientes no site (aguardando aprovação primeiro)" },
+  { key: "cancelamento", label: "Pedidos de cancelamento", hint: "Clientes que pediram cancelamento pelo site" },
   { key: "reservas", label: "Reservas", hint: "O que está reservado" },
   { key: "saidas", label: "A sair", hint: "O que vai sair (hoje e atrasadas)" },
   { key: "fora", label: "Em andamento", hint: "O que está fora" },
@@ -37,6 +39,8 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
 
   const byTab: Record<string, Prisma.RentalWhereInput> = {
     ativas: { status: { in: [...COMMITTING_STATUSES, "ORCAMENTO"] } },
+    site: { source: "SITE" },
+    cancelamento: { cancelRequestedAt: { not: null }, status: { not: "CANCELADA" } },
     reservas: { status: { in: [...RESERVING_STATUSES] } },
     saidas: { status: { in: [...RESERVING_STATUSES] }, departureAt: { lt: dayRange(addDays(todayKey(), 1)).start } },
     fora: { status: { in: OUT } },
@@ -64,7 +68,7 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
   const rentals = await prisma.rental.findMany({
     where,
     include: rentalListInclude,
-    orderBy: tab === "encerradas" || tab === "todas" ? { departureAt: "desc" } : tab === "retornos" || tab === "fora" || tab === "atrasadas" ? { expectedReturnAt: "asc" } : { departureAt: "asc" },
+    orderBy: tab === "site" ? [{ status: "asc" }, { createdAt: "desc" }] : tab === "encerradas" || tab === "todas" ? { departureAt: "desc" } : tab === "retornos" || tab === "fora" || tab === "atrasadas" ? { expectedReturnAt: "asc" } : { departureAt: "asc" },
     take: 300,
   });
 
@@ -116,6 +120,8 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
               cell: (r) => (
                 <span>
                   <span className="font-mono text-xs text-faint">#{seq(r.number)}</span> {r.eventName}
+                  {r.source !== "ADMIN" ? <span className="ml-1.5 rounded-full bg-ink-tint px-2 py-0.5 text-[11px] font-medium text-ink">{SOURCE_LABEL[r.source]}</span> : null}
+                  {r.cancelRequestedAt && r.status !== "CANCELADA" ? <span className="ml-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">Pediu cancelamento</span> : null}
                 </span>
               ),
             },

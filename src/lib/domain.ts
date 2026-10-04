@@ -48,6 +48,16 @@ export const RENTAL_STATUS_LABEL: Record<RentalStatus, string> = {
   CANCELADA: "Cancelada",
 };
 
+export type RentalSource = "ADMIN" | "SITE" | "WHATSAPP" | "OUTRO";
+
+/** Origem da locação (relatórios e filtros: quantas vieram do site). */
+export const SOURCE_LABEL: Record<RentalSource, string> = {
+  ADMIN: "Painel",
+  SITE: "Site",
+  WHATSAPP: "WhatsApp",
+  OUTRO: "Outro",
+};
+
 /** Reservam estoque, mas os produtos ainda estão no depósito. */
 export const RESERVING_STATUSES = ["RESERVADA", "CONFIRMADA", "SEPARACAO"] as const satisfies RentalStatus[];
 /** Produtos fora do depósito (ou de volta, mas ainda sem conferência). */

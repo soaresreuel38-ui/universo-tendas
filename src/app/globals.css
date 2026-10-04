@@ -24,6 +24,12 @@
   --color-st-rented: #c7812a;
   --color-st-maint: #7c6f64;
   --color-st-late: #c62b34;
+  /* Site público: papel quente, azul-noite da marca e serifa editorial */
+  --color-linen: #f4f0e8;
+  --color-sand: #e6dfd2;
+  --color-night: #081b36;
+  --color-night-soft: #12305a;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, "Times New Roman", serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --animate-rise: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -123,4 +129,45 @@
 
 ::selection {
   background: #cfdcf0;
+}
+
+/* ───────────── Site público ───────────── */
+
+/* Entrada discreta ao rolar (o JS só adiciona .is-in; sem JS o conteúdo aparece normalmente) */
+.reveal-ready .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal-ready .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Lento zoom na foto da capa */
+@keyframes slow-zoom {
+  from { transform: scale(1.06); }
+  to { transform: scale(1); }
+}
+@utility animate-slow-zoom {
+  animation: slow-zoom 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Sublinhado que cresce no hover (links editoriais) */
+@utility link-grow {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.35s ease;
+  &:hover {
+    background-size: 100% 1px;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

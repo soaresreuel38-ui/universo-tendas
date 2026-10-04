@@ -18,5 +18,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/api/:path*"],
+  // /api/public/* é o site do cliente: sem login, com validação e limites próprios em cada rota.
+  matcher: ["/admin", "/admin/:path*", "/api/((?!public/).*)"],
 };

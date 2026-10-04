@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ActionForm } from "@/components/ui/forms";
-import { Field, Input, PageHeader, Section } from "@/components/ui/primitives";
+import { Checkbox, Field, Input, PageHeader, Section, Select } from "@/components/ui/primitives";
 import { requirePermission } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { saveSettingsAction } from "./actions";
@@ -46,6 +46,29 @@ export default async function SettingsPage() {
             <Field label="Assinatura das mensagens de WhatsApp" required>
               <Input name="whatsappFooter" required defaultValue={s.whatsappFooter} />
             </Field>
+          </div>
+
+          <h2 className="mt-8 text-sm font-semibold text-graphite">Reservas pelo site</h2>
+          <p className="mt-1 text-xs text-faint">
+            O site usa o mesmo estoque e a mesma regra de disponibilidade do painel. A margem define quantos dias antes e depois do
+            evento as unidades ficam bloqueadas (montagem, transporte e retorno). Em cada locação, você pode ajustar a saída e o retorno em Editar.
+          </p>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            <Field label="Margem antes do evento (dias)">
+              <Input name="onlineBufferDaysBefore" type="number" min={0} max={30} required defaultValue={s.onlineBufferDaysBefore} />
+            </Field>
+            <Field label="Margem depois do evento (dias)">
+              <Input name="onlineBufferDaysAfter" type="number" min={0} max={30} required defaultValue={s.onlineBufferDaysAfter} />
+            </Field>
+            <Field label="Confirmação das reservas online">
+              <Select name="onlineAutoConfirm" defaultValue={s.onlineAutoConfirm ? "1" : "0"}>
+                <option value="0">Manual — fica reservada aguardando minha aprovação</option>
+                <option value="1">Automática — já nasce confirmada</option>
+              </Select>
+            </Field>
+            <div className="flex items-end">
+              <Checkbox name="onlineBookingEnabled" label="Aceitar reservas pelo site" defaultChecked={s.onlineBookingEnabled} />
+            </div>
           </div>
         </ActionForm>
       </Section>

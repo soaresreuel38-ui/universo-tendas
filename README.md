@@ -49,6 +49,10 @@ npm run build
 | `AUTH_SECRET` | Sim | Segredo com 32+ caracteres (`openssl rand -base64 48`). Trocar derruba todas as sessões. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | Só no `admin:create` | Criação do primeiro administrador. Não precisam ficar salvas. |
 | `TEST_DATABASE_URL` | Só nos testes | Banco **descartável** — os testes apagam os dados dele. |
+| `SITE_URL` | Não | Endereço público do site (canonical, `sitemap.xml`, `robots.txt`). Padrão: `https://universotendas.com.br`. |
+
+**Ambientes separados:** desenvolvimento (`.env` local → banco de desenvolvimento), teste (`TEST_DATABASE_URL` →
+banco descartável, onde rodam os testes de concorrência) e produção (variáveis só no painel da Vercel).
 
 Segredos ficam apenas no `.env` (ignorado pelo git) ou no painel da Vercel. Nada sensível vai para o navegador.
 
@@ -146,6 +150,33 @@ Proteções contra erro e concorrência:
 
 Status "Atrasada" é calculado automaticamente (saiu e passou do retorno previsto) — não depende de
 tarefa agendada.
+
+## Site público (reservas online)
+
+```
+SITE (/, /tendas, /tendas/<slug>, /reservar, /minha-reserva)
+  → /api/public/*  (sem login; validação Zod, limite por IP, preços lidos do cadastro)
+  → src/server/public-booking.ts → insertRentalInTx() + availabilityForPeriod()   ← as MESMAS do painel
+  → mesmo PostgreSQL → /admin/locacoes (aba "Do site")
+```
+
+- **Uma única regra de disponibilidade.** O site não calcula estoque: usa `availabilityForPeriod()` e cria a
+  reserva por `insertRentalInTx()` — o mesmo núcleo de `createRental()` do painel, com `lockProducts()`
+  (`SELECT … FOR UPDATE`) e `assertBookable()` dentro da transação.
+- **Período bloqueado** = do início do evento − margem até o fim do evento + margem (padrão 1 dia antes e 1 depois,
+  em *Configurações → Reservas pelo site*). Ex.: evento 10/10 a 12/10 → estoque ocupado de 09/10 a 13/10.
+  São os campos `departureAt`/`expectedReturnAt` de sempre; o admin pode ajustá-los em cada locação (*Editar*).
+- **Aprovação:** por padrão a reserva nasce `RESERVADA` (segura o estoque) com origem `SITE` e aparece em
+  *Locações → Do site* e no alerta "Novas reservas online". *Aprovar* → `CONFIRMADA`; *Recusar* → `CANCELADA`
+  (libera o estoque). O modo automático (já nasce `CONFIRMADA`) é uma opção em Configurações.
+- **Sem preço cadastrado:** a solicitação é aceita com "Valor a consultar" (`pricePending`); o admin define o valor em *Editar*.
+- **Cancelamento:** o cliente só *solicita* em `/minha-reserva`; o pedido aparece em *Locações → Pedidos de
+  cancelamento*. O estoque só é liberado quando a empresa cancela de fato.
+- **Contrato:** o mesmo fluxo de sempre (*Gerar contrato* na locação).
+- **Consulta do cliente:** link pessoal com token (só o hash fica no banco) ou número + telefone.
+- **Produtos:** aparecem no site os ativos de locação com *Mostrar no site* marcado. *Destaque* coloca o produto na
+  página inicial (a foto do primeiro destaque vira a capa). O endereço da página (`slug`) é gerado pelo nome.
+- **Analytics:** eventos em `src/lib/analytics.ts` (`window.dataLayer`), prontos para ligar GA4/GTM.
 
 ## Segurança
 

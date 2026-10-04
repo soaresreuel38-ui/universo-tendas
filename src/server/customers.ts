@@ -2,6 +2,9 @@ import type { PrismaClient } from "@prisma/client";
 import { assertCan, DomainError, type Actor } from "./errors";
 
 export type CustomerInput = {
+  personType?: "PF" | "PJ";
+  tradeName?: string | null;
+  contactName?: string | null;
   name: string;
   document?: string | null;
   phone?: string | null;

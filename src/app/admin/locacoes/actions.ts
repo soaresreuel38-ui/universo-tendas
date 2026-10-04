@@ -16,6 +16,7 @@ import {
   checkInRental,
   createRental,
   departRental,
+  dismissCancelRequest,
   updateRental,
   type RentalInput,
   type UnitReturnState,
@@ -102,6 +103,8 @@ export async function createRentalAction(_: ActionState, form: FormData): Promis
   const result = await run(async () => {
     const data = parseRental(form);
     const status = z.enum(["ORCAMENTO", "RESERVADA", "CONFIRMADA", "SAIU"], { message: "Situação inválida." }).parse(str(form, "status"));
+    // "SITE" nunca vem do painel: só o fluxo público grava essa origem.
+    const source = z.enum(["ADMIN", "WHATSAPP", "OUTRO"]).catch("ADMIN").parse(str(form, "source") || "ADMIN");
     const andContract = str(form, "andContract") === "1";
     let customerId = str(form, "customerId");
     if (str(form, "newCustomer") === "1") {
@@ -121,7 +124,7 @@ export async function createRentalAction(_: ActionState, form: FormData): Promis
     }
     if (!customerId) throw new DomainError("Selecione o cliente.");
     zId.parse(customerId);
-    const rental = await createRental(prisma, user, { ...data, customerId, status: andContract ? "ORCAMENTO" : status });
+    const rental = await createRental(prisma, user, { ...data, customerId, source, status: andContract ? "ORCAMENTO" : status });
     id = rental.id;
     if (andContract) contractId = (await createContractFromRental(prisma, user, rental.id)).id;
   });
@@ -249,5 +252,14 @@ export async function registerPaymentAction(_: ActionState, form: FormData): Pro
     await registerRentalPayment(prisma, user, data.rentalId, { amountCents: data.amount, method: data.method });
     refreshPanel();
     return "Pagamento registrado.";
+  });
+}
+
+export async function dismissCancelRequestAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  return run(async () => {
+    await dismissCancelRequest(prisma, user, zId.parse(str(form, "id")));
+    refreshPanel();
+    return "Pedido de cancelamento dispensado. A locação foi mantida.";
   });
 }

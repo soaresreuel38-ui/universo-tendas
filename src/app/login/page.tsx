@@ -6,7 +6,7 @@ import { LoginForm } from "./LoginForm";
 import { Logo } from "@/components/Logo";
 import { TentDrawing } from "@/components/brand/TentDrawing";
 
-export const metadata: Metadata = { title: "Entrar" };
+export const metadata: Metadata = { title: "Entrar", robots: { index: false, follow: false } };
 
 export default async function LoginPage() {
   if (!isDatabaseConfigured) {

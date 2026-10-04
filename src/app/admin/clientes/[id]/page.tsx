@@ -48,7 +48,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       <PageHeader
         back={{ href: "/admin/clientes", label: "Clientes" }}
         title={<span className="flex items-center gap-2">{c.name} {!c.active ? <Badge tone="muted">Desativado</Badge> : null}</span>}
-        description={[c.phone, c.document, c.email].filter(Boolean).join(" · ") || undefined}
+        description={[c.personType === "PJ" ? "Pessoa jurídica" : null, c.tradeName, c.contactName ? `Resp.: ${c.contactName}` : null, c.phone, c.document, c.email].filter(Boolean).join(" · ") || undefined}
         actions={
           <>
             {wa ? (

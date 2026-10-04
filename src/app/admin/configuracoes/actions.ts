@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import type { ActionState } from "@/lib/action-state";
-import { zInt, zOptText, zReqText } from "@/lib/validation";
+import { zCheckbox, zInt, zOptText, zReqText } from "@/lib/validation";
 import { refreshPanel, run, str } from "@/server/action-utils";
 import { requirePermission } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -20,6 +20,10 @@ export async function saveSettingsAction(_: ActionState, form: FormData): Promis
         address: zOptText(300),
         defaultMinStock: zInt("Estoque mínimo padrão", 0, 100_000),
         whatsappFooter: zReqText(300, "Assinatura"),
+        onlineBufferDaysBefore: zInt("Margem antes do evento", 0, 30),
+        onlineBufferDaysAfter: zInt("Margem depois do evento", 0, 30),
+        onlineAutoConfirm: z.enum(["0", "1"]).transform((v) => v === "1"),
+        onlineBookingEnabled: zCheckbox,
       })
       .parse({
         companyName: str(form, "companyName"),
@@ -30,6 +34,10 @@ export async function saveSettingsAction(_: ActionState, form: FormData): Promis
         address: str(form, "address"),
         defaultMinStock: str(form, "defaultMinStock") || "0",
         whatsappFooter: str(form, "whatsappFooter"),
+        onlineBufferDaysBefore: str(form, "onlineBufferDaysBefore") || "1",
+        onlineBufferDaysAfter: str(form, "onlineBufferDaysAfter") || "1",
+        onlineAutoConfirm: str(form, "onlineAutoConfirm") || "0",
+        onlineBookingEnabled: form.get("onlineBookingEnabled"),
       });
     await prisma.businessSettings.upsert({ where: { id: "default" }, update: data, create: { id: "default", ...data } });
     refreshPanel();

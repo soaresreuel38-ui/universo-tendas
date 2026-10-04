@@ -59,6 +59,19 @@ enum RentalStatus {
   CANCELADA
 }
 
+/// De onde veio a locação (permite medir quantas vieram do site).
+enum RentalSource {
+  ADMIN
+  SITE
+  WHATSAPP
+  OUTRO
+}
+
+enum PersonType {
+  PF
+  PJ
+}
+
 enum SaleStatus {
   CONCLUIDA
   CANCELADA
@@ -131,18 +144,25 @@ model LoginAttempt {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  document  String?
-  phone     String?
-  whatsapp  String?
-  email     String?
-  address   String?
-  city      String?
-  notes     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String     @id @default(cuid())
+  /// Pessoa física: nome completo. Pessoa jurídica: razão social.
+  name        String
+  personType  PersonType @default(PF)
+  /// Nome fantasia (pessoa jurídica).
+  tradeName   String?
+  /// Responsável pelo contato (pessoa jurídica).
+  contactName String?
+  /// CPF ou CNPJ.
+  document    String?
+  phone       String?
+  whatsapp    String?
+  email       String?
+  address     String?
+  city        String?
+  notes       String?
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   rentals   Rental[]
   sales     Sale[]
@@ -175,6 +195,12 @@ model Product {
   /// Alerta de estoque baixo quando o livre para uso ficar igual ou abaixo deste valor.
   minStock          Int          @default(0)
   active            Boolean      @default(true)
+  /// Endereço público da página do produto (/tendas/<slug>).
+  slug              String?      @unique
+  /// Aparece no site público (só vale para produtos ativos de locação).
+  showOnSite        Boolean      @default(true)
+  /// Destaque na página inicial do site (a foto do primeiro destaque vira a capa).
+  featured          Boolean      @default(false)
 
   qtyAvailable   Int @default(0)
   qtyRented      Int @default(0)
@@ -257,39 +283,62 @@ model StockMovement {
 }
 
 model Rental {
-  id               String        @id @default(cuid())
-  number           Int           @unique @default(autoincrement())
-  customerId       String
-  eventName        String
-  eventAddress     String?
-  setupAt          DateTime?
+  id                  String        @id @default(cuid())
+  number              Int           @unique @default(autoincrement())
+  customerId          String
+  eventName           String
+  /// Endereço completo em uma linha (usado nas telas, no contrato e nos PDFs).
+  eventAddress        String?
+  /// Endereço estruturado (preenchido pelo site; opcional nas locações do painel).
+  eventZipCode        String?
+  eventStreet         String?
+  eventNumber         String?
+  eventComplement     String?
+  eventDistrict       String?
+  eventCity           String?
+  eventState          String?
+  /// Observações sobre o local (ex.: entrada lateral, escada).
+  eventNotes          String?
+  setupAt             DateTime?
   /// Desmontagem no local do evento.
-  teardownAt       DateTime?
+  teardownAt          DateTime?
   /// Condição / prazo de pagamento combinado.
-  paymentTerms     String?
+  paymentTerms        String?
   /// Modalidade da locação: diária ou mensal, e quantas diárias/meses foram combinados.
-  billingMode      RentalBilling @default(DIARIA)
-  periodCount      Int           @default(1)
-  departureAt      DateTime
-  eventAt          DateTime?
-  expectedReturnAt DateTime
-  actualReturnAt   DateTime?
-  departedAt       DateTime?
-  pickupBy         String?
-  status           RentalStatus  @default(ORCAMENTO)
-  totalCents       Int           @default(0)
-  discountCents    Int           @default(0)
-  notes            String?
-  checkNotes       String?
-  checkedById      String?
-  checkedAt        DateTime?
-  createdById      String
-  canceledAt       DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  billingMode         RentalBilling @default(DIARIA)
+  periodCount         Int           @default(1)
+  departureAt         DateTime
+  /// Início do evento.
+  eventAt             DateTime?
+  /// Fim do evento (eventos de mais de um dia).
+  eventEndAt          DateTime?
+  expectedReturnAt    DateTime
+  actualReturnAt      DateTime?
+  departedAt          DateTime?
+  pickupBy            String?
+  status              RentalStatus  @default(ORCAMENTO)
+  totalCents          Int           @default(0)
+  discountCents       Int           @default(0)
+  notes               String?
+  checkNotes          String?
+  checkedById         String?
+  checkedAt           DateTime?
+  /// Usuário do painel que registrou. Vazio quando a reserva veio do site.
+  createdById         String?
+  source              RentalSource  @default(ADMIN)
+  /// Algum item foi pedido sem preço cadastrado: o valor ainda precisa ser definido pela empresa.
+  pricePending        Boolean       @default(false)
+  /// Link de consulta do cliente (/minha-reserva/<token>): só o hash fica guardado.
+  publicTokenHash     String?       @unique
+  /// Pedido de cancelamento feito pelo cliente (quem cancela de fato é a empresa).
+  cancelRequestedAt   DateTime?
+  cancelRequestReason String?
+  canceledAt          DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   customer      Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  createdBy     User            @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdBy     User?           @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   checkedBy     User?           @relation("RentalCheckedBy", fields: [checkedById], references: [id], onDelete: SetNull)
   items         RentalItem[]
   movements     StockMovement[]
@@ -304,6 +353,7 @@ model Rental {
   @@index([departureAt])
   @@index([expectedReturnAt])
   @@index([customerId])
+  @@index([source, status])
 }
 
 model RentalItem {
@@ -450,16 +500,23 @@ model Photo {
  * Configurações da empresa (linha única, id = "default").
  */
 model BusinessSettings {
-  id              String   @id @default("default")
-  companyName     String   @default("Universo Tendas")
-  city            String   @default("Sinop - MT")
-  phones          String   @default("(66) 3531-4760 · (66) 9 9982-4544")
-  whatsappNumber  String   @default("5566999824544")
-  instagram       String   @default("@universotendas")
-  address         String?
-  defaultMinStock Int      @default(0)
-  whatsappFooter  String   @default("Universo Tendas")
-  updatedAt       DateTime @updatedAt
+  id                     String   @id @default("default")
+  companyName            String   @default("Universo Tendas")
+  city                   String   @default("Sinop - MT")
+  phones                 String   @default("(66) 3531-4760 · (66) 9 9982-4544")
+  whatsappNumber         String   @default("5566999824544")
+  instagram              String   @default("@universotendas")
+  address                String?
+  defaultMinStock        Int      @default(0)
+  whatsappFooter         String   @default("Universo Tendas")
+  /// Site público: aceitar pedidos de reserva.
+  onlineBookingEnabled   Boolean  @default(true)
+  /// false = a reserva online fica RESERVADA aguardando aprovação; true = já nasce CONFIRMADA.
+  onlineAutoConfirm      Boolean  @default(false)
+  /// Margem operacional padrão (dias) antes do início e depois do fim do evento.
+  onlineBufferDaysBefore Int      @default(1)
+  onlineBufferDaysAfter  Int      @default(1)
+  updatedAt              DateTime @updatedAt
 }
 
 // ─────────────────────────── Catálogo ───────────────────────────

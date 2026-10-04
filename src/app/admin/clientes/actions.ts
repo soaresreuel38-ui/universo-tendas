@@ -10,7 +10,10 @@ import { deleteCustomer, saveCustomer } from "@/server/customers";
 import { prisma } from "@/server/db";
 
 const schema = z.object({
-  name: zReqText(120, "Nome"),
+  name: zReqText(160, "Nome"),
+  personType: z.enum(["PF", "PJ"]).default("PF"),
+  tradeName: zOptText(160),
+  contactName: zOptText(120),
   document: zOptText(20).pipe(z.string().regex(/^[\d./-]*$/, "CPF/CNPJ: use apenas números, ponto, barra e hífen.").nullable()),
   phone: zOptText(30),
   whatsapp: zOptText(30),
@@ -27,6 +30,9 @@ const schema = z.object({
 const parse = (form: FormData) =>
   schema.parse({
     name: str(form, "name"),
+    personType: str(form, "personType") || "PF",
+    tradeName: str(form, "tradeName"),
+    contactName: str(form, "contactName"),
     document: str(form, "document"),
     phone: str(form, "phone"),
     whatsapp: str(form, "whatsapp"),

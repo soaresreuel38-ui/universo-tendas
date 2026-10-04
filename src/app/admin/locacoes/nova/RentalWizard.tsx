@@ -103,6 +103,7 @@ export function RentalWizard({
     setExpectedReturnAt(toLocalValue(periodEnd(m, new Date(from), Math.max(1, Math.min(n, m === "MENSAL" ? 120 : 3650)))));
   };
   const [eventName, setEventName] = useState("");
+  const [source, setSource] = useState<"ADMIN" | "WHATSAPP" | "OUTRO">("ADMIN");
   const [eventAddress, setEventAddress] = useState("");
   const [eventAt, setEventAt] = useState("");
   const [setupAt, setSetupAt] = useState("");
@@ -197,6 +198,7 @@ export function RentalWizard({
     fd.set("billingMode", mode);
     fd.set("periodCount", String(periods));
     fd.set("status", status);
+    fd.set("source", source);
     if (andContract) fd.set("andContract", "1");
     fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: priceOf(l) }))));
     startTransition(() => formAction(fd));
@@ -383,6 +385,14 @@ export function RentalWizard({
 
           <Field label="Nome do evento ou obra (opcional)" className="mt-5">
             <Input value={eventName} onChange={(e) => setEventName(e.target.value)} maxLength={120} placeholder={customerName ? `Ex.: Casamento — ou deixe em branco para “Locação — ${customerName}”` : "Ex.: Casamento"} />
+          </Field>
+
+          <Field label="Origem do pedido" hint="Para saber de onde vêm as locações." className="mt-4">
+            <select value={source} onChange={(e) => setSource(e.target.value as typeof source)} className="mt-1 block h-10 w-full rounded-lg border border-line-strong bg-white px-2">
+              <option value="ADMIN">Balcão / painel</option>
+              <option value="WHATSAPP">WhatsApp</option>
+              <option value="OUTRO">Outro</option>
+            </select>
           </Field>
 
           <details className="group mt-5 rounded-xl border border-line">

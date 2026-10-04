@@ -63,12 +63,16 @@ type AlertSource = {
   openQuotes: number;
   maintenanceUnits?: number;
   lowStock?: number;
+  onlinePending?: number;
+  cancelRequests?: number;
 };
 
 export function operationalAlerts(d: AlertSource, money: (c: number) => string, now = new Date()): AlertItem[] {
   const lateDepartures = d.departures.filter((r) => r.departureAt < now).length;
   const open = d.pendingPayments.reduce((s, p) => s + p.openCents, 0);
   return [
+    { count: d.onlinePending ?? 0, label: "Novas reservas online", detail: "Aguardando sua aprovação (estoque já reservado)", href: "/admin/locacoes?aba=site", tone: "danger", icon: "calendar" },
+    { count: d.cancelRequests ?? 0, label: "Pedidos de cancelamento do site", detail: "O estoque só é liberado quando você cancelar", href: "/admin/locacoes?aba=cancelamento", tone: "warn", icon: "alert" },
     { count: d.overdue.length, label: "Locações atrasadas", detail: "Retorno previsto já passou", href: "/admin/locacoes?aba=atrasadas", tone: "danger", icon: "alert" },
     { count: lateDepartures, label: "Saídas com horário vencido", detail: "Ainda não registradas", href: "/admin/locacoes?aba=saidas", tone: "danger", icon: "truck" },
     { count: d.contractsAwaiting.length, label: "Contratos aguardando assinatura", href: "/admin/contratos?aba=assinatura", tone: "warn", icon: "clipboard" },

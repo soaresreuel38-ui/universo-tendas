@@ -25,6 +25,9 @@ const productSchema = z.object({
   notes: zOptText(2000),
   dimensions: zOptText(120),
   active: zCheckbox,
+  slug: zOptText(80).pipe(z.string().regex(/^[a-z0-9-]+$/, "Endereço da página: use só letras minúsculas, números e hífen.").nullable()),
+  showOnSite: zCheckbox,
+  featured: zCheckbox,
 });
 
 function parseProduct(form: FormData) {
@@ -44,6 +47,9 @@ function parseProduct(form: FormData) {
     notes: str(form, "notes"),
     dimensions: str(form, "dimensions"),
     active: form.get("active"),
+    slug: str(form, "slug").toLowerCase(),
+    showOnSite: form.get("showOnSite"),
+    featured: form.get("featured"),
   });
 }
 

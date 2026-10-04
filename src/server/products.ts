@@ -1,5 +1,5 @@
 import type { PrismaClient, ProductKind, TrackingMode } from "@prisma/client";
-import { assertCan, DomainError, type Actor } from "./errors";
+import { assertCan, DomainError, type Actor, type Db } from "./errors";
 import { applyStock, createUnits, totalOf, withTx } from "./stock";
 
 export type ProductInput = {
@@ -18,6 +18,10 @@ export type ProductInput = {
   dimensions?: string | null;
   minStock: number;
   active: boolean;
+  /** Endereço público (/tendas/<slug>). Vazio = gerado a partir do nome. */
+  slug?: string | null;
+  showOnSite?: boolean;
+  featured?: boolean;
 };
 
 function validate(input: ProductInput) {
@@ -37,7 +41,7 @@ export async function createProduct(
   const { initialQty = 0, ...data } = input;
   if (!Number.isInteger(initialQty) || initialQty < 0) throw new DomainError("Quantidade inicial inválida.");
   return withTx(db, async (tx) => {
-    const product = await tx.product.create({ data: { ...data, sku: data.sku.trim().toUpperCase() } });
+    const product = await tx.product.create({ data: { ...data, sku: data.sku.trim().toUpperCase(), slug: await uniqueSlug(tx, data.slug, data.name) } });
     if (initialQty > 0) {
       const units = product.trackingMode === "UNIT" ? await createUnits(tx, product.id, initialQty) : [];
       await applyStock(
@@ -67,7 +71,10 @@ export async function updateProduct(db: PrismaClient, actor: Actor, productId: s
     if (current.trackingMode !== input.trackingMode && (totalOf(current) > 0 || current._count.units > 0)) {
       throw new DomainError("O modo de controle só pode ser alterado enquanto o produto não tem estoque nem unidades cadastradas.");
     }
-    return tx.product.update({ where: { id: productId }, data: { ...input, sku: input.sku.trim().toUpperCase() } });
+    return tx.product.update({
+      where: { id: productId },
+      data: { ...input, sku: input.sku.trim().toUpperCase(), slug: await uniqueSlug(tx, input.slug ?? current.slug, input.name, productId) },
+    });
   });
 }
 
@@ -102,4 +109,26 @@ export async function setProductActive(db: PrismaClient, actor: Actor, productId
 export async function updateUnitNotes(db: PrismaClient, actor: Actor, unitId: string, notes: string | null) {
   assertCan(actor, "product.manage");
   return db.productUnit.update({ where: { id: unitId }, data: { notes } });
+}
+
+/** "Tenda Piramidal 5x5" → "tenda-piramidal-5x5". */
+export function slugify(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 70);
+}
+
+/** Slug único: usa o informado (ou o nome) e acrescenta -2, -3… se já existir em outro produto. */
+export async function uniqueSlug(tx: Db, wanted: string | null | undefined, name: string, productId?: string): Promise<string> {
+  const base = slugify(wanted?.trim() || name) || "produto";
+  for (let n = 1; n < 200; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`;
+    const taken = await tx.product.findFirst({ where: { slug: candidate, ...(productId ? { id: { not: productId } } : {}) }, select: { id: true } });
+    if (!taken) return candidate;
+  }
+  throw new DomainError("Não foi possível gerar o endereço da página do produto. Informe outro.");
 }

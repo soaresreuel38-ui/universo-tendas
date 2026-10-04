@@ -95,7 +95,7 @@ export async function pendingContractWork() {
 /** Operação do dia: saídas, retornos, montagens, desmontagens, contratos e atrasados. */
 export async function todayOperations(now = new Date()) {
   const { start, end } = dayRange(todayKey(now));
-  const [departures, returns, setups, teardowns, overdue, awaitingCheck, work, events, payments] = await Promise.all([
+  const [departures, returns, setups, teardowns, overdue, awaitingCheck, work, events, payments, onlinePending, cancelRequests] = await Promise.all([
     prisma.rental.findMany({
       where: { status: { in: [...RESERVING_STATUSES] }, departureAt: { lt: end } },
       include: rentalListInclude,
@@ -125,6 +125,9 @@ export async function todayOperations(now = new Date()) {
       orderBy: { eventAt: "asc" },
     }),
     pendingPayments(),
+    // Site: reservas aguardando aprovação e pedidos de cancelamento dos clientes.
+    prisma.rental.count({ where: { source: "SITE", status: "RESERVADA" } }),
+    prisma.rental.count({ where: { cancelRequestedAt: { not: null }, status: { not: "CANCELADA" } } }),
   ]);
-  return { departures, returns, setups, teardowns, overdue, awaitingCheck, events, pendingPayments: payments, ...work };
+  return { departures, returns, setups, teardowns, overdue, awaitingCheck, events, pendingPayments: payments, onlinePending, cancelRequests, ...work };
 }
