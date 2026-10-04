@@ -155,23 +155,26 @@ model Customer {
 }
 
 model Product {
-  id               String       @id @default(cuid())
-  name             String
-  sku              String       @unique
-  category         String
-  kind             ProductKind  @default(RENTAL)
-  trackingMode     TrackingMode @default(QUANTITY)
-  description      String?
-  unit             String       @default("un")
-  salePriceCents   Int?
-  rentalPriceCents Int?
-  photoId          String?
-  notes            String?
+  id                String       @id @default(cuid())
+  name              String
+  sku               String       @unique
+  category          String
+  kind              ProductKind  @default(RENTAL)
+  trackingMode      TrackingMode @default(QUANTITY)
+  description       String?
+  unit              String       @default("un")
+  salePriceCents    Int?
+  /// Preço da diária (por unidade, por dia).
+  rentalPriceCents  Int?
+  /// Preço mensal (por unidade, por mês). Opcional: só para produtos alugados por mês.
+  monthlyPriceCents Int?
+  photoId           String?
+  notes             String?
   /// Tamanho/dimensões informados pelo administrador (ex.: 4 x 4 m).
-  dimensions       String?
+  dimensions        String?
   /// Alerta de estoque baixo quando o livre para uso ficar igual ou abaixo deste valor.
-  minStock         Int          @default(0)
-  active           Boolean      @default(true)
+  minStock          Int          @default(0)
+  active            Boolean      @default(true)
 
   qtyAvailable   Int @default(0)
   qtyRented      Int @default(0)
@@ -254,8 +257,8 @@ model StockMovement {
 }
 
 model Rental {
-  id               String       @id @default(cuid())
-  number           Int          @unique @default(autoincrement())
+  id               String        @id @default(cuid())
+  number           Int           @unique @default(autoincrement())
   customerId       String
   eventName        String
   eventAddress     String?
@@ -264,23 +267,26 @@ model Rental {
   teardownAt       DateTime?
   /// Condição / prazo de pagamento combinado.
   paymentTerms     String?
+  /// Modalidade da locação: diária ou mensal, e quantas diárias/meses foram combinados.
+  billingMode      RentalBilling @default(DIARIA)
+  periodCount      Int           @default(1)
   departureAt      DateTime
   eventAt          DateTime?
   expectedReturnAt DateTime
   actualReturnAt   DateTime?
   departedAt       DateTime?
   pickupBy         String?
-  status           RentalStatus @default(ORCAMENTO)
-  totalCents       Int          @default(0)
-  discountCents    Int          @default(0)
+  status           RentalStatus  @default(ORCAMENTO)
+  totalCents       Int           @default(0)
+  discountCents    Int           @default(0)
   notes            String?
   checkNotes       String?
   checkedById      String?
   checkedAt        DateTime?
   createdById      String
   canceledAt       DateTime?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   customer      Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
   createdBy     User            @relation("RentalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
@@ -503,6 +509,11 @@ model ProductModel3D {
 }
 
 // ─────────────────────────── Contratos ───────────────────────────
+
+enum RentalBilling {
+  DIARIA
+  MENSAL
+}
 
 enum ContractStatus {
   RASCUNHO

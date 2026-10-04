@@ -142,12 +142,36 @@ export default async function ProductPage({
             </p>
           </div>
 
-          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-6">
+          <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line pt-6 sm:grid-cols-3">
             {p.kind !== "SALE" ? (
-              <div>
-                <dt className="eyebrow">Locação</dt>
-                <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-graphite">{p.rentalPriceCents != null ? money(p.rentalPriceCents) : <span className="text-base font-normal text-faint">A definir</span>}</dd>
-              </div>
+              <>
+                <div>
+                  <dt className="eyebrow">Diária</dt>
+                  <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-graphite">
+                    {p.rentalPriceCents != null ? (
+                      <>
+                        {money(p.rentalPriceCents)}
+                        <span className="text-sm font-normal text-faint">/dia</span>
+                      </>
+                    ) : (
+                      <span className="text-base font-normal text-faint">Não aluga por dia</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="eyebrow">Mensal</dt>
+                  <dd className="tabular mt-1 text-2xl font-semibold tracking-tight text-graphite">
+                    {p.monthlyPriceCents != null ? (
+                      <>
+                        {money(p.monthlyPriceCents)}
+                        <span className="text-sm font-normal text-faint">/mês</span>
+                      </>
+                    ) : (
+                      <span className="text-base font-normal text-faint">Não aluga por mês</span>
+                    )}
+                  </dd>
+                </div>
+              </>
             ) : null}
             {p.kind !== "RENTAL" ? (
               <div>
@@ -160,14 +184,35 @@ export default async function ProductPage({
           {p.active ? (
             <div className="mt-6 grid gap-2">
               {p.kind !== "SALE" ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}`} variant="primary" size="lg" className="w-full" icon="calendar">
-                    Reservar
-                  </LinkButton>
-                  <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&orcamento=1`} size="lg" className="w-full" icon="money">
-                    Fazer orçamento
-                  </LinkButton>
-                </div>
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    {p.monthlyPriceCents != null && p.rentalPriceCents == null ? null : (
+                      <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&modo=diaria`} variant="primary" size="lg" className="w-full" icon="calendar">
+                        Alugar por dia
+                      </LinkButton>
+                    )}
+                    {p.monthlyPriceCents != null ? (
+                      <LinkButton
+                        href={`/admin/locacoes/nova?produto=${p.id}&modo=mensal`}
+                        variant={p.rentalPriceCents == null ? "primary" : "secondary"}
+                        size="lg"
+                        className="w-full"
+                        icon="calendar"
+                      >
+                        Alugar por mês
+                      </LinkButton>
+                    ) : (
+                      <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&orcamento=1`} size="lg" className="w-full" icon="money">
+                        Fazer orçamento
+                      </LinkButton>
+                    )}
+                  </div>
+                  {p.monthlyPriceCents != null ? (
+                    <LinkButton href={`/admin/locacoes/nova?produto=${p.id}&orcamento=1`} className="w-full" icon="money">
+                      Fazer orçamento
+                    </LinkButton>
+                  ) : null}
+                </>
               ) : null}
               <div className="grid grid-cols-2 gap-2">
                 {p.kind !== "SALE" ? (
@@ -308,7 +353,8 @@ export default async function ProductPage({
               ["Controle", TRACKING_LABEL[p.trackingMode]],
               ["Unidade", p.unit],
               ["Dimensões", p.dimensions],
-              ["Preço de locação", money(p.rentalPriceCents)],
+              ["Preço da diária", p.rentalPriceCents != null ? `${money(p.rentalPriceCents)}/dia` : "—"],
+              ["Preço mensal", p.monthlyPriceCents != null ? `${money(p.monthlyPriceCents)}/mês` : "—"],
               ["Preço de venda", money(p.salePriceCents)],
               ["Estoque mínimo (alerta)", p.minStock || "Sem alerta"],
               ["Cadastrado em", fmtDateTime(p.createdAt)],

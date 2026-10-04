@@ -8,6 +8,7 @@ import { LazyModel } from "@/components/three/LazyModel";
 import { ProductImage } from "@/components/products/ProductImage";
 import type { ModelViewSettings } from "@/components/three/ModelViewer";
 import type { ActionState } from "@/lib/action-state";
+import { BILLING_LABEL, BILLING_SHORT, BILLING_UNIT, periodEnd, periodLabel, periodsBetween, tablePrice, type BillingMode } from "@/lib/billing";
 import { money, moneyInput, parseMoney } from "@/lib/format";
 
 export type WizardCustomer = {
@@ -29,11 +30,19 @@ export type WizardProduct = {
   unit: string;
   dimensions: string | null;
   rentalPriceCents: number | null;
+  monthlyPriceCents: number | null;
   photoId: string | null;
   model: { url: string; settings: ModelViewSettings } | null;
 };
 
-type Line = { productId: string; quantity: number; unitPrice: string };
+/** priceOverride: valor digitado pela pessoa; sem ele, vale o preço de tabela × diárias/meses. */
+type Line = { productId: string; quantity: number; priceOverride: string | null };
+
+/** Date (horário do navegador) → valor de <input type="datetime-local">. */
+function toLocalValue(d: Date) {
+  const z = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+}
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const STEPS = ["Cliente", "Período", "Produtos", "Revisão"] as const;
@@ -54,7 +63,16 @@ export function RentalWizard({
   action: (s: ActionState, f: FormData) => Promise<ActionState>;
   customers: WizardCustomer[];
   products: WizardProduct[];
-  defaults: { departureAt: string; expectedReturnAt: string; customerId?: string; productId?: string; immediate: boolean; quote?: boolean; paymentTerms: string };
+  defaults: {
+    departureAt: string;
+    expectedReturnAt: string;
+    customerId?: string;
+    productId?: string;
+    immediate: boolean;
+    quote?: boolean;
+    paymentTerms: string;
+    mode?: BillingMode;
+  };
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [step, setStep] = useState(0);
@@ -75,8 +93,15 @@ export function RentalWizard({
   }, [cq, customers]);
 
   // ── Período / evento
+  const [mode, setMode] = useState<BillingMode>(defaults.mode ?? "DIARIA");
   const [departureAt, setDepartureAt] = useState(defaults.departureAt);
   const [expectedReturnAt, setExpectedReturnAt] = useState(defaults.expectedReturnAt);
+  const periods = departureAt && expectedReturnAt ? periodsBetween(mode, new Date(departureAt), new Date(expectedReturnAt)) : 1;
+  // Ao mudar a modalidade, a quantidade ou a retirada, a devolução acompanha (e continua editável).
+  const applyPeriod = (m: BillingMode, n: number, from = departureAt) => {
+    if (!from) return;
+    setExpectedReturnAt(toLocalValue(periodEnd(m, new Date(from), Math.max(1, Math.min(n, m === "MENSAL" ? 120 : 3650)))));
+  };
   const [eventName, setEventName] = useState("");
   const [eventAddress, setEventAddress] = useState("");
   const [eventAt, setEventAt] = useState("");
@@ -86,7 +111,7 @@ export function RentalWizard({
   // ── Produtos
   const [lines, setLines] = useState<Line[]>(() => {
     const p = products.find((x) => x.id === defaults.productId);
-    return p ? [{ productId: p.id, quantity: 1, unitPrice: moneyInput(p.rentalPriceCents) }] : [];
+    return p ? [{ productId: p.id, quantity: 1, priceOverride: null }] : [];
   });
   const [pq, setPq] = useState("");
   const [qtyDraft, setQtyDraft] = useState<Record<string, number>>({});
@@ -130,20 +155,28 @@ export function RentalWizard({
     setLines((ls) => {
       const existing = ls.find((l) => l.productId === p.id);
       if (existing) return ls.map((l) => (l.productId === p.id ? { ...l, quantity: l.quantity + quantity } : l));
-      return [...ls, { productId: p.id, quantity, unitPrice: moneyInput(p.rentalPriceCents) }];
+      return [...ls, { productId: p.id, quantity, priceOverride: null }];
     });
   const over = lines.filter((l) => free[l.productId] !== undefined && l.quantity > free[l.productId]);
+  /** Preço por unidade para o período todo: tabela da modalidade × diárias/meses (ou o valor digitado). */
+  const autoPrice = (productId: string) => {
+    const p = products.find((x) => x.id === productId);
+    const t = p ? tablePrice(p, mode) : null;
+    return t == null ? "" : moneyInput(t * periods);
+  };
+  const priceOf = (l: Line) => l.priceOverride ?? autoPrice(l.productId);
 
   // ── Revisão
   const [discount, setDiscount] = useState("");
   const [paymentTerms, setPaymentTerms] = useState(defaults.paymentTerms);
   const [pickupBy, setPickupBy] = useState("");
   const [notes, setNotes] = useState("");
-  const gross = lines.reduce((s, l) => s + l.quantity * (parseMoney(l.unitPrice) ?? 0), 0);
+  const gross = lines.reduce((s, l) => s + l.quantity * (parseMoney(priceOf(l)) ?? 0), 0);
   const total = Math.max(0, gross - (parseMoney(discount) ?? 0));
 
   const customerOk = newCustomer ? nc.name.trim() && (nc.phone.trim() || nc.whatsapp.trim()) : Boolean(customerId);
-  const stepOk = [customerOk, !datesInvalid && eventName.trim(), lines.length > 0 && over.length === 0, true];
+  const stepOk = [customerOk, !datesInvalid, lines.length > 0 && over.length === 0, true];
+  const customerName = newCustomer ? nc.name.trim() : (customer?.name ?? "");
 
   function submit(status: "ORCAMENTO" | "RESERVADA" | "SAIU", andContract = false) {
     const fd = new FormData();
@@ -158,10 +191,14 @@ export function RentalWizard({
       fd.set("newCustomerCity", nc.city);
       fd.set("newCustomerNotes", nc.notes);
     } else fd.set("customerId", customerId);
-    Object.entries({ eventName, eventAddress, departureAt, expectedReturnAt, eventAt, setupAt, teardownAt, discount, paymentTerms, pickupBy, notes }).forEach(([k, v]) => fd.set(k, v));
+    // Nome do evento é opcional: sem ele, a locação leva o nome do cliente.
+    const name = eventName.trim() || `Locação — ${customerName}`.slice(0, 120);
+    Object.entries({ eventName: name, eventAddress, departureAt, expectedReturnAt, eventAt, setupAt, teardownAt, discount, paymentTerms, pickupBy, notes }).forEach(([k, v]) => fd.set(k, v));
+    fd.set("billingMode", mode);
+    fd.set("periodCount", String(periods));
     fd.set("status", status);
     if (andContract) fd.set("andContract", "1");
-    fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice }))));
+    fd.set("items", JSON.stringify(lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: priceOf(l) }))));
     startTransition(() => formAction(fd));
   }
 
@@ -285,36 +322,94 @@ export function RentalWizard({
 
       {step === 1 ? (
         <section className="animate-rise rounded-2xl border border-line bg-white p-5 sm:p-7">
-          <h2 className="text-xl font-semibold tracking-[-0.015em] text-graphite">Quando?</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Field label="Evento" required className="sm:col-span-2">
-              <Input value={eventName} onChange={(e) => setEventName(e.target.value)} maxLength={120} placeholder="Ex.: Casamento" />
+          <h2 className="text-xl font-semibold tracking-[-0.015em] text-graphite">Como e quando?</h2>
+
+          <div className="mt-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Modalidade da locação">
+            {(["DIARIA", "MENSAL"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={mode === m}
+                onClick={() => {
+                  setMode(m);
+                  applyPeriod(m, 1);
+                }}
+                className={`rounded-2xl border-2 px-4 py-3.5 text-left transition-colors ${mode === m ? "border-ink bg-ink-tint" : "border-line bg-white hover:border-line-strong"}`}
+              >
+                <span className={`block text-base font-semibold ${mode === m ? "text-ink" : "text-graphite"}`}>{m === "DIARIA" ? "Diária" : "Mensal"}</span>
+                <span className="block text-xs text-muted">{m === "DIARIA" ? "Cobrança por dia" : "Cobrança por mês"}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+            <Field label="Retirada" required>
+              <Input
+                type="datetime-local"
+                value={departureAt}
+                onChange={(e) => {
+                  setDepartureAt(e.target.value);
+                  if (e.target.value) applyPeriod(mode, periods, e.target.value);
+                }}
+              />
             </Field>
-            <Field label="Saída do estoque" required>
-              <Input type="datetime-local" value={departureAt} onChange={(e) => setDepartureAt(e.target.value)} />
-            </Field>
-            <Field label="Retorno previsto" required>
-              <Input type="datetime-local" value={expectedReturnAt} onChange={(e) => setExpectedReturnAt(e.target.value)} />
-              {datesInvalid ? <span className="mt-1 block text-sm text-red-700">O retorno precisa ser depois da saída.</span> : null}
-            </Field>
-            <Field label="Endereço de entrega / evento" className="sm:col-span-2">
-              <Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} maxLength={300} />
-              {address && eventAddress !== address ? (
-                <button type="button" onClick={() => setEventAddress(address)} className="mt-1 text-xs text-muted underline">
-                  Usar endereço do cliente
+            <div>
+              <span className="text-[13px] font-medium text-graphite">{mode === "MENSAL" ? "Quantos meses?" : "Quantas diárias?"}</span>
+              <div className="mt-1.5 flex h-[46px] items-center justify-between rounded-lg border border-line-strong bg-white sm:justify-start">
+                <button type="button" aria-label={mode === "MENSAL" ? "Menos um mês" : "Menos uma diária"} className="h-full w-11 text-lg text-muted hover:text-graphite" onClick={() => applyPeriod(mode, periods - 1)}>
+                  −
                 </button>
-              ) : null}
-            </Field>
-            <Field label="Data do evento">
-              <Input type="datetime-local" value={eventAt} onChange={(e) => setEventAt(e.target.value)} />
-            </Field>
-            <Field label="Montagem">
-              <Input type="datetime-local" value={setupAt} onChange={(e) => setSetupAt(e.target.value)} />
-            </Field>
-            <Field label="Desmontagem">
-              <Input type="datetime-local" value={teardownAt} onChange={(e) => setTeardownAt(e.target.value)} />
+                <span className="tabular w-12 text-center text-base font-semibold" aria-live="polite" data-testid="period-count">
+                  {periods}
+                </span>
+                <button type="button" aria-label={mode === "MENSAL" ? "Mais um mês" : "Mais uma diária"} className="h-full w-11 text-lg text-muted hover:text-graphite" onClick={() => applyPeriod(mode, periods + 1)}>
+                  +
+                </button>
+              </div>
+            </div>
+            <Field label="Devolução" required>
+              <Input type="datetime-local" value={expectedReturnAt} onChange={(e) => setExpectedReturnAt(e.target.value)} />
             </Field>
           </div>
+          {datesInvalid ? (
+            <p className="mt-2 text-sm text-accent">A devolução precisa ser depois da retirada.</p>
+          ) : (
+            <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-paper px-3 py-1.5 text-sm text-graphite">
+              <Icon name="calendar" className="h-4 w-4 text-ink" />
+              <b className="font-semibold">{BILLING_LABEL[mode]}</b> · {periodLabel(mode, periods)}
+            </p>
+          )}
+
+          <Field label="Nome do evento ou obra (opcional)" className="mt-5">
+            <Input value={eventName} onChange={(e) => setEventName(e.target.value)} maxLength={120} placeholder={customerName ? `Ex.: Casamento — ou deixe em branco para “Locação — ${customerName}”` : "Ex.: Casamento"} />
+          </Field>
+
+          <details className="group mt-5 rounded-xl border border-line">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-graphite">
+              Mais detalhes (opcional): entrega, data do evento, montagem e desmontagem
+              <Icon name="chevronRight" className="h-4 w-4 text-faint transition-transform group-open:rotate-90" />
+            </summary>
+            <div className="grid gap-4 border-t border-line p-4 sm:grid-cols-2">
+              <Field label="Endereço de entrega / evento" className="sm:col-span-2">
+                <Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} maxLength={300} />
+                {address && eventAddress !== address ? (
+                  <button type="button" onClick={() => setEventAddress(address)} className="mt-1 text-xs text-muted underline">
+                    Usar endereço do cliente
+                  </button>
+                ) : null}
+              </Field>
+              <Field label="Data do evento">
+                <Input type="datetime-local" value={eventAt} onChange={(e) => setEventAt(e.target.value)} />
+              </Field>
+              <Field label="Montagem">
+                <Input type="datetime-local" value={setupAt} onChange={(e) => setSetupAt(e.target.value)} />
+              </Field>
+              <Field label="Desmontagem">
+                <Input type="datetime-local" value={teardownAt} onChange={(e) => setTeardownAt(e.target.value)} />
+              </Field>
+            </div>
+          </details>
         </section>
       ) : null}
 
@@ -322,7 +417,9 @@ export function RentalWizard({
         <section>
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold tracking-[-0.015em] text-graphite">O que o cliente vai alugar?</h2>
-            <p className="text-xs text-faint">Disponibilidade para o período selecionado{checking ? " — verificando…" : ""}</p>
+            <p className="text-xs text-faint">
+              {BILLING_LABEL[mode]} · {periodLabel(mode, periods)} · disponibilidade no período{checking ? " — verificando…" : ""}
+            </p>
           </div>
           <div className="relative mb-3">
             <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
@@ -364,7 +461,16 @@ export function RentalWizard({
                         <span className={`text-lg font-semibold ${left === undefined ? "text-faint" : left > 0 ? "text-st-free" : "text-accent"}`}>{f ?? "—"}</span>{" "}
                         <span className="text-faint">disponíveis</span>
                       </p>
-                      <p className="tabular text-[15px] font-semibold text-graphite">{p.rentalPriceCents != null ? money(p.rentalPriceCents) : <span className="text-sm font-normal text-faint">Preço a definir</span>}</p>
+                      <p className="tabular text-right text-[15px] font-semibold text-graphite">
+                        {tablePrice(p, mode) != null ? (
+                          <>
+                            {money(tablePrice(p, mode))}
+                            <span className="text-xs font-normal text-faint">{BILLING_UNIT[mode]}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-normal text-faint">{mode === "MENSAL" ? "Sem preço mensal" : "Sem preço da diária"}</span>
+                        )}
+                      </p>
                     </div>
                     <div className="mt-3 flex items-center gap-2">
                       <div className="flex items-center rounded-lg border border-line-strong">
@@ -408,12 +514,13 @@ export function RentalWizard({
         <section className="space-y-4">
           <div className="animate-rise rounded-2xl border border-line bg-white p-5 sm:p-7">
             <h2 className="text-xl font-semibold tracking-[-0.015em] text-graphite">Revisão</h2>
-            <dl className="mt-5 grid gap-x-8 gap-y-4 border-y border-line py-5 text-sm sm:grid-cols-4">
+            <dl className="mt-5 grid grid-cols-2 gap-x-8 gap-y-4 border-y border-line py-5 text-sm sm:grid-cols-5">
               {[
                 ["Cliente", newCustomer ? `${nc.name} (novo)` : customer?.name],
-                ["Evento", eventName],
-                ["Saída", localLabel(departureAt)],
-                ["Retorno", localLabel(expectedReturnAt)],
+                ["Modalidade", `${BILLING_SHORT[mode]} · ${periodLabel(mode, periods)}`],
+                ["Evento", eventName.trim() || `Locação — ${customerName}`],
+                ["Retirada", localLabel(departureAt)],
+                ["Devolução", localLabel(expectedReturnAt)],
               ].map(([k, v]) => (
                 <div key={k} className="min-w-0">
                   <dt className="eyebrow">{k}</dt>
@@ -435,6 +542,22 @@ export function RentalWizard({
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={2000} />
               </Field>
             </div>
+            {defaults.quote || defaults.immediate ? null : (
+              <ul className="mt-6 grid gap-2 border-t border-line pt-5 text-sm sm:grid-cols-3">
+                <li className="rounded-xl bg-ink-tint p-3.5">
+                  <b className="block text-ink">Reservar e gerar contrato</b>
+                  <span className="text-muted">Bloqueia os itens no período e já cria o contrato para assinatura.</span>
+                </li>
+                <li className="rounded-xl bg-paper p-3.5">
+                  <b className="block text-graphite">Reservar sem contrato</b>
+                  <span className="text-muted">Bloqueia os itens. O contrato pode ser gerado depois.</span>
+                </li>
+                <li className="rounded-xl bg-paper p-3.5">
+                  <b className="block text-graphite">Salvar orçamento</b>
+                  <span className="text-muted">Não bloqueia o estoque. Vira reserva quando o cliente aprovar.</span>
+                </li>
+              </ul>
+            )}
           </div>
         </section>
       ) : null}
@@ -443,6 +566,9 @@ export function RentalWizard({
       {step >= 2 && lines.length ? (
         <section className="mt-6 animate-rise rounded-2xl border border-line bg-white p-5">
           <h3 className="eyebrow">Itens da locação</h3>
+          <p className="mt-1 text-xs text-faint">
+            Valor por unidade para {periodLabel(mode, periods)} ({BILLING_LABEL[mode].toLowerCase()}). Calculado pela tabela; pode ser alterado.
+          </p>
           <ul className="mt-2 divide-y divide-line">
             {lines.map((l) => {
               const p = products.find((x) => x.id === l.productId)!;
@@ -474,13 +600,13 @@ export function RentalWizard({
                     <span className="text-faint">R$</span>
                     <input
                       aria-label="Preço unitário"
-                      value={l.unitPrice}
-                      onChange={(e) => setLines((ls) => ls.map((x) => (x.productId === l.productId ? { ...x, unitPrice: e.target.value } : x)))}
+                      value={priceOf(l)}
+                      onChange={(e) => setLines((ls) => ls.map((x) => (x.productId === l.productId ? { ...x, priceOverride: e.target.value } : x)))}
                       inputMode="decimal"
                       className="h-9 w-full rounded-lg border border-line-strong px-2 text-right tabular outline-none focus:border-ink"
                     />
                   </label>
-                  <span className="tabular text-right text-sm font-medium max-sm:hidden">{money(l.quantity * (parseMoney(l.unitPrice) ?? 0))}</span>
+                  <span className="tabular text-right text-sm font-medium max-sm:hidden">{money(l.quantity * (parseMoney(priceOf(l)) ?? 0))}</span>
                 </li>
               );
             })}
@@ -519,7 +645,7 @@ export function RentalWizard({
               ) : (
                 <>
                   <button type="button" disabled={pending || over.length > 0} onClick={() => submit("RESERVADA")} className={buttonClass("secondary", "lg")}>
-                    Reservar
+                    Reservar sem contrato
                   </button>
                   <button type="button" disabled={pending || over.length > 0} onClick={() => submit("RESERVADA", true)} className={buttonClass("primary", "lg")}>
                     {pending ? "Salvando…" : "Reservar e gerar contrato"}

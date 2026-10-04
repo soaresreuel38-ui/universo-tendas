@@ -1,9 +1,10 @@
 "use client";
 
+import { periodLabel, periodsBetween, type BillingMode } from "@/lib/billing";
 import { startTransition, useActionState, useEffect, useMemo, useState } from "react";
 import { FormMessage, SubmitButton } from "@/components/ui/forms";
 import { Icon } from "@/components/ui/icons";
-import { Field, Input, Textarea } from "@/components/ui/primitives";
+import { Field, Input, Textarea, Select } from "@/components/ui/primitives";
 import { SearchSelect, type SearchOption } from "@/components/ui/SearchSelect";
 import type { ActionState } from "@/lib/action-state";
 import { money, moneyInput, parseMoney } from "@/lib/format";
@@ -23,6 +24,8 @@ export type RentalFormInitial = {
   pickupBy: string;
   notes: string;
   discount: string;
+  billingMode?: BillingMode;
+  periodCount?: number;
   items: Array<{ productId: string; quantity: number; unitPrice: string }>;
 };
 
@@ -57,6 +60,8 @@ export function RentalForm({
   const [newCustomer, setNewCustomer] = useState(customers.length === 0);
   const [departureAt, setDepartureAt] = useState(initial.departureAt);
   const [expectedReturnAt, setExpectedReturnAt] = useState(initial.expectedReturnAt);
+  const [mode, setMode] = useState<BillingMode>(initial.billingMode ?? "DIARIA");
+  const [periodCount, setPeriodCount] = useState(String(initial.periodCount ?? 1));
   const [status, setStatus] = useState<string>(immediate ? "SAIU" : "RESERVADA");
   const [discount, setDiscount] = useState(initial.discount);
   const [rows, setRows] = useState<Row[]>(() =>
@@ -165,6 +170,18 @@ export function RentalForm({
           <Field label="Retorno previsto" required>
             <Input type="datetime-local" name="expectedReturnAt" required value={expectedReturnAt} onChange={(e) => setExpectedReturnAt(e.target.value)} />
             {datesInvalid ? <span className="mt-1 block text-sm text-red-700">O retorno precisa ser depois da saída.</span> : null}
+          </Field>
+          <Field label="Modalidade">
+            <Select name="billingMode" value={mode} onChange={(e) => setMode(e.target.value as BillingMode)}>
+              <option value="DIARIA">Locação diária</option>
+              <option value="MENSAL">Locação mensal</option>
+            </Select>
+          </Field>
+          <Field
+            label={mode === "MENSAL" ? "Quantidade de meses" : "Quantidade de diárias"}
+            hint={!datesInvalid ? `Pelas datas: ${periodLabel(mode, periodsBetween(mode, new Date(departureAt), new Date(expectedReturnAt)))}` : undefined}
+          >
+            <Input name="periodCount" type="number" min={1} max={3650} inputMode="numeric" value={periodCount} onChange={(e) => setPeriodCount(e.target.value)} />
           </Field>
           <Field label="Montagem">
             <Input type="datetime-local" name="setupAt" defaultValue={initial.setupAt} />

@@ -31,6 +31,9 @@ export type ContractSnapshot = {
     teardownAt: string | null;
     pickupBy: string | null;
     notes: string | null;
+    /** Ausentes em contratos gerados antes da modalidade existir. */
+    billingMode?: "DIARIA" | "MENSAL";
+    periodCount?: number;
   };
   items: Array<{
     productId: string | null;

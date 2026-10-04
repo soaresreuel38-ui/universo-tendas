@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { FirstSteps } from "@/components/operations/FirstSteps";
+import { can } from "@/lib/domain";
 import Link from "next/link";
 import { AgendaTimeline, buildAgenda } from "@/components/operations/Agenda";
 import { AlertList, operationalAlerts } from "@/components/operations/Alerts";
@@ -58,6 +60,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           Nova locação
         </LinkButton>
       </header>
+
+      <FirstSteps isAdmin={can(user.role, "settings.manage")} />
 
       <section aria-label="Ações rápidas" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <div className="grid min-w-max grid-cols-6 gap-2 sm:min-w-0 sm:grid-cols-3 xl:grid-cols-6">

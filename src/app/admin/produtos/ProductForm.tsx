@@ -17,6 +17,7 @@ export type ProductFormValues = {
   description: string | null;
   unit: string;
   rentalPriceCents: number | null;
+  monthlyPriceCents?: number | null;
   salePriceCents: number | null;
   minStock: number;
   photoId: string | null;
@@ -82,11 +83,19 @@ export function ProductForm({
           {lockTracking ? <input type="hidden" name="trackingMode" value={tracking} /> : null}
         </Field>
         {kind !== "SALE" ? (
-          <Field label="Preço de locação (R$)" hint="Valor sugerido por unidade; pode ser ajustado em cada locação.">
-            <Input name="rentalPrice" inputMode="decimal" defaultValue={moneyInput(initial?.rentalPriceCents)} placeholder="0,00" />
-          </Field>
+          <>
+            <Field label="Preço da diária (R$)" hint="Por unidade, por dia. Deixe em branco se não aluga por dia.">
+              <Input name="rentalPrice" inputMode="decimal" defaultValue={moneyInput(initial?.rentalPriceCents)} placeholder="0,00" />
+            </Field>
+            <Field label="Preço mensal (R$)" hint="Por unidade, por mês. Deixe em branco se não aluga por mês.">
+              <Input name="monthlyPrice" inputMode="decimal" defaultValue={moneyInput(initial?.monthlyPriceCents)} placeholder="0,00" />
+            </Field>
+          </>
         ) : (
-          <input type="hidden" name="rentalPrice" value={moneyInput(initial?.rentalPriceCents)} />
+          <>
+            <input type="hidden" name="rentalPrice" value={moneyInput(initial?.rentalPriceCents)} />
+            <input type="hidden" name="monthlyPrice" value={moneyInput(initial?.monthlyPriceCents)} />
+          </>
         )}
         {kind !== "RENTAL" ? (
           <Field label="Preço de venda (R$)">

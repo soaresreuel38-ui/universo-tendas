@@ -78,6 +78,8 @@ async function buildSnapshot(tx: Db, rentalId: string): Promise<ContractSnapshot
       teardownAt: iso(rental.teardownAt),
       pickupBy: rental.pickupBy,
       notes: rental.notes,
+      billingMode: rental.billingMode,
+      periodCount: rental.periodCount,
     },
     items,
     subtotalCents,

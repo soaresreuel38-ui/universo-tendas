@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BILLING_SHORT, periodLabel } from "@/lib/billing";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
@@ -119,6 +120,14 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
             { header: "Cliente", cell: (r) => r.customer.name },
             { header: "Saída", cell: (r) => fmtDateTime(r.departureAt) },
             { header: "Retorno", cell: (r) => fmtDateTime(r.actualReturnAt ?? r.expectedReturnAt) },
+            {
+              header: "Modalidade",
+              cell: (r) => (
+                <span className="whitespace-nowrap text-muted">
+                  {BILLING_SHORT[r.billingMode]} · {periodLabel(r.billingMode, r.periodCount)}
+                </span>
+              ),
+            },
             {
               header: "Itens",
               mobile: "hide",

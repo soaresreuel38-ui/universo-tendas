@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BILLING_LABEL, BILLING_SHORT, periodLabel } from "@/lib/billing";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RentalStatusBadge } from "@/components/rentals/RentalStatusBadge";
@@ -80,6 +81,9 @@ export default async function RentalPage({
         title={
           <span className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-faint">#{seq(r.number)}</span> {r.eventName} <RentalStatusBadge rental={r} />
+            <span className="rounded-full border border-line bg-white px-2.5 py-0.5 text-xs font-medium text-graphite">
+              {BILLING_SHORT[r.billingMode]} · {periodLabel(r.billingMode, r.periodCount)}
+            </span>
           </span>
         }
         description={`${r.customer.name} · criada por ${r.createdBy.name} em ${fmtDateTime(r.createdAt)}`}
@@ -280,6 +284,7 @@ export default async function RentalPage({
       <Section title="Datas e detalhes">
         <DefinitionList
           items={[
+            ["Modalidade", `${BILLING_LABEL[r.billingMode]} — ${periodLabel(r.billingMode, r.periodCount)}`],
             ["Montagem", fmtDateTime(r.setupAt)],
             ["Saída", fmtDateTime(r.departureAt)],
             ["Data do evento", fmtDateTime(r.eventAt)],

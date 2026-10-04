@@ -12,6 +12,7 @@ export type ProductInput = {
   unit: string;
   salePriceCents?: number | null;
   rentalPriceCents?: number | null;
+  monthlyPriceCents?: number | null;
   photoId?: string | null;
   notes?: string | null;
   dimensions?: string | null;

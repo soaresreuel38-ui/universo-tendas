@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BILLING_LABEL, periodLabel } from "@/lib/billing";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
@@ -232,6 +233,7 @@ export default async function ContractPage({ params, searchParams }: { params: P
                   ["Entrega / evento", snap.rental.eventAddress],
                   ["Saída", fmtDateTime(new Date(snap.rental.departureAt))],
                   ["Retorno previsto", fmtDateTime(new Date(snap.rental.expectedReturnAt))],
+                  ["Modalidade", snap.rental.billingMode ? `${BILLING_LABEL[snap.rental.billingMode]} — ${periodLabel(snap.rental.billingMode, snap.rental.periodCount ?? 1)}` : null],
                   ["Condição de pagamento", snap.paymentTerms],
                   ["Cláusulas", snap.clauses.length ? `${snap.clauses.length} cláusula(s) do modelo` : "Nenhuma"],
                   ["Gerado por", `${c.createdBy.name} em ${fmtDateTime(c.createdAt)}`],

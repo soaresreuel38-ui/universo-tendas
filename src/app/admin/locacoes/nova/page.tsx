@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/primitives";
 import { modelView } from "@/lib/model-view";
+import { periodEnd, type BillingMode } from "@/lib/billing";
 import { addDays, toLocalInput, todayKey, zonedToUtc, TZ } from "@/lib/time";
 import { requirePermission } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -9,7 +10,7 @@ import { RentalWizard } from "./RentalWizard";
 
 export const metadata: Metadata = { title: "Nova locação" };
 
-export default async function NewRentalPage({ searchParams }: { searchParams: Promise<{ saida?: string; produto?: string; cliente?: string; orcamento?: string }> }) {
+export default async function NewRentalPage({ searchParams }: { searchParams: Promise<{ saida?: string; produto?: string; cliente?: string; orcamento?: string; modo?: string }> }) {
   await requirePermission("rental.manage");
   const sp = await searchParams;
   const [customers, products, template] = await Promise.all([
@@ -28,14 +29,18 @@ export default async function NewRentalPage({ searchParams }: { searchParams: Pr
   const immediate = sp.saida === "1";
   const today = todayKey();
   const departure = immediate ? new Date() : zonedToUtc(addDays(today, 1), "08:00", TZ);
-  const ret = zonedToUtc(addDays(today, immediate ? 1 : 2), "18:00", TZ);
+  // Modalidade inicial: pedida no link, ou mensal quando o produto escolhido só tem preço mensal.
+  const chosen = products.find((p) => p.id === sp.produto);
+  const mode: BillingMode =
+    sp.modo === "mensal" || (chosen && chosen.rentalPriceCents == null && chosen.monthlyPriceCents != null) ? "MENSAL" : "DIARIA";
+  const ret = periodEnd(mode, departure, 1);
 
   return (
     <div className="pb-28">
       <PageHeader
         eyebrow="Operação"
         title={immediate ? "Saída para locação" : sp.orcamento === "1" ? "Novo orçamento" : "Nova locação"}
-        description="Cliente → período → produtos → revisão. A disponibilidade é conferida em tempo real e de novo ao salvar."
+        description="Quatro passos rápidos: cliente, diária ou mensal, produtos e revisão."
         back={{ href: "/admin/locacoes", label: "Locações" }}
       />
       <RentalWizard
@@ -49,6 +54,7 @@ export default async function NewRentalPage({ searchParams }: { searchParams: Pr
           unit: p.unit,
           dimensions: p.dimensions,
           rentalPriceCents: p.rentalPriceCents,
+          monthlyPriceCents: p.monthlyPriceCents,
           photoId: p.photoId ?? p.images[0]?.photoId ?? null,
           model: modelView(p.id, p.model3d),
         }))}
@@ -59,6 +65,7 @@ export default async function NewRentalPage({ searchParams }: { searchParams: Pr
           productId: products.some((p) => p.id === sp.produto) ? sp.produto : undefined,
           immediate,
           quote: sp.orcamento === "1" && !immediate,
+          mode,
           paymentTerms: template?.defaultPaymentTerms ?? "",
         }}
       />

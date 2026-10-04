@@ -71,7 +71,16 @@ function parseRental(form: FormData): Omit<RentalInput, "customerId"> {
       teardownAt: str(form, "teardownAt"),
       paymentTerms: str(form, "paymentTerms"),
     });
-  return { ...base, discountCents: base.discountCents ?? 0, items };
+  // Modalidade: opcional (formulários antigos não enviam; na edição, mantém a atual).
+  const mode = str(form, "billingMode");
+  const periods = str(form, "periodCount");
+  const billing = z
+    .object({
+      billingMode: z.enum(["DIARIA", "MENSAL"], { message: "Modalidade inválida." }).optional(),
+      periodCount: zInt("Quantidade de diárias/meses", 1, 3650).optional(),
+    })
+    .parse({ billingMode: mode || undefined, periodCount: periods || undefined });
+  return { ...base, ...billing, discountCents: base.discountCents ?? 0, items };
 }
 
 const newCustomerSchema = z.object({

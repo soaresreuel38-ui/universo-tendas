@@ -218,9 +218,24 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                           </div>
                           <div className="shrink-0 text-right">
                             {p.kind !== "SALE" ? (
-                              <p className="tabular text-[15px] font-semibold text-graphite">
-                                {p.rentalPriceCents != null ? money(p.rentalPriceCents) : <span className="text-sm font-normal text-faint">Preço a definir</span>}
-                              </p>
+                              p.rentalPriceCents == null && p.monthlyPriceCents == null ? (
+                                <p className="text-sm text-faint">Preço a definir</p>
+                              ) : (
+                                <>
+                                  {p.rentalPriceCents != null ? (
+                                    <p className="tabular text-[15px] font-semibold text-graphite">
+                                      {money(p.rentalPriceCents)}
+                                      <span className="text-xs font-normal text-faint">/dia</span>
+                                    </p>
+                                  ) : null}
+                                  {p.monthlyPriceCents != null ? (
+                                    <p className={`tabular ${p.rentalPriceCents != null ? "text-[12.5px] text-muted" : "text-[15px] font-semibold text-graphite"}`}>
+                                      {money(p.monthlyPriceCents)}
+                                      <span className="text-xs font-normal text-faint">/mês</span>
+                                    </p>
+                                  ) : null}
+                                </>
+                              )
                             ) : null}
                             {p.kind !== "RENTAL" && p.salePriceCents != null ? (
                               p.kind === "SALE" ? (

@@ -46,6 +46,8 @@ export default async function EditRentalPage({ params }: { params: Promise<{ id:
           pickupBy: r.pickupBy ?? "",
           notes: r.notes ?? "",
           discount: r.discountCents ? moneyInput(r.discountCents) : "",
+          billingMode: r.billingMode,
+          periodCount: r.periodCount,
           items: r.items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPrice: moneyInput(i.unitPriceCents) })),
         }}
       />

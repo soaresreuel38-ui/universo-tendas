@@ -1,5 +1,6 @@
 import { Document, Text, View } from "@react-pdf/renderer";
 import type { ContractSnapshot } from "@/lib/contract-types";
+import { BILLING_LABEL, periodLabel } from "@/lib/billing";
 import { fmtDate, fmtDateTime, money, seq } from "@/lib/format";
 import { DocHeader, DocPage, Grid, s, Section, Signatures, Table, Totals, type Column, type Company, type SignatureView } from "./components";
 
@@ -71,6 +72,7 @@ export function ContractPdf({
           <Grid
             items={[
               ["Endereço de entrega / evento", c.rental.eventAddress, true],
+              ["Modalidade", c.rental.billingMode ? `${BILLING_LABEL[c.rental.billingMode]} — ${periodLabel(c.rental.billingMode, c.rental.periodCount ?? 1)}` : null],
               ["Montagem", d(c.rental.setupAt)],
               ["Saída dos equipamentos", d(c.rental.departureAt)],
               ["Data do evento", d(c.rental.eventAt)],
@@ -148,6 +150,8 @@ export type QuoteData = {
   totalCents: number;
   paymentTerms: string | null;
   notes: string | null;
+  /** Ex.: "Locação diária — 3 diárias". */
+  billing?: string | null;
 };
 
 export function QuotePdf({ q }: { q: QuoteData }) {
@@ -170,6 +174,7 @@ export function QuotePdf({ q }: { q: QuoteData }) {
           <Grid
             items={[
               ["Evento", q.eventName],
+              ["Modalidade", q.billing ?? null],
               ["Data do evento", q.eventAt ? fmtDateTime(q.eventAt) : null],
               ["Local", q.eventAddress, true],
               ["Saída", fmtDateTime(q.departureAt)],

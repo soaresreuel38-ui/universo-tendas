@@ -1,4 +1,5 @@
 import "server-only";
+import { BILLING_LABEL, periodLabel, type BillingMode } from "@/lib/billing";
 import { renderToBuffer } from "@react-pdf/renderer";
 import type { ContractSnapshot } from "@/lib/contract-types";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain";
@@ -44,6 +45,8 @@ export async function contractPdf(contractId: string): Promise<{ buffer: Buffer;
   return { buffer, fileName: `contrato-${String(c.number).padStart(6, "0")}.pdf` };
 }
 
+const modalidade = (mode: BillingMode | undefined, n: number | undefined) => (mode ? `${BILLING_LABEL[mode]} — ${periodLabel(mode, n ?? 1)}` : null);
+
 export async function quotePdf(rentalId: string) {
   const r = await prisma.rental.findUnique({
     where: { id: rentalId },
@@ -76,6 +79,7 @@ export async function quotePdf(rentalId: string) {
         discountCents: r.discountCents,
         totalCents: r.totalCents,
         paymentTerms: r.paymentTerms ?? template.defaultPaymentTerms,
+        billing: modalidade(r.billingMode, r.periodCount),
         notes: r.notes,
       }}
     />,

@@ -27,6 +27,9 @@ export type RentalInput = {
   pickupBy?: string | null;
   teardownAt?: Date | null;
   paymentTerms?: string | null;
+  /** Diária ou mensal, e quantas diárias/meses foram combinados (opcional na edição: mantém o atual). */
+  billingMode?: "DIARIA" | "MENSAL";
+  periodCount?: number;
   discountCents?: number;
   notes?: string | null;
   items: RentalItemInput[];
@@ -42,6 +45,9 @@ export type UnitSelection = Record<string, string[]>;
 function validateInput(input: RentalInput) {
   if (!input.customerId) throw new DomainError("Selecione o cliente.");
   if (!input.eventName.trim()) throw new DomainError("Informe o evento.");
+  if (input.periodCount !== undefined && (!Number.isInteger(input.periodCount) || input.periodCount < 1 || input.periodCount > 3650)) {
+    throw new DomainError("Quantidade de diárias/meses inválida.");
+  }
   if (!(input.departureAt instanceof Date) || Number.isNaN(input.departureAt.getTime())) throw new DomainError("Data de saída inválida.");
   if (!(input.expectedReturnAt instanceof Date) || Number.isNaN(input.expectedReturnAt.getTime())) {
     throw new DomainError("Data prevista de retorno inválida.");
