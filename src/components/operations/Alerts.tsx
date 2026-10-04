@@ -1,11 +1,20 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/icons";
 
-export type AlertItem = { count: number; label: string; href: string; tone: "danger" | "warn" | "info"; icon: IconName; detail?: string };
+export type AlertItem = {
+  count: number;
+  label: string;
+  href: string;
+  tone: "danger" | "warn" | "info";
+  icon: IconName;
+  detail?: string;
+  /** Alerta sem quantidade (ex.: configuração pendente): mostra o ícone no lugar do número. */
+  flag?: boolean;
+};
 
 /** Lista de alertas: só o que pede ação, do mais urgente ao informativo. */
 export function AlertList({ items }: { items: AlertItem[] }) {
-  const visible = items.filter((a) => a.count > 0);
+  const visible = items.filter((a) => a.flag || a.count > 0);
   if (!visible.length) {
     return (
       <div className="flex items-center gap-3 px-5 py-6 text-sm text-muted">
@@ -29,7 +38,7 @@ export function AlertList({ items }: { items: AlertItem[] }) {
                   a.tone === "danger" ? "bg-accent-soft text-accent" : a.tone === "warn" ? "bg-amber-50 text-amber-800" : "bg-canvas text-graphite"
                 }`}
               >
-                {a.count}
+                {a.flag ? <Icon name={a.icon} className="h-4 w-4" /> : a.count}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium text-graphite">{a.label}</span>

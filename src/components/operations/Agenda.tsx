@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TentDrawing } from "@/components/brand/TentDrawing";
 import { ProductImage } from "@/components/products/ProductImage";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { fmtDate, fmtTime, seq } from "@/lib/format";
@@ -54,10 +55,9 @@ export function AgendaTimeline({ entries, empty = "Nada agendado para hoje.", co
   if (!entries.length) {
     return (
       <div className="flex flex-col items-center px-6 py-12 text-center">
-        <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-faint">
-          <Icon name="sun" className="h-5 w-5" />
-        </span>
-        <p className="text-sm text-muted">{empty}</p>
+        <TentDrawing className="mb-4 w-28 text-line-strong" strokeWidth={1.4} />
+        <p className="text-sm font-medium text-graphite">Agenda livre</p>
+        <p className="mt-0.5 text-sm text-muted">{empty}</p>
       </div>
     );
   }
