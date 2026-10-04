@@ -1,3 +1,5 @@
+import { TZ, toDateKey } from "./time";
+
 /** Modalidade da locação: por diária ou por mês. */
 export type BillingMode = "DIARIA" | "MENSAL";
 
@@ -24,18 +26,27 @@ export function periodEnd(mode: BillingMode, from: Date, n: number): Date {
   return mode === "MENSAL" ? addMonths(from, n) : new Date(from.getTime() + n * DAY);
 }
 
+/** Data de calendário (fuso da empresa) como número de dias, para contar por data e não por hora. */
+function dayNumber(d: Date): number {
+  const [y, m, dd] = toDateKey(d, TZ).split("-").map(Number);
+  return Date.UTC(y, m - 1, dd) / DAY;
+}
+
 /**
- * Quantas diárias ou meses cabem no período (sempre ao menos 1).
- * Diária: cada 24 h iniciadas conta uma diária. Mensal: cada mês de calendário iniciado conta um mês.
+ * Quantas diárias ou meses cabem no período (sempre ao menos 1), contando por DATA, sem olhar a hora.
+ * Diária: diferença entre as datas (05→06 = 1, 05→07 = 2, mesmo dia = 1).
+ * Mensal: meses de calendário (05/10→05/11 = 1; 05/10→06/11 = 2).
  */
 export function periodsBetween(mode: BillingMode, from: Date, to: Date): number {
-  if (!(to.getTime() > from.getTime())) return 1;
+  const a = dayNumber(from);
+  const b = dayNumber(to);
+  if (!(b > a)) return 1;
   if (mode === "MENSAL") {
     let m = 1;
-    while (m < 1200 && addMonths(from, m).getTime() < to.getTime()) m++;
+    while (m < 1200 && dayNumber(addMonths(from, m)) < b) m++;
     return m;
   }
-  return Math.max(1, Math.ceil((to.getTime() - from.getTime()) / DAY - 1e-9));
+  return b - a;
 }
 
 /** "1 diária", "3 diárias", "1 mês", "2 meses". */

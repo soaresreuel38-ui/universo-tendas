@@ -338,7 +338,7 @@ export function RentalWizard({
                 className={`rounded-2xl border-2 px-4 py-3.5 text-left transition-colors ${mode === m ? "border-ink bg-ink-tint" : "border-line bg-white hover:border-line-strong"}`}
               >
                 <span className={`block text-base font-semibold ${mode === m ? "text-ink" : "text-graphite"}`}>{m === "DIARIA" ? "Diária" : "Mensal"}</span>
-                <span className="block text-xs text-muted">{m === "DIARIA" ? "Cobrança por dia" : "Cobrança por mês"}</span>
+                <span className="block text-xs text-muted">{m === "DIARIA" ? "Por dia, contada pela data" : "Por mês de calendário"}</span>
               </button>
             ))}
           </div>

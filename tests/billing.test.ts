@@ -7,16 +7,19 @@ import { at, db, makeProduct, makeUsers, resetDb } from "./helpers";
 
 describe("modalidade diária / mensal — cálculo", () => {
   const d = (s: string) => new Date(s);
-  it("conta diárias por 24 h iniciadas e meses de calendário iniciados", () => {
-    expect(periodsBetween("DIARIA", d("2026-10-01T08:00:00Z"), d("2026-10-01T18:00:00Z"))).toBe(1);
-    expect(periodsBetween("DIARIA", d("2026-10-01T08:00:00Z"), d("2026-10-02T08:00:00Z"))).toBe(1);
-    expect(periodsBetween("DIARIA", d("2026-10-01T08:00:00Z"), d("2026-10-02T18:00:00Z"))).toBe(2);
-    expect(periodsBetween("MENSAL", d("2026-10-01T08:00:00Z"), d("2026-10-31T08:00:00Z"))).toBe(1);
-    expect(periodsBetween("MENSAL", d("2026-10-05T08:00:00Z"), d("2026-11-05T08:00:00Z"))).toBe(1);
-    expect(periodsBetween("MENSAL", d("2026-10-01T08:00:00Z"), d("2026-11-15T08:00:00Z"))).toBe(2);
-    expect(periodEnd("MENSAL", d("2026-01-31T08:00:00Z"), 1).toISOString()).toBe("2026-02-28T08:00:00.000Z");
-    expect(periodEnd("DIARIA", d("2026-10-01T08:00:00Z"), 3).toISOString()).toBe("2026-10-04T08:00:00.000Z");
-    expect(periodsBetween("DIARIA", d("2026-10-02T08:00:00Z"), d("2026-10-01T08:00:00Z"))).toBe(1);
+  it("conta diárias pela diferença de datas e meses de calendário, sem olhar a hora", () => {
+    // horários de Cuiabá (UTC-4)
+    const c = (s: string) => new Date(`${s}-04:00`);
+    expect(periodsBetween("DIARIA", c("2026-10-05T08:00:00"), c("2026-10-05T18:00:00"))).toBe(1); // mesmo dia
+    expect(periodsBetween("DIARIA", c("2026-10-05T18:00:00"), c("2026-10-06T08:00:00"))).toBe(1); // 05→06
+    expect(periodsBetween("DIARIA", c("2026-10-05T08:00:00"), c("2026-10-06T18:00:00"))).toBe(1); // hora não importa
+    expect(periodsBetween("DIARIA", c("2026-10-05T08:00:00"), c("2026-10-07T07:00:00"))).toBe(2); // 05→07
+    expect(periodsBetween("DIARIA", c("2026-10-05T23:30:00"), c("2026-10-06T00:30:00"))).toBe(1); // virada do dia em Cuiabá
+    expect(periodsBetween("MENSAL", c("2026-10-05T08:00:00"), c("2026-11-05T18:00:00"))).toBe(1);
+    expect(periodsBetween("MENSAL", c("2026-10-05T08:00:00"), c("2026-11-06T08:00:00"))).toBe(2);
+    expect(periodsBetween("DIARIA", c("2026-10-06T08:00:00"), c("2026-10-05T08:00:00"))).toBe(1);
+    expect(periodEnd("MENSAL", d("2026-01-31T12:00:00Z"), 1).toISOString()).toBe("2026-02-28T12:00:00.000Z");
+    expect(periodEnd("DIARIA", d("2026-10-01T12:00:00Z"), 3).toISOString()).toBe("2026-10-04T12:00:00.000Z");
   });
   it("rótulos e preço de tabela por modalidade", () => {
     expect(periodLabel("DIARIA", 1)).toBe("1 diária");
