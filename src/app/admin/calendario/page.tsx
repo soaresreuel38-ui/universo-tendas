@@ -205,6 +205,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <PageHeader
+        hero
         eyebrow="Operação"
         title="Calendário"
         description="↑ saída · ↓ retorno. Nas visões de dia e semana aparecem também montagem, evento, desmontagem e o contrato."

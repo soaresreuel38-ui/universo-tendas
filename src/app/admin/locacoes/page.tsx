@@ -71,6 +71,8 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader
+        hero
+        eyebrow="Operação"
         title="Locações"
         description={TABS.find((t) => t.key === tab)?.hint}
         actions={

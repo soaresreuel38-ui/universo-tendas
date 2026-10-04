@@ -4,7 +4,7 @@ import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge"
 import { AGENDA_KIND, AgendaTimeline, buildAgenda, type AgendaKind } from "@/components/operations/Agenda";
 import { AlertList, operationalAlerts } from "@/components/operations/Alerts";
 import { Icon } from "@/components/ui/icons";
-import { LinkButton, Section } from "@/components/ui/primitives";
+import { LinkButton, PageHeader, Section } from "@/components/ui/primitives";
 import { fmtDateTime, fmtWeekday, money, seq } from "@/lib/format";
 import { TZ } from "@/lib/time";
 import { requireUser } from "@/server/auth/session";
@@ -47,20 +47,22 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-6">
-      <header className="flex animate-rise flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow mb-1 !text-ink">Hoje · {fmtWeekday(now)}</p>
-          <h1 className="text-[34px] font-semibold leading-none tracking-[-0.03em] text-graphite md:text-[44px]">{dayMonth.format(now)}</h1>
-        </div>
-        <div className="flex gap-2">
-          <LinkButton href="/admin/calendario?view=semana" icon="calendar">
-            Semana
-          </LinkButton>
-          <LinkButton href="/admin/locacoes/nova" variant="primary" icon="plus">
-            Nova locação
-          </LinkButton>
-        </div>
-      </header>
+      <PageHeader
+        hero
+        eyebrow={`Hoje · ${fmtWeekday(now)}`}
+        title={<span className="text-[34px] tracking-[-0.03em] md:text-[44px]">{dayMonth.format(now)}</span>}
+        description={agenda.length ? `${agenda.length} ${agenda.length === 1 ? "compromisso" : "compromissos"} na agenda.` : "Agenda livre hoje."}
+        actions={
+          <>
+            <LinkButton href="/admin/calendario?view=semana" icon="calendar">
+              Semana
+            </LinkButton>
+            <LinkButton href="/admin/locacoes/nova" variant="primary" icon="plus">
+              Nova locação
+            </LinkButton>
+          </>
+        }
+      />
 
       <nav aria-label="Filtrar agenda" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         {FILTERS.map((x) => {

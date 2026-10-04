@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { TentDrawing } from "@/components/brand/TentDrawing";
 import { Icon, type IconName } from "./icons";
 
 /*
@@ -56,13 +57,49 @@ export function PageHeader({
   actions,
   back,
   eyebrow,
+  hero = false,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
   eyebrow?: ReactNode;
+  /** Topo azul da marca (telas principais). Os botões passam para a versão clara automaticamente. */
+  hero?: boolean;
 }) {
+  if (hero) {
+    return (
+      <header className="relative mb-6 animate-rise overflow-hidden rounded-3xl bg-ink-deep text-white md:mb-8">
+        <svg className="absolute inset-0 h-full w-full text-white/[0.05]" aria-hidden>
+          <defs>
+            <pattern id="hero-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+              <path d="M28 0H0v28" fill="none" stroke="currentColor" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hero-grid)" />
+        </svg>
+        <TentDrawing className="pointer-events-none absolute -bottom-8 right-6 hidden w-[230px] text-white/[0.14] md:block lg:right-10" strokeWidth={1.2} />
+        <div className="relative flex flex-col gap-5 px-6 py-6 sm:px-8 sm:py-8 lg:flex-row lg:items-end lg:justify-between lg:px-10">
+          <div className="min-w-0">
+            {back ? (
+              <Link href={back.href} className="mb-3 inline-flex items-center gap-1 text-[13px] text-white/65 transition-colors hover:text-white">
+                <Icon name="chevronLeft" className="h-4 w-4" />
+                {back.label}
+              </Link>
+            ) : null}
+            {eyebrow ? <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">{eyebrow}</p> : null}
+            <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.025em] md:text-[34px]">{title}</h1>
+            {description ? <p className="mt-1.5 max-w-2xl text-sm text-white/70">{description}</p> : null}
+          </div>
+          {actions ? (
+            <div className="flex flex-wrap gap-2 lg:mr-[200px] xl:mr-[230px] [&>a]:border [&>a]:border-white/25 [&>a]:bg-transparent [&>a]:text-white [&>a]:shadow-none [&>a:hover]:bg-white/10 [&>.bg-ink]:border-white [&>.bg-ink]:bg-white [&>.bg-ink]:font-semibold [&>.bg-ink]:text-ink [&>.bg-ink:hover]:bg-white/90">
+              {actions}
+            </div>
+          ) : null}
+        </div>
+      </header>
+    );
+  }
   return (
     <header className="mb-6 animate-rise md:mb-8">
       {back ? (

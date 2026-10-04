@@ -52,6 +52,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   return (
     <div>
       <PageHeader
+        hero
         eyebrow="Estoque"
         title="Estoque por produto"
         description="Como cada item está distribuído agora. Toque no produto para ver o histórico de movimentações."

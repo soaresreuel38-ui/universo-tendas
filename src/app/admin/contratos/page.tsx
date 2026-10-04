@@ -72,6 +72,7 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader
+        hero
         eyebrow="Operação"
         title="Contratos"
         description="Documentos gerados automaticamente a partir das locações, sem redigitar dados."

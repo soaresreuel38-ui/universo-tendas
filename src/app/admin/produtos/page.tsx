@@ -74,6 +74,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader
+        hero
         eyebrow="Estoque"
         title="Catálogo"
         description="Tendas, estruturas e equipamentos com fotos reais, disponibilidade e preços."
