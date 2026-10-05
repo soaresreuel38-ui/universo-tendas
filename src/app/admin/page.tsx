@@ -78,7 +78,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       {negado ? <Notice tone="danger">Você não tem permissão para acessar aquela área.</Notice> : null}
 
       {/* Abertura: o dia em uma frase e as ações principais */}
-      <header className="relative animate-rise overflow-hidden rounded-3xl bg-ink-deep text-white">
+      <header className="relative animate-rise overflow-hidden rounded-3xl bg-ink text-white">
         <svg className="absolute inset-0 h-full w-full text-white/[0.05]" aria-hidden>
           <defs>
             <pattern id="painel-grid" width="28" height="28" patternUnits="userSpaceOnUse">

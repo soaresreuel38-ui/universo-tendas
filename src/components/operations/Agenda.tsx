@@ -12,7 +12,7 @@ export const AGENDA_KIND: Record<AgendaKind, { label: string; icon: IconName; do
   saida: { label: "Saída", icon: "truck", dot: "bg-st-reserved", text: "text-[#244f8a]" },
   montagem: { label: "Montagem", icon: "tent", dot: "bg-ink", text: "text-ink" },
   evento: { label: "Evento", icon: "sparkle", dot: "bg-graphite", text: "text-graphite" },
-  desmontagem: { label: "Desmontagem", icon: "layers", dot: "bg-st-maint", text: "text-[#5f554c]" },
+  desmontagem: { label: "Desmontagem", icon: "layers", dot: "bg-st-maint", text: "text-[#4f5b6b]" },
   retorno: { label: "Devolução", icon: "undo", dot: "bg-st-rented", text: "text-[#8a5413]" },
   conferencia: { label: "Conferência", icon: "clipboard", dot: "bg-st-rented", text: "text-[#8a5413]" },
 };

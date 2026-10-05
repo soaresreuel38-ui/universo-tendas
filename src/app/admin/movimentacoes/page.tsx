@@ -55,7 +55,7 @@ export default async function MovementsPage({ searchParams }: { searchParams: Pr
         </select>
         <input type="date" name="de" defaultValue={sp.de} className={select} aria-label="De" />
         <input type="date" name="ate" defaultValue={sp.ate} className={select} aria-label="Até" />
-        <button className="col-span-2 h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black md:col-span-1">Filtrar</button>
+        <button className="col-span-2 h-10 rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft md:col-span-1">Filtrar</button>
       </form>
       <Section padded={false}>
         <MovementTable rows={rows} />

@@ -284,7 +284,7 @@ export function RentalForm({
             {STATUS_CHOICES.map((s) => (
               <label
                 key={s.value}
-                className={`cursor-pointer rounded-md border px-3 py-2 ${status === s.value ? "border-graphite bg-graphite text-white" : "border-line-strong hover:border-line-strong"}`}
+                className={`cursor-pointer rounded-md border px-3 py-2 ${status === s.value ? "border-ink bg-ink text-white" : "border-line-strong hover:border-line-strong"}`}
               >
                 <input type="radio" name="status" value={s.value} checked={status === s.value} onChange={() => setStatus(s.value)} className="sr-only" />
                 <span className="block text-sm font-semibold">{s.label}</span>

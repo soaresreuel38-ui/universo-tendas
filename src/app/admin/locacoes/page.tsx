@@ -93,7 +93,7 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
               <Link
                 href={`/admin/locacoes?aba=${t.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
                 className={`inline-block rounded-full border px-3 py-1.5 text-sm ${
-                  t.key === tab ? "border-graphite bg-graphite text-white" : "border-line-strong bg-white text-muted hover:border-line-strong"
+                  t.key === tab ? "border-ink bg-ink text-white" : "border-line-strong bg-white text-muted hover:border-line-strong"
                 }`}
               >
                 {t.label}
@@ -105,7 +105,7 @@ export default async function RentalsPage({ searchParams }: { searchParams: Prom
       <form className="mb-3 flex gap-2" role="search">
         <input type="hidden" name="aba" value={tab} />
         <input name="q" defaultValue={q} type="search" placeholder="Nº, evento, cliente ou telefone" className="h-10 flex-1 rounded-lg border border-line-strong bg-white px-3 text-sm" />
-        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Buscar</button>
+        <button className="h-10 rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft">Buscar</button>
       </form>
       <Section padded={false}>
         <DataTable

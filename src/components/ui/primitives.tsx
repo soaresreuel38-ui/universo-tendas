@@ -19,8 +19,8 @@ export function buttonClass(variant: ButtonVariant = "secondary", size: "sm" | "
   const variants = {
     primary: "bg-ink text-white shadow-[0_1px_0_rgba(8,44,92,0.4),inset_0_1px_0_rgba(255,255,255,0.08)] hover:bg-ink-soft",
     accent: "bg-accent text-white shadow-[0_1px_0_rgba(120,20,26,0.35)] hover:bg-accent-strong",
-    secondary: "border border-line-strong bg-white text-graphite hover:border-[#bfbab0] hover:bg-paper",
-    ghost: "text-muted hover:bg-black/[0.04] hover:text-graphite",
+    secondary: "border border-line-strong bg-white text-graphite hover:border-[#b3bdca] hover:bg-paper",
+    ghost: "text-muted hover:bg-ink-tint hover:text-ink",
     danger: "border border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50",
   }[variant];
   return `${base} ${sizes} ${variants}`;
@@ -69,7 +69,7 @@ export function PageHeader({
 }) {
   if (hero) {
     return (
-      <header className="relative mb-6 animate-rise overflow-hidden rounded-3xl bg-ink-deep text-white md:mb-8">
+      <header className="relative mb-6 animate-rise overflow-hidden rounded-3xl bg-ink text-white md:mb-8">
         <svg className="absolute inset-0 h-full w-full text-white/[0.05]" aria-hidden>
           <defs>
             <pattern id="hero-grid" width="28" height="28" patternUnits="userSpaceOnUse">
@@ -139,7 +139,10 @@ export function Section({
     <section id={id} className={`scroll-mt-20 overflow-hidden rounded-2xl border border-line bg-white ${className}`}>
       {title ? (
         <div className="flex min-h-12 items-center justify-between gap-3 border-b border-line px-5 py-3">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.06em] text-graphite">{title}</h2>
+          <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.06em] text-graphite">
+            <span className="h-3.5 w-[3px] rounded-full bg-ink" aria-hidden />
+            {title}
+          </h2>
           {actions ? <div className="flex items-center gap-2 text-sm">{actions}</div> : null}
         </div>
       ) : null}
@@ -215,7 +218,7 @@ export function StatusDot({ tone = "neutral", className = "" }: { tone?: Tone; c
 // ───────────────────────── Formulários ─────────────────────────
 
 const control =
-  "mt-1.5 block w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-graphite outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-faint hover:border-[#bfbab0] focus:border-ink focus:ring-4 focus:ring-ink/10 disabled:bg-canvas disabled:text-faint";
+  "mt-1.5 block w-full rounded-lg border border-line-strong bg-white px-3 py-2.5 text-graphite outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-faint hover:border-[#b3bdca] focus:border-ink focus:ring-4 focus:ring-ink/10 disabled:bg-canvas disabled:text-faint";
 
 export function Field({
   label,
@@ -299,7 +302,7 @@ export function DataTable<T>({
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-line">
+            <tr className="border-b border-line bg-ink-tint/60">
               {columns.map((c, i) => (
                 <th key={i} className={`eyebrow px-5 py-3 font-semibold ${align(c)} ${c.className ?? ""}`}>
                   {c.header}
@@ -309,11 +312,11 @@ export function DataTable<T>({
           </thead>
           <tbody className="divide-y divide-line/70">
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="group transition-colors hover:bg-paper">
+              <tr key={rowKey(row)} className="group transition-colors hover:bg-ink-tint/40">
                 {columns.map((c, i) => (
                   <td key={i} className={`px-5 py-3 align-middle ${align(c)} ${c.className ?? ""}`}>
                     {i === 0 && rowHref ? (
-                      <Link href={rowHref(row)} className="font-medium text-graphite underline-offset-4 group-hover:underline">
+                      <Link href={rowHref(row)} className="font-medium text-graphite underline-offset-4 group-hover:text-ink group-hover:underline">
                         {c.cell(row)}
                       </Link>
                     ) : (
@@ -381,12 +384,12 @@ export function Stat({
         <StatusDot tone={tone === "neutral" ? "muted" : tone} />
         {label}
       </p>
-      <p className={`tabular mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] ${tone === "danger" && value ? "text-accent" : "text-graphite"}`}>{value}</p>
+      <p className={`tabular mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] ${tone === "danger" && value ? "text-accent" : "text-ink"}`}>{value}</p>
       {hint ? <p className="mt-1.5 text-xs text-faint">{hint}</p> : null}
     </div>
   );
   return href ? (
-    <Link href={href} className="block h-full transition-colors hover:bg-paper">
+    <Link href={href} className="block h-full transition-colors hover:bg-ink-tint/50">
       {body}
     </Link>
   ) : (

@@ -156,7 +156,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
                         ["Disp.", r.free, r.free > 0 ? "text-st-free font-semibold" : "text-faint"],
                         ["Res.", r.reserved, r.reserved ? "text-[#244f8a]" : "text-faint"],
                         ["Loc.", r.qtyRented, r.qtyRented ? "text-[#8a5413]" : "text-faint"],
-                        ["Man.", r.qtyMaintenance, r.qtyMaintenance ? "text-[#5f554c]" : "text-faint"],
+                        ["Man.", r.qtyMaintenance, r.qtyMaintenance ? "text-[#4f5b6b]" : "text-faint"],
                       ].map(([l, v, cls]) => (
                         <span key={l as string} className="tabular text-sm">
                           <span className="block text-[10px] font-semibold uppercase tracking-wider text-faint md:hidden">{l}</span>

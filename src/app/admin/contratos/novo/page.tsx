@@ -32,7 +32,7 @@ export default async function NewContractPage({ searchParams }: { searchParams: 
       />
       <form className="mb-3 flex gap-2" role="search">
         <input name="q" defaultValue={q} type="search" placeholder="Cliente ou evento" className="h-11 flex-1 rounded-lg border border-line-strong bg-white px-3" />
-        <button className="h-11 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Buscar</button>
+        <button className="h-11 rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft">Buscar</button>
       </form>
       <Section padded={false}>
         {rentals.length === 0 ? (

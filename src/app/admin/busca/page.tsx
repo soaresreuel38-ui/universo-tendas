@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       <PageHeader title="Busca" description="Cliente, telefone, CPF/CNPJ, produto, código, contrato, locação ou evento." />
       <form role="search" className="flex gap-2">
         <input name="q" defaultValue={q} type="search" autoFocus placeholder="O que você procura?" className="h-12 flex-1 rounded-lg border border-line-strong bg-white px-3" />
-        <button className="h-12 rounded-lg bg-graphite px-5 text-sm font-medium text-white hover:bg-black">Buscar</button>
+        <button className="h-12 rounded-lg bg-ink px-5 text-sm font-medium text-white hover:bg-ink-soft">Buscar</button>
       </form>
       {q && total === 0 ? <Section><EmptyState>Nada encontrado para “{q}”.</EmptyState></Section> : null}
       {products.length ? (

@@ -24,7 +24,7 @@ const chipTone: Record<string, string> = {
   EM_EVENTO: "bg-[#fbf1e3] text-[#7a4a10] border-[#efd6b0]",
   AGUARDANDO_RETORNO: "bg-[#fbf1e3] text-[#7a4a10] border-[#efd6b0]",
   ATRASADA: "bg-accent-soft text-accent border-[#f0c4c7]",
-  RETORNADA: "bg-[#f1eee9] text-[#5f554c] border-line-strong",
+  RETORNADA: "bg-[#eef1f5] text-[#4f5b6b] border-line-strong",
   CONFERIDA: "bg-paper text-faint border-line",
   FINALIZADA: "bg-paper text-faint border-line",
 };
@@ -221,7 +221,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="inline-flex rounded-lg border border-line-strong bg-white p-0.5 text-sm">
           {(["dia", "semana", "mes"] as const).map((v) => (
-            <Link key={v} href={qs({ view: v })} className={`rounded-md px-3 py-1.5 font-medium ${view === v ? "bg-graphite text-white" : "text-muted hover:text-graphite"}`}>
+            <Link key={v} href={qs({ view: v })} className={`rounded-md px-3 py-1.5 font-medium ${view === v ? "bg-ink text-white" : "text-muted hover:text-graphite"}`}>
               {v === "dia" ? "Dia" : v === "semana" ? "Semana" : "Mês"}
             </Link>
           ))}
@@ -245,7 +245,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
-          <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white">Ver</button>
+          <button className="h-10 rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft">Ver</button>
         </form>
       </div>
       {product ? (

@@ -27,7 +27,7 @@ function Chip({ href, on, children }: { href: string; on: boolean; children: Rea
       href={href}
       aria-current={on ? "true" : undefined}
       className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
-        on ? "border-graphite bg-graphite text-white" : "border-line bg-white text-muted hover:border-line-strong hover:text-graphite"
+        on ? "border-ink bg-ink text-white" : "border-line bg-white text-muted hover:border-line-strong hover:text-graphite"
       }`}
     >
       {children}

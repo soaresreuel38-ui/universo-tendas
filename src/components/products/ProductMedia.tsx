@@ -73,7 +73,7 @@ export function ProductMedia({
                 role="tab"
                 aria-selected={showing === m}
                 onClick={() => setMode(m)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors ${showing === m ? "bg-graphite text-white" : "text-muted hover:text-graphite"}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors ${showing === m ? "bg-ink text-white" : "text-muted hover:text-graphite"}`}
               >
                 <Icon name={m === "3d" ? "cube" : "image"} className="h-3.5 w-3.5" />
                 {m === "3d" ? "Ver em 3D" : "Fotos"}
@@ -95,7 +95,7 @@ export function ProductMedia({
               }}
               aria-label={`Foto ${i + 1}`}
               className={`h-[68px] w-[88px] shrink-0 overflow-hidden rounded-xl border-2 transition-[border-color,opacity] ${
-                showing === "fotos" && current === i ? "border-graphite" : "border-transparent opacity-75 hover:opacity-100"
+                showing === "fotos" && current === i ? "border-ink" : "border-transparent opacity-75 hover:opacity-100"
               }`}
             >
               <img src={`/api/fotos/${id}?s=t`} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -105,7 +105,7 @@ export function ProductMedia({
             <button
               type="button"
               onClick={() => setMode("3d")}
-              className={`flex h-[68px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 bg-white text-[11px] font-semibold text-graphite ${showing === "3d" ? "border-graphite" : "border-line"}`}
+              className={`flex h-[68px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 bg-white text-[11px] font-semibold text-graphite ${showing === "3d" ? "border-ink" : "border-line"}`}
             >
               <Icon name="cube" className="h-5 w-5 text-ink" />
               3D

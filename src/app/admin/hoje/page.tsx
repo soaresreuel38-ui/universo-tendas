@@ -74,7 +74,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
               href={x.key === "tudo" ? "/admin/hoje" : `/admin/hoje?f=${x.key}`}
               aria-current={on ? "true" : undefined}
               className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
-                on ? "border-graphite bg-graphite text-white" : "border-line bg-white text-muted hover:border-line-strong hover:text-graphite"
+                on ? "border-ink bg-ink text-white" : "border-line bg-white text-muted hover:border-line-strong hover:text-graphite"
               } ${x.key === "atrasado" && n && !on ? "!border-red-200 !text-accent" : ""}`}
             >
               {x.key !== "tudo" && x.key !== "atrasado" ? <span className={`h-1.5 w-1.5 rounded-full ${AGENDA_KIND[x.key].dot}`} aria-hidden /> : null}

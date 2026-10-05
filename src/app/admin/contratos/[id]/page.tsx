@@ -323,7 +323,7 @@ export default async function ContractPage({ params, searchParams }: { params: P
 
         {/* Pré-visualização do documento (computador) */}
         <aside className="hidden xl:sticky xl:top-8 xl:block" aria-label="Pré-visualização do contrato">
-          <div className="overflow-hidden rounded-2xl border border-line bg-[#e9e6e0]">
+          <div className="overflow-hidden rounded-2xl border border-line bg-[#e8ecf1]">
             <div className="flex items-center justify-between border-b border-line bg-white px-4 py-2.5">
               <span className="eyebrow">Pré-visualização · A4</span>
               <a href={pdf} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-[12.5px] font-medium text-ink hover:underline">

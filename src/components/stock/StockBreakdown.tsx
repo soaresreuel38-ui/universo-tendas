@@ -16,7 +16,7 @@ export function StockBreakdown({
 }) {
   const parts = [
     { label: "Disponível", value: free, color: "bg-emerald-500" },
-    { label: "Reservado", value: reserved, color: "bg-sky-500" },
+    { label: "Reservado", value: reserved, color: "bg-st-reserved" },
     { label: "Alugado", value: rented, color: "bg-amber-500" },
     { label: "Manutenção", value: maintenance, color: "bg-yellow-400" },
     { label: "Pendente", value: pending, color: "bg-red-500" },

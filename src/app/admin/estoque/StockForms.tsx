@@ -121,7 +121,7 @@ export function ExitForm({
               {product.units.map((u) => {
                 const on = selectedUnits.includes(u.id);
                 return (
-                  <label key={u.id} className={`cursor-pointer rounded-md border px-2.5 py-1.5 font-mono text-sm ${on ? "border-graphite bg-graphite text-white" : "border-line-strong"}`}>
+                  <label key={u.id} className={`cursor-pointer rounded-md border px-2.5 py-1.5 font-mono text-sm ${on ? "border-ink bg-ink text-white" : "border-line-strong"}`}>
                     <input
                       type="checkbox"
                       name="unitIds"

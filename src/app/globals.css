@@ -2,15 +2,20 @@
 
 /* Universo Tendas — identidade da marca: azul Universo, branco e cinzas, com o vermelho do logo como destaque. */
 @theme {
-  /* Marca */
+  /* Marca: azul institucional da Universo Tendas */
   --color-ink: #0c3f80;
   --color-ink-soft: #1d56a3;
   --color-ink-deep: #082c5c;
   --color-ink-tint: #eef3fa;
+  --color-ink-mist: #dbe7f7;
+  --color-ink-light: #8fb6ec;
+  /* Navegação lateral */
+  --color-nav: #0a2a57;
+  --color-nav-line: #1c3f73;
   --color-accent: #c62b34;
   --color-accent-strong: #a8222a;
   --color-accent-soft: #fbeaeb;
-  /* Neutros "papel" e grafite */
+  /* Neutros "papel" e grafite (o painel /admin troca por neutros frios — ver .admin-ui) */
   --color-canvas: #f5f4f1;
   --color-paper: #fbfaf8;
   --color-line: #e6e3dd;
@@ -18,6 +23,7 @@
   --color-graphite: #16181d;
   --color-muted: #5d626b;
   --color-faint: #8b9098;
+  --color-slate-blue: #5b6f8f;
   /* Estados do equipamento (mesmas cores em todo o sistema) */
   --color-st-free: #1f8a5b;
   --color-st-reserved: #3a6fb5;
@@ -105,12 +111,12 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-faint);
+  color: var(--eyebrow-color, var(--color-faint));
 }
 
 /* Esqueleto de carregamento */
 @utility skeleton {
-  background: linear-gradient(90deg, #ebe8e2 0%, #f4f2ee 50%, #ebe8e2 100%);
+  background: linear-gradient(90deg, var(--skeleton-a, #ebe8e2) 0%, var(--skeleton-b, #f4f2ee) 50%, var(--skeleton-a, #ebe8e2) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.3s ease-in-out infinite;
   border-radius: 8px;
@@ -129,6 +135,47 @@
 
 ::selection {
   background: #cfdcf0;
+}
+
+/* Painel /admin: identidade azul institucional sobre base fria (branco/cinza) e texto grafite.
+   Fica restrito ao painel (o site público mantém a sua paleta); :has() cobre também o body e diálogos. */
+:root:has(.admin-ui) {
+  --color-ink-soft: #1a4f99;
+  --color-ink-deep: #0a2f63;
+  --color-ink-tint: #edf3fb;
+  --color-canvas: #f3f5f8;
+  --color-paper: #f8fafc;
+  --color-line: #e2e7ee;
+  --color-line-strong: #cdd5df;
+  --color-graphite: #1b2330;
+  --color-muted: #566173;
+  --color-faint: #8791a0;
+  --color-st-maint: #6b7686;
+  --eyebrow-color: var(--color-slate-blue);
+  --skeleton-a: #e6ebf1;
+  --skeleton-b: #f3f5f8;
+  --placeholder-bg: #eef1f5;
+  --placeholder-grid: #dfe5ec;
+  --placeholder-fg: #9aa6b5;
+  --photo-bg: #e9edf2;
+}
+:root:has(.admin-ui) ::selection {
+  background: #cddcf2;
+}
+
+/* Links de texto do painel em azul institucional (botões e cartões não usam "underline") */
+@layer base {
+  .admin-ui main a.underline,
+  .admin-ui main summary.underline,
+  .admin-ui main .underline > a {
+    color: var(--color-ink);
+    text-decoration-color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+    text-underline-offset: 3px;
+  }
+  .admin-ui main a.underline:hover {
+    color: var(--color-ink-soft);
+    text-decoration-color: currentColor;
+  }
 }
 
 /* ───────────── Site público ───────────── */

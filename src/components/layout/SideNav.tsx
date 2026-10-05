@@ -20,7 +20,7 @@ export function SideNav({ role }: { role: Role }) {
         if (items.length === 0) return null;
         return (
           <div key={gi}>
-            {group.title ? <p className="eyebrow px-2.5 pb-1.5 !text-[10.5px]">{group.title}</p> : null}
+            {group.title ? <p className="px-2.5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-white/40">{group.title}</p> : null}
             <ul className="space-y-px">
               {items.map((item) => {
                 const active = item.href === current;
@@ -30,11 +30,11 @@ export function SideNav({ role }: { role: Role }) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={`group relative flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors ${
-                        active ? "bg-ink-tint font-medium text-ink" : "text-muted hover:bg-black/[0.035] hover:text-graphite"
+                        active ? "bg-white/[0.11] font-medium text-white" : "text-white/70 hover:bg-white/[0.06] hover:text-white"
                       }`}
                     >
-                      {active ? <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-ink" aria-hidden /> : null}
-                      <Icon name={item.icon} className={`h-[17px] w-[17px] ${active ? "text-ink" : "text-faint group-hover:text-muted"}`} />
+                      {active ? <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-ink-light" aria-hidden /> : null}
+                      <Icon name={item.icon} className={`h-[17px] w-[17px] ${active ? "text-ink-light" : "text-white/45 group-hover:text-white/80"}`} />
                       {item.label}
                     </Link>
                   </li>
@@ -48,16 +48,18 @@ export function SideNav({ role }: { role: Role }) {
   );
 }
 
-export function SearchTrigger({ compact = false }: { compact?: boolean }) {
+export function SearchTrigger({ compact = false, dark = false }: { compact?: boolean; dark?: boolean }) {
   return (
     <button
       type="button"
       onClick={openSearch}
-      className={`flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white text-left text-[13px] text-faint transition-colors hover:border-line-strong hover:text-muted ${compact ? "px-2.5" : "px-3"}`}
+      className={`flex h-9 w-full items-center gap-2 rounded-lg border text-left text-[13px] transition-colors ${compact ? "px-2.5" : "px-3"} ${
+        dark ? "border-white/10 bg-white/[0.07] text-white/55 hover:bg-white/[0.11] hover:text-white/80" : "border-line bg-white text-faint hover:border-line-strong hover:text-muted"
+      }`}
     >
       <Icon name="search" className="h-4 w-4" />
-      <span className="flex-1 truncate">Buscar cliente, CPF, produto, contrato…</span>
-      <kbd className="rounded border border-line bg-paper px-1.5 font-mono text-[11px] text-faint">/</kbd>
+      <span className="flex-1 truncate">{dark && !compact ? "Buscar…" : "Buscar cliente, CPF, produto, contrato…"}</span>
+      <kbd className={`rounded border px-1.5 font-mono text-[11px] ${dark ? "border-white/15 text-white/50" : "border-line bg-paper text-faint"}`}>/</kbd>
     </button>
   );
 }

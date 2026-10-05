@@ -17,7 +17,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="Configurações da empresa"
         description="Usadas nas mensagens de WhatsApp e no cadastro de produtos."
-        actions={<a href="/admin/configuracoes/contratos" className="inline-flex h-10 items-center rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Modelo de contrato</a>}
+        actions={<a href="/admin/configuracoes/contratos" className="inline-flex h-10 items-center rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft">Modelo de contrato</a>}
       />
       <Section>
         <ActionForm action={saveSettingsAction}>

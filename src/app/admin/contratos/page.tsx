@@ -144,7 +144,7 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
           aria-label="Data (emissão, saída ou evento)"
           className="h-10 rounded-lg border border-line-strong bg-white px-3 text-sm outline-none focus:border-ink"
         />
-        <button className="h-10 rounded-lg bg-graphite px-5 text-sm font-medium text-white hover:bg-black">Buscar</button>
+        <button className="h-10 rounded-lg bg-ink px-5 text-sm font-medium text-white hover:bg-ink-soft">Buscar</button>
       </form>
 
       <Section padded={false}>

@@ -84,7 +84,7 @@ export function TemplateEditor({ action, initial }: { action: (s: ActionState, f
               Adicionar tópicos sugeridos (sem texto)
             </button>
           ) : null}
-          <button type="button" onClick={() => setClauses((cs) => [...cs, withKey({ title: "", body: "" })])} className="rounded-lg bg-graphite px-3 py-1.5 text-sm font-medium text-white hover:bg-black">
+          <button type="button" onClick={() => setClauses((cs) => [...cs, withKey({ title: "", body: "" })])} className="rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-ink-soft">
             + Nova cláusula
           </button>
         </div>

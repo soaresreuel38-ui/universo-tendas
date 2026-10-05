@@ -42,13 +42,13 @@ export default async function ExitPage({ searchParams }: { searchParams: Promise
             <Link
               key={t.type}
               href={href(t.type)}
-              className={`rounded-lg border px-3 py-3 transition ${active ? "border-graphite bg-graphite text-white" : "border-line bg-white hover:border-line-strong"}`}
+              className={`rounded-lg border px-3 py-3 transition ${active ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-line-strong"}`}
             >
               <span className="flex items-center gap-2 font-semibold">
                 <Icon name={t.icon} className={`h-5 w-5 ${active ? "text-white" : "text-faint"}`} />
                 {EXIT_TYPES[t.type]}
               </span>
-              <span className={`mt-0.5 block text-xs ${active ? "text-blue-100" : "text-faint"}`}>{t.hint}</span>
+              <span className={`mt-0.5 block text-xs ${active ? "text-white/70" : "text-faint"}`}>{t.hint}</span>
             </Link>
           );
         })}

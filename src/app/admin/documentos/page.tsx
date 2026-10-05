@@ -85,7 +85,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
             <option key={k.key} value={k.key}>{k.label}</option>
           ))}
         </select>
-        <button className="h-10 rounded-lg bg-graphite px-4 text-sm font-medium text-white hover:bg-black">Filtrar</button>
+        <button className="h-10 rounded-lg bg-ink px-4 text-sm font-medium text-white hover:bg-ink-soft">Filtrar</button>
       </form>
       <Section padded={false}>
         {rows.length === 0 ? (
