@@ -10,8 +10,8 @@ const csp = [
   "font-src 'self'",
   // ViaCEP: preenchimento do endereço pelo CEP no site (só o CEP é enviado).
   "connect-src 'self' blob: data: https://viacep.com.br",
-  // Mapa do local do evento, carregado só quando o cliente pede.
-  "frame-src https://www.google.com https://maps.google.com",
+  // Prévia do PDF do contrato no painel ('self') e mapa do local do evento, carregado só quando o cliente pede.
+  "frame-src 'self' https://www.google.com https://maps.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
