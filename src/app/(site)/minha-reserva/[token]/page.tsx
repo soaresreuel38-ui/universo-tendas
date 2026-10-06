@@ -21,16 +21,16 @@ export default async function ReservationByTokenPage({ params, searchParams }: {
         {rental ? (
           <>
             <ReservationView rental={serializeRental(rental, settings)} reference={{ token }} fresh={nova === "1"} />
-            <p className="mt-10 rounded-[4px] bg-white p-4 text-center text-[13px] leading-relaxed text-night/60 ring-1 ring-night/10">
+            <p className="mt-12 border-t border-night/12 pt-6 text-center text-[13px] leading-relaxed text-night/60">
               Guarde o número <b className="text-night">#{serializeRental(rental, settings).code}</b>. Para consultar depois, use{" "}
               <Link href="/minha-reserva" className="underline underline-offset-4">Minha reserva</Link> com o número e o telefone informado, ou salve este link.
             </p>
           </>
         ) : (
           <div className="py-16 text-center">
-            <p className="font-display text-3xl font-light">Link de reserva inválido.</p>
+            <p className="text-[24px] font-semibold uppercase tracking-[0.01em]">Link de reserva inválido.</p>
             <p className="mt-3 text-night/60">Consulte pelo número da reserva e o telefone informado no pedido.</p>
-            <Link href="/minha-reserva" className="mt-8 inline-flex h-12 items-center rounded-full bg-night px-6 text-[12px] font-semibold uppercase tracking-[0.14em] text-white">
+            <Link href="/minha-reserva" className="mt-8 inline-flex h-14 items-center bg-night px-8 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-night-soft">
               Consultar minha reserva
             </Link>
           </div>

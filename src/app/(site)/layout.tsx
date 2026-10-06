@@ -1,4 +1,3 @@
-import "@fontsource-variable/fraunces";
 import { Reveal } from "@/components/site/Reveal";
 
 /** Site público da Universo Tendas (mesmo backend e mesmo banco do painel /admin). */

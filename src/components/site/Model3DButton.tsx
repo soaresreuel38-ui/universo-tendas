@@ -20,7 +20,7 @@ export function Model3DButton({ url, settings, name, slug }: { url: string; sett
           setOpen(true);
           track("model3d_open", { product: slug });
         }}
-        className="inline-flex h-12 items-center gap-2 rounded-full border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em] hover:border-night"
+        className="inline-flex h-12 items-center gap-3 border border-night/25 px-6 text-[11.5px] font-semibold uppercase tracking-[0.18em] text-night transition-colors hover:border-night"
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
           <path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Zm0 0v18M4 7.5l8 4.5 8-4.5" />

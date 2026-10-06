@@ -304,15 +304,15 @@ export function BookingWizard({
         </div>
         <div className="mt-3 grid grid-cols-6 gap-1.5" aria-hidden>
           {STEPS.map((s, i) => (
-            <span key={s} className={`h-[3px] rounded-full transition-colors duration-500 ${i <= step ? "bg-night" : "bg-night/10"}`} />
+            <span key={s} className={`h-[3px] transition-colors duration-500 ${i <= step ? "bg-night" : "bg-night/10"}`} />
           ))}
         </div>
       </div>
 
       {/* Tenda escolhida (resumo fixo a partir da etapa 2) */}
       {product && step > 0 ? (
-        <button type="button" onClick={() => goTo(0)} className="mt-6 flex w-full items-center gap-4 rounded-[4px] bg-white p-3 text-left ring-1 ring-night/10 hover:ring-night/30">
-          <span className="h-14 w-16 shrink-0 overflow-hidden rounded-[3px]">
+        <button type="button" onClick={() => goTo(0)} className="mt-6 flex w-full items-center gap-4 bg-white p-3 text-left ring-1 ring-night/10 hover:ring-night/30">
+          <span className="h-14 w-16 shrink-0 overflow-hidden">
             {product.photoId ? <img src={publicPhotoUrl(product.photoId, true)} alt="" className="h-full w-full object-cover" /> : <ProductPlaceholder compact />}
           </span>
           <span className="min-w-0 flex-1">
@@ -339,17 +339,17 @@ export function BookingWizard({
                       setError(null);
                       goTo(1);
                     }}
-                    className={`flex w-full items-center gap-4 rounded-[4px] bg-white p-3 text-left ring-1 transition ${
+                    className={`flex w-full items-center gap-4 bg-white p-3 text-left ring-1 transition ${
                       p.id === draft.productId ? "ring-2 ring-night" : "ring-night/10 hover:ring-night/30"
                     }`}
                     aria-pressed={p.id === draft.productId}
                   >
-                    <span className="h-20 w-24 shrink-0 overflow-hidden rounded-[3px]">
+                    <span className="h-20 w-24 shrink-0 overflow-hidden">
                       {p.photoId ? <img src={publicPhotoUrl(p.photoId, true)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductPlaceholder compact />}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-night/45">{p.category}</span>
-                      <span className="mt-1 block font-display text-[20px] font-light leading-tight">{p.name}</span>
+                      <span className="mt-1.5 block text-[16px] font-semibold uppercase leading-snug tracking-[0.01em]">{p.name}</span>
                       <span className="mt-1 block text-[13px] text-night/60">
                         {p.dimensions ? `${p.dimensions} · ` : ""}
                         {p.rentalPriceCents != null ? `${money(p.rentalPriceCents)} / dia` : "Valor a consultar"}
@@ -387,7 +387,7 @@ export function BookingWizard({
               <Input label="Nome ou tipo do evento (opcional)" value={draft.eventName} onChange={(v) => set("eventName", v)} maxLength={120} placeholder="Ex.: Casamento, feira, aniversário" />
             </div>
             {blocked ? (
-              <div className="mt-6 rounded-[4px] bg-white p-4 text-[14px] leading-relaxed text-night/70 ring-1 ring-night/10">
+              <div className="mt-6 bg-white p-4 text-[14px] leading-relaxed text-night/70 ring-1 ring-night/10">
                 {daysBefore || daysAfter ? (
                   <>
                     Para montagem e retirada, as unidades ficam reservadas de <b className="text-night">{fmtDate(startOfDay(blocked.from))}</b> a{" "}
@@ -413,15 +413,15 @@ export function BookingWizard({
             {free == null ? (
               <p className="text-night/60">{availability?.error ?? "Consultando disponibilidade…"}</p>
             ) : free <= 0 ? (
-              <div className="rounded-[4px] bg-white p-5 ring-1 ring-accent/30">
+              <div className="bg-white p-5 ring-1 ring-accent/30">
                 <p className="text-[16px] text-accent">Não há estoque suficiente para o período selecionado.</p>
-                <button type="button" onClick={() => goTo(1)} className="mt-4 h-12 rounded-full border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em]">
+                <button type="button" onClick={() => goTo(1)} className="mt-4 h-12 border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em]">
                   Escolher outra data
                 </button>
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-center gap-6 rounded-[4px] bg-white py-8 ring-1 ring-night/10">
+                <div className="flex items-center justify-center gap-6 bg-white py-8 ring-1 ring-night/10">
                   <StepperButton label="Diminuir" disabled={draft.quantity <= 1} onClick={() => set("quantity", Math.max(1, draft.quantity - 1))}>−</StepperButton>
                   <input
                     aria-label="Quantidade"
@@ -431,11 +431,11 @@ export function BookingWizard({
                       const n = Number(onlyDigits(e.target.value)) || 1;
                       set("quantity", Math.min(Math.max(1, n), free));
                     }}
-                    className="w-24 bg-transparent text-center font-display text-[56px] font-light tabular outline-none"
+                    className="w-28 bg-transparent text-center text-[52px] font-semibold tabular tracking-[-0.02em] outline-none"
                   />
                   <StepperButton label="Aumentar" disabled={draft.quantity >= free} onClick={() => set("quantity", Math.min(free, draft.quantity + 1))}>+</StepperButton>
                 </div>
-                <dl className="mt-5 grid grid-cols-3 divide-x divide-night/10 rounded-[4px] bg-white text-center ring-1 ring-night/10">
+                <dl className="mt-5 grid grid-cols-3 divide-x divide-night/10 bg-white text-center ring-1 ring-night/10">
                   <Stat label="Disponível para o período" value={free} />
                   <Stat label="Selecionado" value={draft.quantity} />
                   <Stat label="Disponível após a reserva" value={free - draft.quantity} />
@@ -448,7 +448,7 @@ export function BookingWizard({
 
         {step === 4 ? (
           <Step title="Seus dados" lead="Só o necessário para registrar a locação.">
-            <div className="mb-5 grid grid-cols-2 rounded-full bg-white p-1 ring-1 ring-night/10" role="radiogroup" aria-label="Tipo de cliente">
+            <div className="mb-5 grid grid-cols-2 bg-white p-1 ring-1 ring-night/10" role="radiogroup" aria-label="Tipo de cliente">
               {(["PF", "PJ"] as const).map((t) => (
                 <button
                   key={t}
@@ -456,7 +456,7 @@ export function BookingWizard({
                   role="radio"
                   aria-checked={draft.customer.personType === t}
                   onClick={() => setCust("personType", t)}
-                  className={`h-11 rounded-full text-[14px] transition ${draft.customer.personType === t ? "bg-night text-white" : "text-night/65"}`}
+                  className={`h-11 text-[14px] transition ${draft.customer.personType === t ? "bg-night text-white" : "text-night/65"}`}
                 >
                   {t === "PF" ? "Pessoa física" : "Pessoa jurídica"}
                 </button>
@@ -486,7 +486,7 @@ export function BookingWizard({
 
         {step === 5 && product ? (
           <Step title="Minha reserva" lead="Confira antes de confirmar.">
-            <div className="divide-y divide-night/10 rounded-[4px] bg-white ring-1 ring-night/10">
+            <div className="divide-y divide-night/10 bg-white ring-1 ring-night/10">
               <Row label="Tenda" onEdit={() => goTo(0)}>
                 {product.name} <span className="text-night/50">· {product.code}</span>
               </Row>
@@ -515,7 +515,7 @@ export function BookingWizard({
               </Row>
               <div className="flex items-baseline justify-between px-5 py-5">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-night/55">Total</span>
-                <span className="font-display text-[30px] font-light">{total != null ? money(total) : "Valor a consultar"}</span>
+                <span className="text-[24px] font-semibold tracking-[-0.01em] sm:text-[28px]">{total != null ? money(total) : "Valor a consultar"}</span>
               </div>
             </div>
             <p className="mt-4 text-[13px] leading-relaxed text-night/55">
@@ -526,7 +526,7 @@ export function BookingWizard({
         ) : null}
 
         {error ? (
-          <p role="alert" className="mt-5 rounded-[4px] bg-accent-soft px-4 py-3 text-[15px] text-accent">
+          <p role="alert" className="mt-5 bg-accent-soft px-4 py-3 text-[15px] text-accent">
             {error}
           </p>
         ) : null}
@@ -538,7 +538,7 @@ export function BookingWizard({
           <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3 sm:px-6">
             <div className="min-w-0 flex-1 text-[13px] leading-tight text-night/60">
               {isLast ? (
-                <span className="block font-display text-[20px] text-night">{total != null ? money(total) : "Valor a consultar"}</span>
+                <span className="block text-[18px] font-semibold text-night">{total != null ? money(total) : "Valor a consultar"}</span>
               ) : (
                 <span className="block truncate">{STEPS[step]}</span>
               )}
@@ -548,7 +548,7 @@ export function BookingWizard({
                 type="button"
                 onClick={submit}
                 disabled={submitting}
-                className="h-14 flex-[2] rounded-full bg-night px-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-night-soft disabled:opacity-60"
+                className="h-14 flex-[2] bg-night px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft disabled:opacity-60"
               >
                 {submitting ? "Registrando…" : "Confirmar reserva"}
               </button>
@@ -556,7 +556,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={next}
-                className="h-14 flex-[2] rounded-full bg-night px-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-night-soft"
+                className="h-14 flex-[2] bg-night px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft"
               >
                 Continuar
               </button>
@@ -582,7 +582,7 @@ export function BookingWizard({
 function Step({ title, lead, children }: { title: string; lead?: string; children: ReactNode }) {
   return (
     <div>
-      <h1 className="font-display text-[34px] font-light leading-[1.08] tracking-[-0.02em] sm:text-[42px]">{title}</h1>
+      <h1 className="text-[28px] font-semibold uppercase leading-[1.04] tracking-[-0.015em] sm:text-[38px]">{title}</h1>
       {lead ? <p className="mt-2 text-[16px] text-night/60">{lead}</p> : null}
       <div className="mt-7">{children}</div>
     </div>
@@ -598,12 +598,12 @@ function Input({
 }: { label: string; value: string; onChange: (v: string) => void; className?: string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-[13px] font-medium text-night/65">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">{label}</span>
       <input
         {...rest}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 h-12 w-full rounded-lg border border-night/15 bg-white px-3.5 text-[16px] text-night outline-none transition focus:border-night focus:ring-2 focus:ring-night/10"
+        className="mt-2 h-12 w-full border border-night/20 bg-white px-3.5 text-[16px] text-night outline-none transition-colors focus:border-night"
       />
     </label>
   );
@@ -629,7 +629,7 @@ function StepperButton({ children, label, disabled, onClick }: { children: React
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="flex h-14 w-14 items-center justify-center rounded-full text-[26px] ring-1 ring-night/20 transition hover:ring-night disabled:opacity-30"
+      className="flex h-14 w-14 items-center justify-center text-[26px] ring-1 ring-night/20 transition hover:ring-night disabled:opacity-30"
     >
       {children}
     </button>
@@ -639,7 +639,7 @@ function StepperButton({ children, label, disabled, onClick }: { children: React
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="px-2 py-4">
-      <dd className="font-display text-[28px] font-light tabular">{value}</dd>
+      <dd className="text-[26px] font-semibold tabular tracking-[-0.01em]">{value}</dd>
       <dt className="mt-1 text-[11px] leading-tight text-night/55">{label}</dt>
     </div>
   );
@@ -693,7 +693,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
   return (
     <div className="grid gap-4 sm:grid-cols-6">
       <label className="block sm:col-span-2">
-        <span className="text-[13px] font-medium text-night/65">CEP</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">CEP</span>
         <input
           value={address.zipCode}
           inputMode="numeric"
@@ -705,7 +705,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
             setAddr("zipCode", v);
             if (onlyDigits(v).length === 8) void lookup(v);
           }}
-          className="mt-1.5 h-12 w-full rounded-lg border border-night/15 bg-white px-3.5 text-[16px] outline-none focus:border-night focus:ring-2 focus:ring-night/10"
+          className="mt-2 h-12 w-full border border-night/20 bg-white px-3.5 text-[16px] outline-none transition-colors focus:border-night"
         />
         <span className="mt-1 block min-h-4 text-[12px] text-night/50">
           {cepState === "loading" ? "Buscando endereço…" : cepState === "notfound" ? "CEP não encontrado — preencha manualmente." : ""}
@@ -717,22 +717,22 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
       <Input className="sm:col-span-3" label="Bairro" value={address.district} onChange={(v) => setAddr("district", v)} maxLength={120} />
       <Input className="sm:col-span-2" label="Cidade" value={address.city} onChange={(v) => setAddr("city", v)} autoComplete="address-level2" maxLength={120} />
       <label className="block sm:col-span-1">
-        <span className="text-[13px] font-medium text-night/65">UF</span>
-        <select value={address.state} onChange={(e) => setAddr("state", e.target.value)} className="mt-1.5 h-12 w-full rounded-lg border border-night/15 bg-white px-2 text-[16px]">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">UF</span>
+        <select value={address.state} onChange={(e) => setAddr("state", e.target.value)} className="mt-2 h-12 w-full border border-night/20 bg-white px-2 text-[16px]">
           {UF_LIST.map((uf) => (
             <option key={uf} value={uf}>{uf}</option>
           ))}
         </select>
       </label>
       <label className="block sm:col-span-6">
-        <span className="text-[13px] font-medium text-night/65">Observações sobre o local (opcional)</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Observações sobre o local (opcional)</span>
         <textarea
           value={address.notes}
           onChange={(e) => setAddr("notes", e.target.value)}
           maxLength={1000}
           rows={3}
           placeholder="Ex.: entrada lateral, necessário montar no sábado, local possui escada"
-          className="mt-1.5 w-full rounded-lg border border-night/15 bg-white px-3.5 py-3 text-[16px] outline-none focus:border-night focus:ring-2 focus:ring-night/10"
+          className="mt-2 w-full border border-night/20 bg-white px-3.5 py-3 text-[16px] outline-none transition-colors focus:border-night"
         />
       </label>
       {canMap ? (
@@ -741,7 +741,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
             <iframe
               title="Local do evento no mapa"
               src={`https://www.google.com/maps?q=${encodeURIComponent(full)}&output=embed`}
-              className="h-64 w-full rounded-[4px] border-0"
+              className="h-64 w-full border-0"
               loading="lazy"
               referrerPolicy="no-referrer"
             />

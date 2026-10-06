@@ -44,19 +44,19 @@ export function ReservationView({ rental, reference, fresh = false }: { rental: 
     <div>
       <div className="text-center">
         {fresh ? <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-night/50">Reserva recebida</p> : null}
-        <h1 className="mt-4 font-display text-[44px] font-light leading-none tracking-[-0.02em] md:text-[64px]">#{view.code}</h1>
-        <p className={`mx-auto mt-5 inline-flex rounded-full px-4 py-1.5 text-[13px] font-medium ${TONE[view.status.tone]}`}>{view.status.label}</p>
+        <h1 className="mt-4 text-[44px] font-semibold leading-none tracking-[-0.03em] tabular md:text-[64px]">#{view.code}</h1>
+        <p className={`mx-auto mt-6 inline-flex px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${TONE[view.status.tone]}`}>{view.status.label}</p>
         <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-night/65">{view.status.detail}</p>
       </div>
 
-      <div className="mt-10 divide-y divide-night/10 rounded-[4px] bg-white ring-1 ring-night/10">
+      <div className="mt-10 divide-y divide-night/10 bg-white ring-1 ring-night/10">
         {view.items.map((i) => (
           <div key={i.code} className="flex items-center gap-4 p-4">
-            <Link href={i.path} className="h-16 w-20 shrink-0 overflow-hidden rounded-[3px]">
+            <Link href={i.path} className="h-16 w-20 shrink-0 overflow-hidden">
               {i.photoId ? <img src={publicPhotoUrl(i.photoId, true)} alt="" className="h-full w-full object-cover" /> : <ProductPlaceholder compact />}
             </Link>
             <div className="min-w-0 flex-1">
-              <p className="font-display text-[20px] font-light leading-tight">{i.name}</p>
+              <p className="text-[16px] font-semibold uppercase leading-snug tracking-[0.01em]">{i.name}</p>
               <p className="text-[13px] text-night/55">
                 {i.quantity} {i.quantity === 1 ? "unidade" : "unidades"}
                 {i.unitPriceCents != null ? ` · ${money(i.unitPriceCents)} por unidade${view.days ? ` (${view.days} ${view.days === 1 ? "diária" : "diárias"})` : ""}` : " · Valor a consultar"}
@@ -76,7 +76,7 @@ export function ReservationView({ rental, reference, fresh = false }: { rental: 
         </Line>
         <div className="flex items-baseline justify-between px-5 py-5">
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-night/55">Total</span>
-          <span className="font-display text-[26px] font-light">{view.pricePending ? "Valor a consultar" : money(view.totalCents)}</span>
+          <span className="text-[24px] font-semibold tracking-[-0.01em]">{view.pricePending ? "Valor a consultar" : money(view.totalCents)}</span>
         </div>
       </div>
 
@@ -87,12 +87,12 @@ export function ReservationView({ rental, reference, fresh = false }: { rental: 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("whatsapp_click", { from: "reserva" })}
-            className="inline-flex h-14 flex-1 items-center justify-center rounded-full bg-[#1f8a5b] px-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#1a764e]"
+            className="inline-flex h-14 flex-1 items-center justify-center bg-night px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-night-soft"
           >
             Falar pelo WhatsApp
           </a>
         ) : null}
-        <Link href="/tendas" className="inline-flex h-14 flex-1 items-center justify-center rounded-full border border-night/20 px-6 text-[13px] font-semibold uppercase tracking-[0.14em] hover:border-night">
+        <Link href="/tendas" className="inline-flex h-14 flex-1 items-center justify-center border border-night/20 px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] hover:border-night">
           Ver outras tendas
         </Link>
       </div>
@@ -142,8 +142,8 @@ function CancelRequest({ reference, onDone }: { reference: Ref; onDone: () => vo
           Solicitar cancelamento
         </button>
       ) : (
-        <div className="rounded-[4px] bg-white p-5 ring-1 ring-night/10">
-          <p className="font-display text-[22px] font-light">Solicitar cancelamento</p>
+        <div className="bg-white p-5 ring-1 ring-night/10">
+          <p className="text-[18px] font-semibold uppercase tracking-[0.02em]">Solicitar cancelamento</p>
           <p className="mt-2 text-[14px] leading-relaxed text-night/65">
             Seu pedido será enviado para a equipe da Universo Tendas, que vai analisar e responder. A reserva só é cancelada depois dessa análise.
           </p>
@@ -153,14 +153,14 @@ function CancelRequest({ reference, onDone }: { reference: Ref; onDone: () => vo
             maxLength={1000}
             rows={3}
             placeholder="Motivo (opcional)"
-            className="mt-4 w-full rounded-lg border border-night/15 px-3.5 py-3 text-[16px] outline-none focus:border-night"
+            className="mt-4 w-full border border-night/15 px-3.5 py-3 text-[16px] outline-none transition-colors focus:border-night"
           />
           {state.error ? <p className="mt-2 text-[14px] text-accent">{state.error}</p> : null}
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button type="button" onClick={send} disabled={state.sending} className="h-12 flex-1 rounded-full bg-night px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white disabled:opacity-60">
+            <button type="button" onClick={send} disabled={state.sending} className="h-12 flex-1 bg-night px-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white disabled:opacity-60">
               {state.sending ? "Enviando…" : "Enviar pedido de cancelamento"}
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="h-12 flex-1 rounded-full border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em]">
+            <button type="button" onClick={() => setOpen(false)} className="h-12 flex-1 border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em]">
               Manter reserva
             </button>
           </div>

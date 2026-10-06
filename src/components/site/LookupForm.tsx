@@ -41,7 +41,7 @@ export function LookupForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md">
       <label className="block">
-        <span className="text-[13px] font-medium text-night/65">Número da reserva</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Número da reserva</span>
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
@@ -49,11 +49,11 @@ export function LookupForm() {
           inputMode="numeric"
           maxLength={10}
           placeholder="000123"
-          className="mt-1.5 h-12 w-full rounded-lg border border-night/15 bg-white px-3.5 text-[16px] outline-none focus:border-night focus:ring-2 focus:ring-night/10"
+          className="mt-2 h-12 w-full border border-night/20 bg-white px-3.5 text-[16px] outline-none transition-colors focus:border-night"
         />
       </label>
       <label className="mt-4 block">
-        <span className="text-[13px] font-medium text-night/65">Telefone / WhatsApp informado no pedido</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Telefone / WhatsApp informado no pedido</span>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -63,11 +63,11 @@ export function LookupForm() {
           autoComplete="tel-national"
           maxLength={20}
           placeholder="(66) 90000-0000"
-          className="mt-1.5 h-12 w-full rounded-lg border border-night/15 bg-white px-3.5 text-[16px] outline-none focus:border-night focus:ring-2 focus:ring-night/10"
+          className="mt-2 h-12 w-full border border-night/20 bg-white px-3.5 text-[16px] outline-none transition-colors focus:border-night"
         />
       </label>
-      {state.error ? <p role="alert" className="mt-4 rounded-[4px] bg-accent-soft px-4 py-3 text-[14px] text-accent">{state.error}</p> : null}
-      <button disabled={state.loading} className="mt-6 h-14 w-full rounded-full bg-night text-[13px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-night-soft disabled:opacity-60">
+      {state.error ? <p role="alert" className="mt-4 bg-accent-soft px-4 py-3 text-[14px] text-accent">{state.error}</p> : null}
+      <button disabled={state.loading} className="mt-6 h-14 w-full bg-night text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft disabled:opacity-60">
         {state.loading ? "Consultando…" : "Consultar"}
       </button>
     </form>

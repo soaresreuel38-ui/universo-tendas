@@ -44,7 +44,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
 
   if (photos.length === 0) {
     return (
-      <div className="aspect-[4/3] overflow-hidden rounded-[4px]">
+      <div className="aspect-[4/3] overflow-hidden">
         <ProductPlaceholder name={name} />
       </div>
     );
@@ -53,7 +53,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
   return (
     <div>
       <div className="relative">
-        <div ref={track} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-[4px]" aria-label={`Fotos de ${name}`}>
+        <div ref={track} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto bg-sand" aria-label={`Fotos de ${name}`}>
           {photos.map((id, i) => (
             <button
               key={id}
@@ -75,19 +75,19 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
           ))}
         </div>
         {photos.length > 1 ? (
-          <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-night/70 px-3 py-1 text-xs text-white tabular backdrop-blur">
+          <span className="pointer-events-none absolute bottom-0 right-0 bg-night px-4 py-2 text-[11px] font-semibold tracking-[0.16em] text-white tabular">
             {index + 1} / {photos.length}
           </span>
         ) : null}
       </div>
       {photos.length > 1 ? (
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-5 sm:px-0">
           {photos.map((id, i) => (
             <button
               key={id}
               type="button"
               onClick={() => go(i)}
-              className={`h-16 w-20 shrink-0 overflow-hidden rounded-[3px] ring-offset-2 ring-offset-linen transition ${i === index ? "ring-2 ring-night" : "opacity-60 hover:opacity-100"}`}
+              className={`h-16 w-20 shrink-0 overflow-hidden border-b-2 transition sm:h-20 sm:w-28 ${i === index ? "border-night" : "border-transparent opacity-55 hover:opacity-100"}`}
               aria-label={`Ver foto ${i + 1}`}
             >
               <img src={publicPhotoUrl(id, true)} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -99,15 +99,15 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
       {zoom != null ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/95 p-4" role="dialog" aria-modal="true" aria-label="Foto ampliada" onClick={() => setZoom(null)}>
           <img src={publicPhotoUrl(photos[zoom])} alt={`${name} — foto ${zoom + 1}`} className="max-h-full max-w-full object-contain" />
-          <button type="button" onClick={() => setZoom(null)} className="absolute right-4 top-4 h-11 rounded-full bg-white/10 px-4 text-sm text-white hover:bg-white/20">
+          <button type="button" onClick={() => setZoom(null)} className="absolute right-4 top-4 h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
             Fechar
           </button>
           {photos.length > 1 ? (
             <div className="absolute bottom-6 flex gap-3" onClick={(e) => e.stopPropagation()}>
-              <button type="button" onClick={() => setZoom((zoom - 1 + photos.length) % photos.length)} className="h-11 rounded-full bg-white/10 px-5 text-sm text-white hover:bg-white/20">
+              <button type="button" onClick={() => setZoom((zoom - 1 + photos.length) % photos.length)} className="h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
                 ← Anterior
               </button>
-              <button type="button" onClick={() => setZoom((zoom + 1) % photos.length)} className="h-11 rounded-full bg-white/10 px-5 text-sm text-white hover:bg-white/20">
+              <button type="button" onClick={() => setZoom((zoom + 1) % photos.length)} className="h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
                 Próxima →
               </button>
             </div>

@@ -6,6 +6,7 @@ import { Gallery } from "@/components/site/Gallery";
 import { Model3DButton } from "@/components/site/Model3DButton";
 import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { TrackView } from "@/components/site/TrackView";
+import { ui } from "@/components/site/ui";
 import { money } from "@/lib/format";
 import { publicPhotoUrl } from "@/lib/public-urls";
 import { prisma } from "@/server/db";
@@ -63,52 +64,52 @@ export default async function ProductPage({ params }: Props) {
       <SiteHeader />
       <TrackView event="product_view" props={{ product: p.slug }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <main className="mx-auto max-w-[1280px] px-4 pb-24 pt-8 sm:px-8 md:pt-12">
-        <nav aria-label="Trilha" className="text-[13px] text-night/55">
-          <Link href="/tendas" className="link-grow">Tendas</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="link-grow">{p.category}</Link>
+      <main className="mx-auto max-w-[1360px] px-5 pb-28 pt-8 sm:px-10 md:pt-12">
+        <nav aria-label="Trilha" className={`${ui.label} flex flex-wrap items-center gap-x-3 gap-y-1 text-night/45`}>
+          <Link href="/tendas" className="hover:text-night">Tendas</Link>
+          <span aria-hidden>/</span>
+          <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="hover:text-night">{p.category}</Link>
         </nav>
 
-        <div className="mt-6 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-16">
-          <div className="min-w-0">
+        <div className="mt-6 grid gap-10 lg:mt-8 lg:grid-cols-[1.45fr_1fr] lg:gap-16">
+          <div className="-mx-5 min-w-0 sm:mx-0">
             <Gallery photos={photos} name={p.name} />
             {p.model3d ? (
-              <div className="mt-6">
+              <div className="mt-6 px-5 sm:px-0">
                 <Model3DButton url={p.model3d.url} settings={p.model3d.settings} name={p.name} slug={p.slug} />
               </div>
             ) : null}
           </div>
 
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-night/45">{p.category}</p>
-            <h1 className="mt-3 font-display text-[38px] font-light leading-[1.05] tracking-[-0.02em] md:text-[52px]">{p.name}</h1>
-            <p className="mt-5 text-[17px]">
+            <p className={`${ui.eyebrow} text-night/45`}>{p.category}</p>
+            <h1 className="mt-4 text-[30px] font-semibold uppercase leading-[1.04] tracking-[-0.015em] [text-wrap:balance] sm:text-[40px]">{p.name}</h1>
+            <p className="mt-6 flex items-baseline gap-2 border-y border-night/12 py-5">
               {p.rentalPriceCents != null ? (
                 <>
-                  <span className="font-display text-[30px]">{money(p.rentalPriceCents)}</span>
-                  <span className="text-night/55"> / dia por {p.unit === "un" ? "unidade" : p.unit}</span>
+                  <span className="text-[28px] font-semibold tracking-[-0.01em]">{money(p.rentalPriceCents)}</span>
+                  <span className="text-[14px] text-night/55">/ dia por {p.unit === "un" ? "unidade" : p.unit}</span>
                 </>
               ) : (
-                <span className="text-night/65">Valor a consultar</span>
+                <span className="text-[18px] font-semibold uppercase tracking-[0.04em] text-night/70">Valor a consultar</span>
               )}
             </p>
-            {p.description ? <p className="mt-6 whitespace-pre-line text-[16px] leading-relaxed text-night/75">{p.description}</p> : null}
+            {p.description ? <p className="mt-6 whitespace-pre-line text-[16px] leading-relaxed text-night/70">{p.description}</p> : null}
 
-            <dl className="mt-8 divide-y divide-night/10 border-y border-night/10 text-[15px]">
+            <dl className="mt-8 border-t border-night/12">
               {facts.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-6 py-3">
-                  <dt className="text-night/55">{k}</dt>
-                  <dd className="text-right">{v}</dd>
+                <div key={k} className="flex justify-between gap-6 border-b border-night/12 py-3.5">
+                  <dt className={ui.label}>{k}</dt>
+                  <dd className="text-right text-[15px] text-night">{v}</dd>
                 </div>
               ))}
             </dl>
 
-            <div className="mt-8">
+            <div className="mt-10">
               {settings.booking.enabled ? (
                 <AvailabilityCheck productId={p.id} slug={p.slug} unit={p.unit} />
               ) : (
-                <p className="rounded-[4px] bg-white p-5 text-[15px] text-night/70">As reservas pelo site estão pausadas. Fale com a gente pelo WhatsApp.</p>
+                <p className={`${ui.panel} p-5 text-[15px] text-night/70`}>As reservas pelo site estão pausadas. Fale com a gente pelo WhatsApp.</p>
               )}
             </div>
           </div>
