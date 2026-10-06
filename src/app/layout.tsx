@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "./globals.css";
+import { siteUrl } from "@/lib/site-url";
 
 // Metadados do site público. O painel (/admin) e o login sobrescrevem com noindex.
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL || "https://universotendas.com.br"),
+  metadataBase: new URL(siteUrl()),
   title: { default: "Universo Tendas | Locação de Tendas em Sinop - MT", template: "%s | Universo Tendas" },
   description: "Locação de tendas e estruturas para eventos em Sinop - MT. Escolha a tenda, informe a data e o local e faça sua reserva online.",
   applicationName: "Universo Tendas",

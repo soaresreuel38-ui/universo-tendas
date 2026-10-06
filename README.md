@@ -49,7 +49,7 @@ npm run build
 | `AUTH_SECRET` | Sim | Segredo com 32+ caracteres (`openssl rand -base64 48`). Trocar derruba todas as sessões. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | Só no `admin:create` | Criação do primeiro administrador. Não precisam ficar salvas. |
 | `TEST_DATABASE_URL` | Só nos testes | Banco **descartável** — os testes apagam os dados dele. |
-| `SITE_URL` | Não | Endereço público do site (canonical, `sitemap.xml`, `robots.txt`). Padrão: `https://universotendas.com.br`. |
+| `SITE_URL` | Recomendada | Endereço público do site (canonical, Open Graph, `sitemap.xml`, `robots.txt` e link de assinatura de contrato). Produção: `https://universotendas.app.br` (também é o padrão). |
 
 **Ambientes separados:** desenvolvimento (`.env` local → banco de desenvolvimento), teste (`TEST_DATABASE_URL` →
 banco descartável, onde rodam os testes de concorrência) e produção (variáveis só no painel da Vercel).

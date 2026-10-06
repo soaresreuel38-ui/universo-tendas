@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 import { prisma } from "@/server/db";
 import { listPublicProducts, productPath } from "@/server/public-booking";
 
 // Gerado a cada requisição: produtos novos entram no sitemap sem novo deploy.
 export const dynamic = "force-dynamic";
 
-const base = () => (process.env.SITE_URL || "https://universotendas.com.br").replace(/\/$/, "");
+const base = siteUrl;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = base();

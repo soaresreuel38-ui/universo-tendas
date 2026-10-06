@@ -19,6 +19,7 @@ import {
 } from "@/server/contracts";
 import { prisma } from "@/server/db";
 import { DomainError } from "@/server/errors";
+import { siteUrl } from "@/lib/site-url";
 
 export async function createContractAction(_: ActionState, form: FormData): Promise<ActionState> {
   const user = await requireUser();
@@ -50,7 +51,9 @@ export async function markSentAction(_: ActionState, form: FormData): Promise<Ac
   });
 }
 
+/** Endereço usado no link de assinatura enviado ao cliente: o domínio oficial (SITE_URL) quando configurado. */
 async function baseUrl() {
+  if (process.env.SITE_URL?.trim()) return siteUrl();
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
