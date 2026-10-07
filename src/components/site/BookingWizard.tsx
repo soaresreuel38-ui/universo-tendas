@@ -293,7 +293,7 @@ export function BookingWizard({
       {/* Progresso */}
       <div className="scroll-mt-24">
         <div className="flex items-baseline justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-night/45">
+          <p className="text-[13px] font-medium text-night/45">
             Etapa {step + 1} de {STEPS.length}
           </p>
           {step > 0 ? (
@@ -304,7 +304,7 @@ export function BookingWizard({
         </div>
         <div className="mt-3 grid grid-cols-6 gap-1.5" aria-hidden>
           {STEPS.map((s, i) => (
-            <span key={s} className={`h-[3px] transition-colors duration-500 ${i <= step ? "bg-night" : "bg-night/10"}`} />
+            <span key={s} className={`h-[3px] transition-colors duration-500 ${i <= step ? "bg-ink" : "bg-night/10"}`} />
           ))}
         </div>
       </div>
@@ -340,7 +340,7 @@ export function BookingWizard({
                       goTo(1);
                     }}
                     className={`flex w-full items-center gap-4 bg-white p-3 text-left ring-1 transition ${
-                      p.id === draft.productId ? "ring-2 ring-night" : "ring-night/10 hover:ring-night/30"
+                      p.id === draft.productId ? "ring-2 ring-ink" : "ring-night/10 hover:ring-night/30"
                     }`}
                     aria-pressed={p.id === draft.productId}
                   >
@@ -348,8 +348,8 @@ export function BookingWizard({
                       {p.photoId ? <img src={publicPhotoUrl(p.photoId, true)} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ProductPlaceholder compact />}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-night/45">{p.category}</span>
-                      <span className="mt-1.5 block text-[16px] font-semibold uppercase leading-snug tracking-[0.01em]">{p.name}</span>
+                      <span className="block text-[13px] font-medium text-night/45">{p.category}</span>
+                      <span className="mt-1.5 block text-[17px] font-semibold leading-snug tracking-[-0.01em] tracking-[0.01em]">{p.name}</span>
                       <span className="mt-1 block text-[13px] text-night/60">
                         {p.dimensions ? `${p.dimensions} · ` : ""}
                         {p.rentalPriceCents != null ? `${money(p.rentalPriceCents)} / dia` : "Valor a consultar"}
@@ -415,7 +415,7 @@ export function BookingWizard({
             ) : free <= 0 ? (
               <div className="bg-white p-5 ring-1 ring-accent/30">
                 <p className="text-[16px] text-accent">Não há estoque suficiente para o período selecionado.</p>
-                <button type="button" onClick={() => goTo(1)} className="mt-4 h-12 border border-night/20 px-5 text-[12px] font-semibold uppercase tracking-[0.14em]">
+                <button type="button" onClick={() => goTo(1)} className="mt-4 h-12 border border-night/20 px-5 text-[14px] font-medium">
                   Escolher outra data
                 </button>
               </div>
@@ -456,7 +456,7 @@ export function BookingWizard({
                   role="radio"
                   aria-checked={draft.customer.personType === t}
                   onClick={() => setCust("personType", t)}
-                  className={`h-11 text-[14px] transition ${draft.customer.personType === t ? "bg-night text-white" : "text-night/65"}`}
+                  className={`h-11 text-[14px] transition ${draft.customer.personType === t ? "bg-ink text-white" : "text-night/65"}`}
                 >
                   {t === "PF" ? "Pessoa física" : "Pessoa jurídica"}
                 </button>
@@ -514,7 +514,7 @@ export function BookingWizard({
                   : "Valor a consultar"}
               </Row>
               <div className="flex items-baseline justify-between px-5 py-5">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-night/55">Total</span>
+                <span className="text-[13px] font-medium text-night/55">Total</span>
                 <span className="text-[24px] font-semibold tracking-[-0.01em] sm:text-[28px]">{total != null ? money(total) : "Valor a consultar"}</span>
               </div>
             </div>
@@ -548,7 +548,7 @@ export function BookingWizard({
                 type="button"
                 onClick={submit}
                 disabled={submitting}
-                className="h-14 flex-[2] bg-night px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft disabled:opacity-60"
+                className="h-14 flex-[2] bg-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-ink-deep disabled:opacity-60"
               >
                 {submitting ? "Registrando…" : "Confirmar reserva"}
               </button>
@@ -556,7 +556,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={next}
-                className="h-14 flex-[2] bg-night px-6 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft"
+                className="h-14 flex-[2] bg-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-ink-deep"
               >
                 Continuar
               </button>
@@ -582,7 +582,7 @@ export function BookingWizard({
 function Step({ title, lead, children }: { title: string; lead?: string; children: ReactNode }) {
   return (
     <div>
-      <h1 className="text-[28px] font-semibold uppercase leading-[1.04] tracking-[-0.015em] sm:text-[38px]">{title}</h1>
+      <h1 className="text-[28px] font-semibold leading-[1.1] tracking-[-0.02em] sm:text-[36px]">{title}</h1>
       {lead ? <p className="mt-2 text-[16px] text-night/60">{lead}</p> : null}
       <div className="mt-7">{children}</div>
     </div>
@@ -598,7 +598,7 @@ function Input({
 }: { label: string; value: string; onChange: (v: string) => void; className?: string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">{label}</span>
+      <span className="text-[13px] font-medium text-night/55">{label}</span>
       <input
         {...rest}
         value={value}
@@ -648,7 +648,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 function Row({ label, onEdit, children }: { label: string; onEdit?: () => void; children: ReactNode }) {
   return (
     <div className="flex gap-4 px-5 py-4">
-      <span className="w-24 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-night/45">{label}</span>
+      <span className="w-24 shrink-0 pt-0.5 text-[13px] font-medium text-night/45">{label}</span>
       <span className="min-w-0 flex-1 text-[15px] leading-relaxed">{children}</span>
       {onEdit ? (
         <button type="button" onClick={onEdit} className="shrink-0 self-start text-[13px] text-night/55 underline-offset-4 hover:underline">
@@ -693,7 +693,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
   return (
     <div className="grid gap-4 sm:grid-cols-6">
       <label className="block sm:col-span-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">CEP</span>
+        <span className="text-[13px] font-medium text-night/55">CEP</span>
         <input
           value={address.zipCode}
           inputMode="numeric"
@@ -717,7 +717,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
       <Input className="sm:col-span-3" label="Bairro" value={address.district} onChange={(v) => setAddr("district", v)} maxLength={120} />
       <Input className="sm:col-span-2" label="Cidade" value={address.city} onChange={(v) => setAddr("city", v)} autoComplete="address-level2" maxLength={120} />
       <label className="block sm:col-span-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">UF</span>
+        <span className="text-[13px] font-medium text-night/55">UF</span>
         <select value={address.state} onChange={(e) => setAddr("state", e.target.value)} className="mt-2 h-12 w-full border border-night/20 bg-white px-2 text-[16px]">
           {UF_LIST.map((uf) => (
             <option key={uf} value={uf}>{uf}</option>
@@ -725,7 +725,7 @@ function AddressFields({ address, setAddr }: { address: Address; setAddr: (k: ke
         </select>
       </label>
       <label className="block sm:col-span-6">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Observações sobre o local (opcional)</span>
+        <span className="text-[13px] font-medium text-night/55">Observações sobre o local (opcional)</span>
         <textarea
           value={address.notes}
           onChange={(e) => setAddr("notes", e.target.value)}

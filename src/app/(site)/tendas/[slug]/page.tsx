@@ -64,48 +64,60 @@ export default async function ProductPage({ params }: Props) {
       <SiteHeader />
       <TrackView event="product_view" props={{ product: p.slug }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <main className="mx-auto max-w-[1360px] px-5 pb-28 pt-8 sm:px-10 md:pt-12">
-        <nav aria-label="Trilha" className={`${ui.label} flex flex-wrap items-center gap-x-3 gap-y-1 text-night/45`}>
-          <Link href="/tendas" className="hover:text-night">Tendas</Link>
-          <span aria-hidden>/</span>
-          <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="hover:text-night">{p.category}</Link>
-        </nav>
+      <main className="bg-white">
+        <div className="mx-auto max-w-[1280px] px-5 pb-24 pt-8 sm:px-8 md:pt-10">
+          <nav aria-label="Trilha" className={`${ui.meta} flex flex-wrap items-center gap-x-2 gap-y-1`}>
+            <Link href="/tendas" className="hover:text-ink">Tendas</Link>
+            <span aria-hidden>/</span>
+            <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="hover:text-ink">{p.category}</Link>
+          </nav>
 
-        <div className="mt-6 grid gap-10 lg:mt-8 lg:grid-cols-[1.45fr_1fr] lg:gap-16">
-          <div className="-mx-5 min-w-0 sm:mx-0">
-            <Gallery photos={photos} name={p.name} />
-            {p.model3d ? (
-              <div className="mt-6 px-5 sm:px-0">
-                <Model3DButton url={p.model3d.url} settings={p.model3d.settings} name={p.name} slug={p.slug} />
-              </div>
-            ) : null}
-          </div>
-
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <p className={`${ui.eyebrow} text-night/45`}>{p.category}</p>
-            <h1 className="mt-4 text-[30px] font-semibold uppercase leading-[1.04] tracking-[-0.015em] [text-wrap:balance] sm:text-[40px]">{p.name}</h1>
-            <p className="mt-6 flex items-baseline gap-2 border-y border-night/12 py-5">
+          {/* Nome e preço logo acima da fotografia */}
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
+            <h1 className={`${ui.h1} max-w-[18ch] [text-wrap:balance]`}>{p.name}</h1>
+            <p className="pb-1.5 text-[17px] text-night">
               {p.rentalPriceCents != null ? (
                 <>
-                  <span className="text-[28px] font-semibold tracking-[-0.01em]">{money(p.rentalPriceCents)}</span>
-                  <span className="text-[14px] text-night/55">/ dia por {p.unit === "un" ? "unidade" : p.unit}</span>
+                  <span className="text-[24px] font-semibold tracking-[-0.01em]">{money(p.rentalPriceCents)}</span>{" "}
+                  <span className="text-night/55">por dia, por {p.unit === "un" ? "unidade" : p.unit}</span>
                 </>
               ) : (
-                <span className="text-[18px] font-semibold uppercase tracking-[0.04em] text-night/70">Valor a consultar</span>
+                <span className="text-[19px] font-medium text-night/70">Valor a consultar</span>
               )}
             </p>
-            {p.description ? <p className="mt-6 whitespace-pre-line text-[16px] leading-relaxed text-night/70">{p.description}</p> : null}
+          </div>
 
-            <dl className="mt-8 border-t border-night/12">
-              {facts.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-6 border-b border-night/12 py-3.5">
-                  <dt className={ui.label}>{k}</dt>
-                  <dd className="text-right text-[15px] text-night">{v}</dd>
+          {/* A fotografia como protagonista */}
+          <div className="-mx-5 mt-8 sm:mx-0">
+            <Gallery photos={photos} name={p.name} />
+          </div>
+
+          <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
+            <div>
+              {p.description ? <p className={`${ui.lead} max-w-2xl whitespace-pre-line`}>{p.description}</p> : null}
+              <dl className={`${p.description ? "mt-10" : ""} max-w-2xl border-t border-night/12`}>
+                {facts.map(([k, v]) => (
+                  <div key={k} className="grid grid-cols-[9rem_1fr] gap-4 border-b border-night/12 py-3.5 text-[15.5px]">
+                    <dt className="text-night/55">{k}</dt>
+                    <dd className="text-night">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              {p.model3d ? (
+                <div className="mt-12 border-l-2 border-ink pl-6">
+                  <h2 className={ui.h3}>Modelo 3D</h2>
+                  <p className="mt-2 max-w-md text-[15.5px] leading-relaxed text-night/65">
+                    Gire, aproxime e veja a estrutura de todos os ângulos. O modelo só é carregado quando você abrir.
+                  </p>
+                  <div className="mt-5">
+                    <Model3DButton url={p.model3d.url} settings={p.model3d.settings} name={p.name} slug={p.slug} />
+                  </div>
                 </div>
-              ))}
-            </dl>
+              ) : null}
+            </div>
 
-            <div className="mt-10">
+            <div className="lg:sticky lg:top-28 lg:self-start">
               {settings.booking.enabled ? (
                 <AvailabilityCheck productId={p.id} slug={p.slug} unit={p.unit} />
               ) : (

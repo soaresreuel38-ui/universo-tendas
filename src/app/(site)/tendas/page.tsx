@@ -50,24 +50,19 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     return s ? `/tendas?${s}` : "/tendas";
   };
   const reserveHref = (slug: string) => `/reservar?tenda=${slug}${hasDates && !dateError ? `&inicio=${sp.inicio}&fim=${sp.fim}` : ""}`;
-
-  // Capa da página: a 1ª foto real do catálogo (destaque primeiro); sem fotos, o fundo da marca.
-  const coverProduct = all.find((p) => p.featured && productPhotos(p).length) ?? all.find((p) => productPhotos(p).length);
-  const coverPhoto = coverProduct ? productPhotos(coverProduct)[0] : null;
+  const title = sp.categoria && categories.includes(sp.categoria) ? sp.categoria : "Tendas para locação";
 
   return (
     <>
       <PageIntro
-        eyebrow="Catálogo"
-        title={sp.categoria && categories.includes(sp.categoria) ? sp.categoria : "Nossas tendas"}
-        text="Estruturas com fotos reais e disponibilidade consultada na hora para a data do seu evento."
-        photoId={coverPhoto}
-        photoAlt={coverProduct?.name}
+        eyebrow={`Catálogo · ${settings.city}`}
+        title={title}
+        text="Escolha a estrutura, informe a data e o local. A disponibilidade é consultada na hora e nossa equipe confirma o pedido."
       />
 
-      {/* Filtros */}
-      <div className="sticky top-0 z-20 border-b border-night/10 bg-linen/95 backdrop-blur">
-        <nav aria-label="Categorias" className="no-scrollbar mx-auto flex max-w-[1360px] gap-8 overflow-x-auto px-5 sm:px-10">
+      {/* Categorias */}
+      <div className="sticky top-[72px] z-20 border-y border-night/10 bg-white/95 backdrop-blur">
+        <nav aria-label="Categorias" className="no-scrollbar mx-auto flex max-w-[1280px] gap-7 overflow-x-auto px-5 sm:px-8">
           <FilterTab href={keep({ categoria: undefined })} active={!sp.categoria}>Todas</FilterTab>
           {categories.map((c) => (
             <FilterTab key={c} href={keep({ categoria: c })} active={sp.categoria === c}>{c}</FilterTab>
@@ -75,122 +70,123 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
         </nav>
       </div>
 
-      <main className="mx-auto max-w-[1360px] px-5 pb-28 sm:px-10">
-        <form method="get" className="grid gap-4 border-b border-night/10 py-8 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end">
-          {sp.categoria ? <input type="hidden" name="categoria" value={sp.categoria} /> : null}
-          <label className="block">
-            <span className={ui.label}>Início do evento</span>
-            <input type="date" name="inicio" defaultValue={sp.inicio} className={ui.input} />
-          </label>
-          <label className="block">
-            <span className={ui.label}>Término do evento</span>
-            <input type="date" name="fim" defaultValue={sp.fim} className={ui.input} />
-          </label>
-          {sizes.length ? (
+      <main className="bg-white">
+        <div className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-8">
+          <form method="get" className="grid gap-4 border-b border-night/10 py-7 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end">
+            {sp.categoria ? <input type="hidden" name="categoria" value={sp.categoria} /> : null}
             <label className="block">
-              <span className={ui.label}>Tamanho</span>
-              <select name="tamanho" defaultValue={sp.tamanho ?? ""} className={ui.input}>
-                <option value="">Todos</option>
-                {sizes.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <span className={ui.label}>Início do evento</span>
+              <input type="date" name="inicio" defaultValue={sp.inicio} className={ui.input} />
             </label>
-          ) : null}
-          {kinds.length > 1 ? (
             <label className="block">
-              <span className={ui.label}>Tipo</span>
-              <select name="tipo" defaultValue={sp.tipo ?? ""} className={ui.input}>
-                <option value="">Todos</option>
-                {kinds.map((k) => (
-                  <option key={k} value={k}>{KIND_LABEL[k]}</option>
-                ))}
-              </select>
+              <span className={ui.label}>Término do evento</span>
+              <input type="date" name="fim" defaultValue={sp.fim} className={ui.input} />
             </label>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-1">
-            <label className="inline-flex h-12 items-center gap-2.5 text-[13px] text-night/75">
-              <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#081b36]" />
-              Só disponíveis
-            </label>
-            <button className={`${ui.btnPrimary} h-12 flex-1 lg:flex-none`}>Consultar</button>
-          </div>
-          {dateError ? <p className="text-[14px] text-accent sm:col-span-2 lg:col-span-5">{dateError}</p> : null}
-          {free ? (
-            <p className="text-[14px] text-night/60 sm:col-span-2 lg:col-span-5">
-              Disponibilidade para {fmtDate(startOfDay(sp.inicio!))} a {fmtDate(startOfDay(sp.fim!))}, já considerando a preparação antes e depois do evento.
-            </p>
-          ) : null}
-        </form>
+            {sizes.length ? (
+              <label className="block">
+                <span className={ui.label}>Tamanho</span>
+                <select name="tamanho" defaultValue={sp.tamanho ?? ""} className={ui.input}>
+                  <option value="">Todos</option>
+                  {sizes.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {kinds.length > 1 ? (
+              <label className="block">
+                <span className={ui.label}>Tipo</span>
+                <select name="tipo" defaultValue={sp.tipo ?? ""} className={ui.input}>
+                  <option value="">Todos</option>
+                  {kinds.map((k) => (
+                    <option key={k} value={k}>{KIND_LABEL[k]}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-1">
+              <label className="inline-flex h-12 items-center gap-2.5 text-[14.5px] text-night/75">
+                <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#0c3f80]" />
+                Só disponíveis
+              </label>
+              <button className={`${ui.btnPrimary} flex-1 lg:flex-none`}>Consultar datas</button>
+            </div>
+            {dateError ? <p className="text-[14.5px] text-accent sm:col-span-2 lg:col-span-5">{dateError}</p> : null}
+            {free ? (
+              <p className="text-[14.5px] text-night/60 sm:col-span-2 lg:col-span-5">
+                Disponibilidade para {fmtDate(startOfDay(sp.inicio!))} a {fmtDate(startOfDay(sp.fim!))}, já considerando a preparação antes e depois do evento.
+              </p>
+            ) : null}
+          </form>
 
-        <p className={`${ui.label} mt-10`}>
-          {products.length} {products.length === 1 ? "estrutura" : "estruturas"}
-        </p>
+          <p className={`${ui.meta} mt-8`}>
+            {products.length} {products.length === 1 ? "estrutura" : "estruturas"}
+          </p>
 
-        {/* Lista: fotografia em primeiro plano, informação enxuta */}
-        {products.length ? (
-          <ul className="mt-8 grid gap-x-8 gap-y-20 md:grid-cols-2">
-            {products.map((p, i) => {
-              const photo = productPhotos(p)[0];
-              const n = free?.[p.id];
-              return (
-                <li key={p.id} className="reveal group" style={{ transitionDelay: `${(i % 2) * 90}ms` }}>
-                  <Link href={productPath(p)} className="-mx-5 block overflow-hidden sm:mx-0" aria-label={p.name}>
-                    <div className="relative aspect-[4/3] bg-sand">
-                      <Photo id={photo} alt={p.name} className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.04]" sizes="(min-width: 768px) 50vw, 100vw" />
-                      {n != null ? (
-                        <span className={`absolute left-0 top-5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${n > 0 ? "bg-white text-night" : "bg-night text-white"}`}>
-                          {n > 0 ? `${n} ${n === 1 ? "disponível" : "disponíveis"} na data` : "Indisponível na data"}
-                        </span>
-                      ) : null}
-                    </div>
-                  </Link>
-                  <div className="mt-6 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
-                    <div className="min-w-0">
-                      <p className={`${ui.label} text-night/45`}>
-                        {p.category}
-                        {p.dimensions ? <span className="text-night/35"> · {p.dimensions}</span> : null}
-                      </p>
-                      <h2 className="mt-2 text-[22px] font-semibold uppercase leading-tight tracking-[0.01em] text-night sm:text-[24px]">
-                        <Link href={productPath(p)}>{p.name}</Link>
-                      </h2>
-                      {p.description ? <p className="mt-2 line-clamp-2 max-w-lg text-[15px] leading-relaxed text-night/60">{p.description}</p> : null}
-                      <p className="mt-3 text-[15px] text-night">
-                        {p.rentalPriceCents != null ? (
-                          <>
-                            <span className="font-semibold">{money(p.rentalPriceCents)}</span>
-                            <span className="text-night/50"> / dia</span>
-                          </>
-                        ) : (
-                          <span className="text-night/55">Valor a consultar</span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-6 sm:flex-col sm:items-end sm:gap-4">
-                      {n !== 0 ? (
-                        <Link href={reserveHref(p.slug ?? p.id)} className={ui.btnSmall}>
-                          Reservar
-                        </Link>
-                      ) : null}
-                      <Link href={productPath(p)} className={ui.link}>
-                        Ver detalhes <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+          {/* Composição variada: a primeira estrutura em destaque; as demais alternam proporções e alturas */}
+          {products.length ? (
+            <ul className="mt-6 grid gap-x-10 gap-y-16 md:grid-cols-2">
+              {products.map((p, i) => {
+                const photo = productPhotos(p)[0];
+                const n = free?.[p.id];
+                const featured = i === 0;
+                const aspect = featured ? "aspect-[4/3] lg:aspect-[16/9]" : i % 3 === 1 ? "aspect-[4/5]" : "aspect-[4/3]";
+                return (
+                  <li key={p.id} className={`reveal group ${featured ? "md:col-span-2" : i % 2 === 0 ? "md:mt-20" : ""}`}>
+                    <div className={featured ? "grid gap-6 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-end lg:gap-10" : ""}>
+                      <Link href={productPath(p)} className="-mx-5 block overflow-hidden bg-linen sm:mx-0" aria-label={p.name}>
+                        <div className={`relative ${aspect}`}>
+                          <Photo id={photo} alt={p.name} className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]" sizes={featured ? "(min-width: 1024px) 66vw, 100vw" : "(min-width: 768px) 50vw, 100vw"} />
+                          {n != null ? (
+                            <span className={`absolute left-0 top-4 px-3 py-1.5 text-[13px] font-medium ${n > 0 ? "bg-white text-night" : "bg-night text-white"}`}>
+                              {n > 0 ? `${n} ${n === 1 ? "disponível" : "disponíveis"} na data` : "Indisponível na data"}
+                            </span>
+                          ) : null}
+                        </div>
                       </Link>
+                      <div className={featured ? "" : "mt-5"}>
+                        <p className={ui.meta}>
+                          {p.category}
+                          {p.dimensions ? ` · ${p.dimensions}` : ""}
+                        </p>
+                        <h2 className={`mt-1.5 font-semibold tracking-[-0.015em] text-night ${featured ? "text-[26px] sm:text-[30px]" : "text-[21px]"}`}>
+                          <Link href={productPath(p)} className="hover:text-ink">{p.name}</Link>
+                        </h2>
+                        {p.description ? <p className={`mt-2 max-w-lg text-[15.5px] leading-relaxed text-night/65 ${featured ? "line-clamp-4" : "line-clamp-2"}`}>{p.description}</p> : null}
+                        <p className="mt-3 text-[15.5px] text-night">
+                          {p.rentalPriceCents != null ? (
+                            <>
+                              {money(p.rentalPriceCents)} <span className="text-night/55">por dia</span>
+                            </>
+                          ) : (
+                            <span className="text-night/60">Valor a consultar</span>
+                          )}
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+                          <Link href={productPath(p)} className={ui.link}>Ver estrutura</Link>
+                          {n !== 0 ? (
+                            <Link href={reserveHref(p.slug ?? p.id)} className="text-[15px] text-night/70 hover:text-ink">
+                              Solicitar orçamento →
+                            </Link>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <div className="border-t border-night/10 py-24 text-center">
-            <p className="text-[22px] font-semibold uppercase tracking-[0.01em]">{all.length ? "Nenhuma estrutura com esses filtros." : "O catálogo está sendo preparado."}</p>
-            {all.length ? (
-              <Link href="/tendas" className={`${ui.link} mt-6`}>Limpar filtros</Link>
-            ) : (
-              <p className="mt-3 text-night/60">Fale com a gente pelo WhatsApp para consultar disponibilidade.</p>
-            )}
-          </div>
-        )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="border-t border-night/10 py-20">
+              <p className={ui.h3}>{all.length ? "Nenhuma estrutura com esses filtros." : "O catálogo está sendo preparado."}</p>
+              {all.length ? (
+                <Link href="/tendas" className={`${ui.link} mt-4`}>Limpar filtros</Link>
+              ) : (
+                <p className="mt-2 text-night/60">Fale com a gente pelo WhatsApp para consultar disponibilidade.</p>
+              )}
+            </div>
+          )}
+        </div>
       </main>
       <SiteFooter settings={settings} />
     </>
@@ -202,8 +198,8 @@ function FilterTab({ href, active, children }: { href: string; active: boolean; 
     <Link
       href={href}
       aria-current={active ? "true" : undefined}
-      className={`relative flex h-14 shrink-0 items-center whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.16em] transition-colors ${
-        active ? "text-night after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-night" : "text-night/45 hover:text-night"
+      className={`relative flex h-12 shrink-0 items-center whitespace-nowrap text-[15px] transition-colors ${
+        active ? "font-medium text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-ink" : "text-night/60 hover:text-night"
       }`}
     >
       {children}

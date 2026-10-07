@@ -41,7 +41,7 @@ export function LookupForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md">
       <label className="block">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Número da reserva</span>
+        <span className="text-[13px] font-medium text-night/55">Número da reserva</span>
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
@@ -53,7 +53,7 @@ export function LookupForm() {
         />
       </label>
       <label className="mt-4 block">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-night/55">Telefone / WhatsApp informado no pedido</span>
+        <span className="text-[13px] font-medium text-night/55">Telefone / WhatsApp informado no pedido</span>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -67,7 +67,7 @@ export function LookupForm() {
         />
       </label>
       {state.error ? <p role="alert" className="mt-4 bg-accent-soft px-4 py-3 text-[14px] text-accent">{state.error}</p> : null}
-      <button disabled={state.loading} className="mt-6 h-14 w-full bg-night text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-night-soft disabled:opacity-60">
+      <button disabled={state.loading} className="mt-6 h-12 w-full bg-ink text-[15px] font-medium text-white transition-colors hover:bg-ink-deep disabled:opacity-60">
         {state.loading ? "Consultando…" : "Consultar"}
       </button>
     </form>

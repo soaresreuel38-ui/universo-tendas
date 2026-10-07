@@ -27,7 +27,8 @@ export function AvailabilityCheck({ productId, slug, unit }: { productId: string
 
   return (
     <div className={`${ui.panel} p-5 sm:p-7`}>
-      <p className={`${ui.eyebrow} text-night/45`}>Consultar disponibilidade</p>
+      <h2 className={ui.h3}>Disponibilidade e orçamento</h2>
+      <p className="mt-1.5 text-[14.5px] text-night/60">Informe as datas do evento para ver quantas unidades estão livres.</p>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <label className="block">
           <span className={ui.label}>Início do evento</span>
@@ -73,11 +74,11 @@ export function AvailabilityCheck({ productId, slug, unit }: { productId: string
       <Link
         href={`/reservar?tenda=${slug}${start && end ? `&inicio=${start}&fim=${end}` : ""}`}
         aria-disabled={state.free === 0}
-        className={`mt-5 flex h-14 items-center justify-center text-[12.5px] font-semibold uppercase tracking-[0.18em] transition-colors ${
-          state.free === 0 ? "pointer-events-none bg-night/20 text-night/50" : "bg-night text-white hover:bg-night-soft"
+        className={`mt-5 flex h-12 items-center justify-center text-[15px] font-medium transition-colors ${
+          state.free === 0 ? "pointer-events-none bg-night/20 text-night/50" : "bg-ink text-white hover:bg-ink-deep"
         }`}
       >
-        Reservar esta tenda
+        Solicitar orçamento
       </Link>
     </div>
   );

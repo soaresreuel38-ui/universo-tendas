@@ -59,7 +59,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
               key={id}
               type="button"
               onClick={() => setZoom(i)}
-              className="relative aspect-[4/3] w-full shrink-0 snap-center cursor-zoom-in bg-sand"
+              className="relative aspect-[4/3] w-full shrink-0 snap-center cursor-zoom-in bg-sand lg:aspect-[16/9]"
               aria-label={`Ampliar foto ${i + 1} de ${photos.length}`}
             >
               <img src={publicPhotoUrl(id, true)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-105 object-cover blur-md" />
@@ -75,7 +75,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
           ))}
         </div>
         {photos.length > 1 ? (
-          <span className="pointer-events-none absolute bottom-0 right-0 bg-night px-4 py-2 text-[11px] font-semibold tracking-[0.16em] text-white tabular">
+          <span className="pointer-events-none absolute bottom-0 right-0 bg-white px-3 py-1.5 text-[13px] text-night tabular">
             {index + 1} / {photos.length}
           </span>
         ) : null}
@@ -87,7 +87,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
               key={id}
               type="button"
               onClick={() => go(i)}
-              className={`h-16 w-20 shrink-0 overflow-hidden border-b-2 transition sm:h-20 sm:w-28 ${i === index ? "border-night" : "border-transparent opacity-55 hover:opacity-100"}`}
+              className={`h-16 w-20 shrink-0 overflow-hidden border-b-2 transition sm:h-20 sm:w-28 ${i === index ? "border-ink" : "border-transparent opacity-55 hover:opacity-100"}`}
               aria-label={`Ver foto ${i + 1}`}
             >
               <img src={publicPhotoUrl(id, true)} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -99,15 +99,15 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
       {zoom != null ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/95 p-4" role="dialog" aria-modal="true" aria-label="Foto ampliada" onClick={() => setZoom(null)}>
           <img src={publicPhotoUrl(photos[zoom])} alt={`${name} — foto ${zoom + 1}`} className="max-h-full max-w-full object-contain" />
-          <button type="button" onClick={() => setZoom(null)} className="absolute right-4 top-4 h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
+          <button type="button" onClick={() => setZoom(null)} className="absolute right-4 top-4 h-11 border border-white/30 px-5 text-[14px] text-white hover:bg-white/10">
             Fechar
           </button>
           {photos.length > 1 ? (
             <div className="absolute bottom-6 flex gap-3" onClick={(e) => e.stopPropagation()}>
-              <button type="button" onClick={() => setZoom((zoom - 1 + photos.length) % photos.length)} className="h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
+              <button type="button" onClick={() => setZoom((zoom - 1 + photos.length) % photos.length)} className="h-11 border border-white/30 px-5 text-[14px] text-white hover:bg-white/10">
                 ← Anterior
               </button>
-              <button type="button" onClick={() => setZoom((zoom + 1) % photos.length)} className="h-11 border border-white/30 px-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-white/10">
+              <button type="button" onClick={() => setZoom((zoom + 1) % photos.length)} className="h-11 border border-white/30 px-5 text-[14px] text-white hover:bg-white/10">
                 Próxima →
               </button>
             </div>

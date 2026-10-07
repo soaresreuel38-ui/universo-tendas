@@ -3,8 +3,9 @@ import Link from "next/link";
 import { TentDrawing } from "@/components/brand/TentDrawing";
 import { Photo } from "@/components/site/Photo";
 import { QUOTE_HREF, SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
+import { ui } from "@/components/site/ui";
 import { formatPhoneDisplay } from "@/lib/br-documents";
-import { whatsappLink } from "@/lib/format";
+import { money, whatsappLink } from "@/lib/format";
 import { prisma } from "@/server/db";
 import { listPublicProducts, productPath, productPhotos } from "@/server/public-booking";
 import { getSiteSettings, instagramUrl } from "@/server/site-data";
@@ -13,28 +14,15 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Universo Tendas | Locação de Tendas em Sinop - MT" },
-  description: "Locação de tendas e estruturas para eventos, empresas e grandes projetos em Sinop e região. Montagem e desmontagem.",
+  description: "Locação de tendas e estruturas para eventos em Sinop e região. Escolha a estrutura, informe a data e o local e solicite o orçamento.",
   alternates: { canonical: "/" },
 };
 
-const PROCESS = [
-  ["Conte o que você precisa", "Data, local e o tipo de evento. Quanto mais detalhes, mais certeira a indicação."],
-  ["Escolha a estrutura", "Veja as estruturas disponíveis para a sua data, com fotos reais."],
-  ["Definimos os detalhes", "Nossa equipe confirma o pedido, as medidas do local e a logística."],
-  ["Montagem no local", "A estrutura é levada e montada no endereço do evento."],
-  ["Seu evento pronto", "Você recebe tudo montado. Depois do evento, cuidamos da desmontagem."],
+const STEPS = [
+  ["Escolha a estrutura", "Veja as tendas do catálogo, com fotos e informações de cada uma."],
+  ["Informe a data e o local", "O site mostra na hora quantas unidades estão livres para o período do evento."],
+  ["Envie o pedido", "A equipe confere os detalhes e retorna pelo WhatsApp para confirmar a locação."],
 ] as const;
-
-const REASONS = [
-  ["Estruturas para diferentes necessidades", "Modelos e tamanhos variados para diferentes formatos de evento."],
-  ["Atendimento especializado", "Orientação na escolha da estrutura certa para o espaço e para o público."],
-  ["Montagem e desmontagem", "Nossa equipe monta a estrutura no local e retira depois do evento."],
-  ["Organização logística", "Saída, montagem e retorno planejados em torno da data do seu evento."],
-  ["Atendimento em Sinop e região", "Base em Sinop - MT, atendendo eventos na cidade e na região."],
-] as const;
-
-const H2 = "text-[30px] font-semibold uppercase leading-[1.02] tracking-[-0.02em] text-night sm:text-[44px] lg:text-[56px]";
-const EYEBROW = "text-[11px] font-semibold uppercase tracking-[0.3em]";
 
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSiteSettings(), listPublicProducts(prisma)]);
@@ -43,20 +31,11 @@ export default async function HomePage() {
   const withPhotos = products.filter((p) => productPhotos(p).length);
   const cover = withPhotos.find((p) => p.featured) ?? withPhotos[0] ?? null;
   const coverPhoto = cover ? productPhotos(cover)[0] : null;
-  const pool = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name }))).filter((x) => x.id !== coverPhoto);
-  const reasonsPhoto = pool[0] ?? null;
-  const ctaPhoto = pool[1] ?? pool[0] ?? (coverPhoto && cover ? { id: coverPhoto, name: cover.name } : null);
-
-  const categories = [...new Set(products.map((p) => p.category))].map((name) => {
-    const inCat = products.filter((p) => p.category === name);
-    const withPhoto = inCat.find((p) => productPhotos(p).length);
-    return {
-      name,
-      count: inCat.length,
-      photoId: withPhoto ? productPhotos(withPhoto)[0] : null,
-      description: inCat.find((p) => p.description)?.description ?? null,
-    };
-  });
+  // Uma segunda foto real (se houver) para a faixa entre as seções.
+  const bandPhoto = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name }))).find((x) => x.id !== coverPhoto) ?? null;
+  // Estruturas em destaque primeiro; o catálogo completo fica em /tendas.
+  const shown = [...products].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, 5);
+  const [lead, ...rest] = shown;
 
   const wa = whatsappLink(settings.whatsappNumber, "Olá! Vim pelo site da Universo Tendas e gostaria de um orçamento.");
   const ig = instagramUrl(settings.instagram);
@@ -75,234 +54,171 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <SiteHeader />
 
-      {/* ───────────── Hero: a fotografia vende a empresa ───────────── */}
-      <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#05101f] text-white">
-        <SiteHeader overlay />
-        {coverPhoto ? (
-          <div className="absolute inset-0 -z-10" aria-hidden={false}>
-            <div className="h-full w-full animate-slow-zoom">
-              <Photo id={coverPhoto} alt={cover!.name} priority sizes="100vw" className="object-[50%_60%]" />
+      {/* Abertura: texto direto à esquerda, a fotografia real ocupando o lado direito sem nada por cima */}
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <div className="flex flex-col justify-center px-5 pb-10 pt-12 sm:px-8 lg:py-24 lg:pr-14">
+            <p className={ui.meta}>Universo Tendas · {settings.city}</p>
+            <h1 className={`${ui.h1} mt-4 [text-wrap:balance]`}>Locação de tendas para eventos em Sinop e região.</h1>
+            <p className={`${ui.lead} mt-5 max-w-md`}>
+              Escolha a estrutura, informe a data e o local. Nossa equipe confirma a disponibilidade e cuida da montagem e da desmontagem.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <Link href={QUOTE_HREF} className={ui.btnPrimary}>
+                Solicitar orçamento
+              </Link>
+              <Link href="/tendas" className={ui.link}>
+                Ver as tendas
+              </Link>
             </div>
-            {/* overlay escuro elegante: mais forte à esquerda (texto) e embaixo; vinheta leve */}
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,10,22,0.82)_0%,rgba(3,10,22,0.55)_45%,rgba(3,10,22,0.15)_100%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,22,0.55)_0%,transparent_22%,transparent_60%,rgba(3,10,22,0.85)_100%)]" />
-            <div className="absolute inset-0 shadow-[inset_0_0_220px_rgba(0,0,0,0.45)]" />
+            {wa && settings.whatsappNumber ? (
+              <p className="mt-10 border-t border-night/10 pt-5 text-[14.5px] text-night/60">
+                Prefere conversar? WhatsApp{" "}
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="text-night underline decoration-night/25 underline-offset-4 hover:decoration-night">
+                  {formatPhoneDisplay(settings.whatsappNumber)}
+                </a>
+                {settings.phones ? <> · Telefone {settings.phones.split("·")[0].trim()}</> : null}
+              </p>
+            ) : null}
           </div>
-        ) : (
-          // Sem foto oficial cadastrada: composição pronta para receber a fotografia (nunca uma imagem genérica).
-          <div className="absolute inset-0 -z-10" aria-hidden>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_60%,#12305a_0%,#05101f_70%)]" />
-            <TentDrawing strokeWidth={0.6} className="absolute bottom-[-6%] right-[-10%] w-[120%] max-w-[1200px] text-white/[0.12] lg:w-[72%]" />
-          </div>
-        )}
-
-        <div className="mx-auto flex w-full max-w-[1360px] flex-1 flex-col justify-end px-5 pb-12 pt-32 sm:px-10 sm:pb-16 lg:justify-center lg:pb-24">
-          <p className={`${EYEBROW} animate-rise text-white/65`}>Universo Tendas · {settings.city}</p>
-          <h1 className="mt-6 max-w-[15ch] animate-rise text-[42px] font-semibold uppercase leading-[0.98] tracking-[-0.03em] [animation-delay:80ms] [text-wrap:balance] sm:text-[64px] lg:text-[96px]">
-            Estrutura para eventos que impressionam.
-          </h1>
-          <p className="mt-6 max-w-[34rem] animate-rise text-[17px] leading-relaxed text-white/80 [animation-delay:140ms] sm:text-[19px]">
-            Locação de tendas e estruturas para eventos, empresas e grandes projetos em Sinop e região.
-          </p>
-          <div className="mt-10 flex animate-rise flex-col gap-3 [animation-delay:200ms] sm:flex-row">
-            <Link href={QUOTE_HREF} className="inline-flex h-14 items-center justify-center bg-white px-9 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-night transition-colors hover:bg-linen">
-              Solicitar orçamento
-            </Link>
-            <Link href="/tendas" className="group inline-flex h-14 items-center justify-center gap-3 border border-white/45 px-9 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:border-white hover:bg-white/10">
-              Conhecer nossas tendas <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
-            </Link>
-          </div>
-          <ul className="mt-8 flex animate-rise flex-col gap-2.5 text-[11px] font-medium uppercase tracking-[0.22em] text-white/60 [animation-delay:260ms] sm:flex-row sm:flex-wrap sm:gap-x-5">
-            {["Atendimento profissional", "Montagem e desmontagem", "Sinop e região"].map((t, i) => (
-              <li key={t} className="flex items-center gap-3 whitespace-nowrap sm:gap-5">
-                <span aria-hidden className="block h-px w-4 bg-white/40 sm:hidden" />
-                {i ? <span aria-hidden className="hidden text-white/30 sm:inline">•</span> : null}
-                {t}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mx-auto hidden w-full max-w-[1360px] items-end justify-between px-10 pb-8 text-[11px] uppercase tracking-[0.22em] text-white/50 lg:flex">
-          <a href="#solucoes" className="inline-flex items-center gap-3 hover:text-white">
-            <span className="block h-10 w-px bg-white/40" aria-hidden /> Role para conhecer
-          </a>
-          {cover ? (
-            <Link href={productPath(cover)} className="hover:text-white">
-              Na foto: {cover.name}
-            </Link>
-          ) : null}
+          <figure className="relative lg:pl-0">
+            <div className="relative aspect-[4/3] w-full bg-linen sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[620px]">
+              {coverPhoto && cover ? (
+                <Photo id={coverPhoto} alt={cover.name} priority sizes="(min-width: 1024px) 58vw, 100vw" />
+              ) : (
+                <div className="flex h-full items-center justify-center" aria-hidden>
+                  <TentDrawing strokeWidth={0.9} className="w-[62%] max-w-[460px] text-night/20" />
+                </div>
+              )}
+            </div>
+            {cover ? (
+              <figcaption className="px-5 pt-3 text-[13px] text-night/50 sm:px-8 lg:absolute lg:bottom-0 lg:left-0 lg:bg-white lg:px-4 lg:py-2.5">
+                Na foto: <Link href={productPath(cover)} className="text-night underline decoration-night/25 underline-offset-4 hover:decoration-night">{cover.name}</Link>
+              </figcaption>
+            ) : null}
+          </figure>
         </div>
       </section>
 
-      {/* ───────────── Soluções: categorias reais do catálogo ───────────── */}
-      <section id="solucoes" className="scroll-mt-20 bg-white py-24 sm:py-32" aria-labelledby="solucoes-titulo">
-        <div className="mx-auto max-w-[1360px] px-5 sm:px-10">
-          <div className="reveal grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
-            <div>
-              <p className={`${EYEBROW} text-night/45`}>Soluções</p>
-              <h2 id="solucoes-titulo" className={`mt-5 ${H2}`}>Estruturas para cada tipo de evento</h2>
-            </div>
-            <p className="max-w-md text-[17px] leading-relaxed text-night/60 lg:justify-self-end">
-              Conheça as estruturas do nosso catálogo. Cada uma com fotos reais e disponibilidade consultada na hora para a data do seu evento.
-            </p>
+      {/* Estruturas: a primeira em destaque, as demais em composição livre */}
+      <section id="estruturas" className="scroll-mt-24 border-t border-night/10 bg-white py-20 sm:py-24" aria-labelledby="estruturas-titulo">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 id="estruturas-titulo" className={ui.h2}>Estruturas para locação</h2>
+            <Link href="/tendas" className={ui.link}>Ver o catálogo completo</Link>
           </div>
 
-          {categories.length ? (
-            <ul className={`mt-16 grid gap-x-6 gap-y-14 sm:grid-cols-2 ${categories.length >= 3 ? "lg:grid-cols-3" : ""}`}>
-              {categories.map((c, i) => (
-                <li key={c.name} className="reveal" style={{ transitionDelay: `${(i % 3) * 90}ms` }}>
-                  <Link href={`/tendas?categoria=${encodeURIComponent(c.name)}`} className="group block">
-                    <div className="relative aspect-[4/5] overflow-hidden bg-sand">
-                      <Photo id={c.photoId} alt={c.name} className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.04]" sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
-                      <span className="absolute left-5 top-5 text-[11px] font-semibold tracking-[0.2em] text-white mix-blend-difference">{String(i + 1).padStart(2, "0")}</span>
-                    </div>
-                    <h3 className="mt-6 text-[20px] font-semibold uppercase tracking-[0.02em] text-night">{c.name}</h3>
-                    <p className="mt-2 line-clamp-2 min-h-[3em] text-[15px] leading-relaxed text-night/60">
-                      {c.description ?? `${c.count} ${c.count === 1 ? "modelo disponível" : "modelos disponíveis"} no catálogo.`}
-                    </p>
-                    <span className="mt-5 inline-flex items-center gap-3 border-b border-night pb-1 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-night">
-                      Ver estrutura <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          {lead ? (
+            <>
+              <article className="reveal mt-10 grid gap-6 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-end lg:gap-10">
+                <Link href={productPath(lead)} className="group -mx-5 block overflow-hidden bg-linen sm:mx-0">
+                  <div className="aspect-[3/2]">
+                    <Photo id={productPhotos(lead)[0]} alt={lead.name} className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]" sizes="(min-width: 1024px) 66vw, 100vw" />
+                  </div>
+                </Link>
+                <ProductText p={lead} large />
+              </article>
+
+              {rest.length ? (
+                <div className="mt-16 grid gap-x-10 gap-y-14 sm:grid-cols-2">
+                  {rest.map((p, i) => (
+                    <article key={p.id} className={`reveal ${i % 2 ? "sm:mt-16" : ""}`}>
+                      <Link href={productPath(p)} className="group block overflow-hidden bg-linen">
+                        <div className={i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}>
+                          <Photo id={productPhotos(p)[0]} alt={p.name} size="full" className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]" sizes="(min-width: 640px) 50vw, 100vw" />
+                        </div>
+                      </Link>
+                      <div className="mt-5">
+                        <ProductText p={p} />
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+            </>
           ) : (
-            <p className="mt-16 border-t border-night/10 pt-8 text-[16px] text-night/60">
-              O catálogo está sendo preparado. Fale com a nossa equipe para conhecer as estruturas disponíveis.
+            <p className="mt-10 max-w-lg text-[17px] text-night/65">
+              O catálogo está sendo preparado. Para consultar as estruturas disponíveis, fale com a gente pelo WhatsApp.
             </p>
           )}
         </div>
       </section>
 
-      {/* ───────────── Processo ───────────── */}
-      <section id="como-funciona" className="scroll-mt-20 border-t border-night/10 bg-linen py-24 sm:py-32" aria-labelledby="processo-titulo">
-        <div className="mx-auto max-w-[1360px] px-5 sm:px-10">
-          <div className="reveal max-w-3xl">
-            <p className={`${EYEBROW} text-night/45`}>Como funciona</p>
-            <h2 id="processo-titulo" className={`mt-5 ${H2}`}>Do planejamento à montagem</h2>
+      {/* Faixa fotográfica: só aparece quando existe mais uma foto real cadastrada */}
+      {bandPhoto ? (
+        <figure className="relative bg-linen">
+          <div className="mx-auto aspect-[16/9] max-h-[640px] w-full sm:aspect-[21/9]">
+            <Photo id={bandPhoto.id} alt={bandPhoto.name} sizes="100vw" />
           </div>
-          <ol className="mt-16 grid gap-0 sm:grid-cols-2 lg:grid-cols-5">
-            {PROCESS.map(([title, text], i) => (
-              <li key={title} className="reveal border-t border-night/20 py-8 sm:pr-8 lg:py-10" style={{ transitionDelay: `${i * 70}ms` }}>
-                <span className="block text-[13px] font-semibold tracking-[0.2em] text-ink">{String(i + 1).padStart(2, "0")}</span>
-                <h3 className="mt-5 text-[18px] font-semibold uppercase leading-snug tracking-[0.01em] text-night">{title}</h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-night/60">{text}</p>
+        </figure>
+      ) : null}
+
+      {/* Como solicitar: três passos em texto corrido, sem cartões */}
+      <section id="como-solicitar" className="scroll-mt-24 bg-linen py-20 sm:py-24" aria-labelledby="como-titulo">
+        <div className="mx-auto grid max-w-[1280px] gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
+          <div className="reveal">
+            <h2 id="como-titulo" className={ui.h2}>Como solicitar um orçamento</h2>
+            <p className={`${ui.lead} mt-4 max-w-sm`}>Pelo site, sem cadastro. O pedido chega direto para a nossa equipe.</p>
+            <Link href={QUOTE_HREF} className={`${ui.btnPrimary} mt-8`}>
+              Solicitar orçamento
+            </Link>
+          </div>
+          <ol className="reveal border-t border-night/15">
+            {STEPS.map(([title, text], i) => (
+              <li key={title} className="grid grid-cols-[2.5rem_1fr] gap-x-4 border-b border-night/15 py-6 sm:grid-cols-[3rem_14rem_1fr] sm:items-baseline">
+                <span className="text-[15px] font-semibold text-ink tabular">{i + 1}.</span>
+                <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-night">{title}</h3>
+                <p className="col-start-2 mt-1 text-[15.5px] leading-relaxed text-night/65 sm:col-start-3 sm:mt-0">{text}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* ───────────── Por que a Universo Tendas ───────────── */}
-      <section className="bg-[#05101f] text-white" aria-labelledby="porque-titulo">
-        <div className="mx-auto grid max-w-[1360px] lg:grid-cols-2">
-          <div className="relative min-h-[320px] overflow-hidden lg:min-h-[640px]">
-            {reasonsPhoto ? (
-              <Photo id={reasonsPhoto.id} alt={reasonsPhoto.name} sizes="(min-width: 1024px) 50vw, 100vw" className="absolute inset-0" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#12305a_0%,#05101f_75%)]" aria-hidden>
-                <TentDrawing variant="articulada" strokeWidth={0.8} className="w-[70%] text-white/15" />
-              </div>
-            )}
-          </div>
-          <div className="px-5 py-20 sm:px-10 lg:px-16 lg:py-28">
-            <p className={`${EYEBROW} reveal text-white/45`}>Por que nós</p>
-            <h2 id="porque-titulo" className="reveal mt-5 text-[30px] font-semibold uppercase leading-[1.02] tracking-[-0.02em] sm:text-[44px]">
-              Por que escolher a Universo Tendas?
-            </h2>
-            <ul className="mt-12 divide-y divide-white/12 border-y border-white/12">
-              {REASONS.map(([title, text]) => (
-                <li key={title} className="reveal grid gap-2 py-6 sm:grid-cols-[1fr_1.2fr] sm:gap-8">
-                  <h3 className="text-[15px] font-semibold uppercase tracking-[0.08em]">{title}</h3>
-                  <p className="text-[15px] leading-relaxed text-white/60">{text}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────────── Sobre nós ───────────── */}
-      <section id="sobre" className="scroll-mt-20 bg-white py-24 sm:py-32" aria-labelledby="sobre-titulo">
-        <div className="reveal mx-auto grid max-w-[1360px] gap-10 px-5 sm:px-10 lg:grid-cols-[1fr_1.4fr]">
-          <div>
-            <p className={`${EYEBROW} text-night/45`}>Sobre nós</p>
-            <h2 id="sobre-titulo" className={`mt-5 ${H2}`}>Universo Tendas</h2>
-          </div>
-          <div className="space-y-6 text-[18px] leading-relaxed text-night/70 lg:pt-12">
-            <p>
-              Somos uma empresa de locação de tendas e estruturas para eventos em {settings.city}. Atendemos eventos sociais, empresas e
-              grandes projetos em Sinop e região, com montagem e desmontagem feitas pela nossa equipe.
-            </p>
-            <p>
-              Do primeiro contato ao dia do evento, cuidamos da estrutura para que você possa cuidar do resto.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────────── Chamada final sobre fotografia ───────────── */}
-      <section className="relative isolate overflow-hidden bg-[#05101f] text-white" aria-labelledby="cta-titulo">
-        {ctaPhoto ? (
-          <div className="absolute inset-0 -z-10">
-            <Photo id={ctaPhoto.id} alt={ctaPhoto.name} sizes="100vw" />
-            <div className="absolute inset-0 bg-[rgba(3,10,22,0.72)]" />
-          </div>
-        ) : (
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_30%_100%,#12305a_0%,#05101f_70%)]" aria-hidden />
-        )}
-        <div className="reveal mx-auto flex max-w-[1360px] flex-col items-start px-5 py-28 sm:px-10 sm:py-40">
-          <h2 id="cta-titulo" className="max-w-[18ch] text-[32px] font-semibold uppercase leading-[1.02] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px] lg:text-[68px]">
-            Vamos montar a estrutura do seu evento?
-          </h2>
-          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-white/75 sm:text-[19px]">
-            Conte o que você precisa e nossa equipe entra em contato para entender o seu projeto.
-          </p>
-          <Link href={QUOTE_HREF} className="mt-10 inline-flex h-14 w-full items-center justify-center bg-white px-10 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-night transition-colors hover:bg-linen sm:w-auto">
-            Solicitar orçamento
-          </Link>
-        </div>
-      </section>
-
-      {/* ───────────── Contato ───────────── */}
-      <section id="contato" className="scroll-mt-20 bg-linen py-24 sm:py-28" aria-labelledby="contato-titulo">
-        <div className="mx-auto grid max-w-[1360px] gap-14 px-5 sm:px-10 lg:grid-cols-[1.15fr_1fr]">
+      {/* A empresa e o contato, juntos: quem somos, onde estamos e como falar com a gente */}
+      <section id="empresa" className="scroll-mt-24 bg-white py-20 sm:py-24" aria-labelledby="empresa-titulo">
+        <div className="mx-auto grid max-w-[1280px] gap-14 px-5 sm:px-8 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-24">
           <div className="reveal">
-            <p className={`${EYEBROW} text-night/45`}>Contato</p>
-            <h2 id="contato-titulo" className={`mt-5 ${H2}`}>Fale com a gente</h2>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              {wa ? (
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex h-14 items-center justify-center whitespace-nowrap bg-night px-8 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-white hover:bg-night-soft">
-                  Falar pelo WhatsApp
-                </a>
-              ) : null}
-              <Link href={QUOTE_HREF} className="inline-flex h-14 items-center justify-center whitespace-nowrap border border-night/25 px-8 text-[12.5px] font-semibold uppercase tracking-[0.18em] text-night hover:border-night">
-                Solicitar orçamento
-              </Link>
+            <h2 id="empresa-titulo" className={ui.h2}>{settings.companyName}</h2>
+            <div className={`${ui.lead} mt-5 max-w-xl space-y-4`}>
+              <p>
+                Empresa de locação de tendas e estruturas para eventos em {settings.city}. Atendemos eventos sociais, empresas e projetos na
+                cidade e na região.
+              </p>
+              <p>A montagem e a desmontagem são feitas pela nossa equipe, no endereço do evento.</p>
             </div>
           </div>
-          <dl className="reveal grid gap-10 sm:grid-cols-2 lg:pt-14">
-            <ContactItem label="Endereço">
-              <span className="block">{settings.companyName}</span>
-              {settings.address ? <span className="block">{settings.address}</span> : null}
-              <span className="block">{settings.city}</span>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="link-grow mt-3 inline-block text-[13px] uppercase tracking-[0.16em] text-night/60">
-                Ver no mapa →
-              </a>
-            </ContactItem>
-            <ContactItem label="Telefones">
-              {settings.phones ? <span className="block">Telefone: {settings.phones.split("·")[0].trim()}</span> : null}
-              {settings.whatsappNumber ? <span className="block">WhatsApp: {formatPhoneDisplay(settings.whatsappNumber)}</span> : null}
-              {ig ? (
-                <a href={ig} target="_blank" rel="noopener noreferrer" className="link-grow mt-1 inline-block">
-                  Instagram: {settings.instagram}
-                </a>
+          <div id="contato" className="reveal scroll-mt-24">
+            <dl className="divide-y divide-night/10 border-y border-night/10 text-[15.5px]">
+              {settings.address ? (
+                <ContactRow label="Endereço">
+                  {settings.address}
+                  <br />
+                  {settings.city}{" "}
+                  <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+                    ver no mapa
+                  </a>
+                </ContactRow>
               ) : null}
-            </ContactItem>
-          </dl>
+              {settings.phones ? <ContactRow label="Telefone">{settings.phones.split("·")[0].trim()}</ContactRow> : null}
+              {wa && settings.whatsappNumber ? (
+                <ContactRow label="WhatsApp">
+                  <a href={wa} target="_blank" rel="noopener noreferrer" className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+                    {formatPhoneDisplay(settings.whatsappNumber)}
+                  </a>
+                </ContactRow>
+              ) : null}
+              {ig ? (
+                <ContactRow label="Instagram">
+                  <a href={ig} target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+                    {settings.instagram}
+                  </a>
+                </ContactRow>
+              ) : null}
+            </dl>
+          </div>
         </div>
       </section>
 
@@ -311,11 +227,38 @@ export default async function HomePage() {
   );
 }
 
-function ContactItem({ label, children }: { label: string; children: React.ReactNode }) {
+function ProductText({ p, large = false }: { p: Awaited<ReturnType<typeof listPublicProducts>>[number]; large?: boolean }) {
   return (
-    <div className="border-t border-night/20 pt-6">
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.24em] text-night/45">{label}</dt>
-      <dd className="mt-4 text-[17px] leading-relaxed text-night">{children}</dd>
+    <div>
+      <p className={ui.meta}>
+        {p.category}
+        {p.dimensions ? ` · ${p.dimensions}` : ""}
+      </p>
+      <h3 className={`mt-1.5 font-semibold tracking-[-0.015em] text-night ${large ? "text-[26px] sm:text-[30px]" : "text-[21px]"}`}>
+        <Link href={productPath(p)} className="hover:text-ink">{p.name}</Link>
+      </h3>
+      {p.description ? <p className={`mt-2 text-[15.5px] leading-relaxed text-night/65 ${large ? "line-clamp-4" : "line-clamp-2"}`}>{p.description}</p> : null}
+      <p className="mt-3 text-[15.5px] text-night">
+        {p.rentalPriceCents != null ? (
+          <>
+            {money(p.rentalPriceCents)} <span className="text-night/55">por dia</span>
+          </>
+        ) : (
+          <span className="text-night/60">Valor a consultar</span>
+        )}
+      </p>
+      <Link href={productPath(p)} className={`${ui.link} mt-4`}>
+        Ver estrutura
+      </Link>
+    </div>
+  );
+}
+
+function ContactRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[6.5rem_1fr] gap-4 py-4">
+      <dt className="text-night/50">{label}</dt>
+      <dd className="text-night">{children}</dd>
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default async function ReservePage({ searchParams }: { searchParams: Prom
           <Link href="/" aria-label="Universo Tendas — início">
             <Brand />
           </Link>
-          <Link href="/tendas" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-night/55 hover:text-night">Sair</Link>
+          <Link href="/tendas" className="text-[13px] font-medium text-night/55 hover:text-night">Sair</Link>
         </div>
       </header>
       {settings.booking.enabled && list.length ? (
@@ -53,7 +53,7 @@ export default async function ReservePage({ searchParams }: { searchParams: Prom
         />
       ) : (
         <main className="mx-auto max-w-xl px-4 py-24 text-center">
-          <p className="text-[24px] font-semibold uppercase tracking-[0.01em]">{list.length ? "As reservas pelo site estão pausadas no momento." : "O catálogo está sendo preparado."}</p>
+          <p className="text-[24px] font-semibold tracking-[0.01em]">{list.length ? "As reservas pelo site estão pausadas no momento." : "O catálogo está sendo preparado."}</p>
           <p className="mt-4 text-night/65">Fale com a gente pelo WhatsApp para consultar disponibilidade.</p>
         </main>
       )}

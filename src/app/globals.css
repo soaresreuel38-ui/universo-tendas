@@ -30,11 +30,11 @@
   --color-st-rented: #c7812a;
   --color-st-maint: #7c6f64;
   --color-st-late: #c62b34;
-  /* Site público: papel quente, azul-noite da marca e serifa editorial */
-  --color-linen: #f4f0e8;
-  --color-sand: #e6dfd2;
-  --color-night: #081b36;
-  --color-night-soft: #12305a;
+  /* Site público: branco, cinza e grafite; o azul da marca (ink) fica para navegação, botões e seleção */
+  --color-linen: #f3f4f5;
+  --color-sand: #e4e6e9;
+  --color-night: #1c1f24;
+  --color-night-soft: #30353d;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --animate-rise: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
