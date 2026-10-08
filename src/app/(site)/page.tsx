@@ -7,8 +7,9 @@ import { ui } from "@/components/site/ui";
 import { formatPhoneDisplay } from "@/lib/br-documents";
 import { money, whatsappLink } from "@/lib/format";
 import { prisma } from "@/server/db";
+import { photoSize } from "@/server/image-size";
 import { listPublicProducts, productPath, productPhotos } from "@/server/public-booking";
-import { getSiteSettings, instagramUrl } from "@/server/site-data";
+import { getSiteSettings, instagramUrl, type SiteSettings } from "@/server/site-data";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,9 @@ export default async function HomePage() {
   const withPhotos = products.filter((p) => productPhotos(p).length);
   const cover = withPhotos.find((p) => p.featured) ?? withPhotos[0] ?? null;
   const coverPhoto = cover ? productPhotos(cover)[0] : null;
+  // Foto grande o bastante para tela cheia? (lida do próprio arquivo; nada é inventado)
+  const coverSize = coverPhoto ? await photoSize(coverPhoto) : null;
+  const fullBleed = Boolean(coverSize && coverSize.width >= 1400);
   // Uma segunda foto real (se houver) para a faixa entre as seções.
   const bandPhoto = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name }))).find((x) => x.id !== coverPhoto) ?? null;
   // Estruturas em destaque primeiro; o catálogo completo fica em /tendas.
@@ -56,51 +60,39 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <SiteHeader />
 
-      {/* Abertura: texto direto à esquerda, a fotografia real ocupando o lado direito sem nada por cima */}
-      <section className="bg-white">
-        <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <div className="flex flex-col justify-center px-5 pb-10 pt-12 sm:px-8 lg:py-24 lg:pr-14">
-            <p className={ui.meta}>Universo Tendas · {settings.city}</p>
-            <h1 className={`${ui.h1} mt-4 [text-wrap:balance]`}>Locação de tendas para eventos em Sinop e região.</h1>
-            <p className={`${ui.lead} mt-5 max-w-md`}>
-              Escolha a estrutura, informe a data e o local. Nossa equipe confirma a disponibilidade e cuida da montagem e da desmontagem.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Link href={QUOTE_HREF} className={ui.btnPrimary}>
-                Solicitar orçamento
-              </Link>
-              <Link href="/tendas" className={ui.link}>
-                Ver as tendas
-              </Link>
-            </div>
-            {wa && settings.whatsappNumber ? (
-              <p className="mt-10 border-t border-night/10 pt-5 text-[14.5px] text-night/60">
-                Prefere conversar? WhatsApp{" "}
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="text-night underline decoration-night/25 underline-offset-4 hover:decoration-night">
-                  {formatPhoneDisplay(settings.whatsappNumber)}
-                </a>
-                {settings.phones ? <> · Telefone {settings.phones.split("·")[0].trim()}</> : null}
-              </p>
-            ) : null}
+      {/* Hero: a tenda real da Universo Tendas ocupa a composição inteira; o texto fica sobre ela */}
+      {fullBleed && coverPhoto && cover ? (
+        // Foto grande (≥ 1400 px): fotografia em tela cheia, overlay moderado para leitura, tenda reconhecível.
+        <section className="relative isolate flex min-h-[calc(100svh-72px)] items-end overflow-hidden bg-night text-white">
+          <div className="absolute inset-0 -z-10">
+            <Photo id={coverPhoto} alt={cover.name} priority sizes="100vw" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(14,17,21,0.62)_0%,rgba(14,17,21,0.32)_48%,rgba(14,17,21,0.08)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(0deg,rgba(14,17,21,0.55),transparent)]" />
           </div>
-          <figure className="relative lg:pl-0">
-            <div className="relative aspect-[4/3] w-full bg-linen sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[620px]">
-              {coverPhoto && cover ? (
-                <Photo id={coverPhoto} alt={cover.name} priority sizes="(min-width: 1024px) 58vw, 100vw" />
-              ) : (
-                <div className="flex h-full items-center justify-center" aria-hidden>
-                  <TentDrawing strokeWidth={0.9} className="w-[62%] max-w-[460px] text-night/20" />
-                </div>
-              )}
-            </div>
-            {cover ? (
-              <figcaption className="px-5 pt-3 text-[13px] text-night/50 sm:px-8 lg:absolute lg:bottom-0 lg:left-0 lg:bg-white lg:px-4 lg:py-2.5">
-                Na foto: <Link href={productPath(cover)} className="text-night underline decoration-night/25 underline-offset-4 hover:decoration-night">{cover.name}</Link>
-              </figcaption>
-            ) : null}
-          </figure>
-        </div>
-      </section>
+          <HeroText settings={settings} wa={wa} tone="light" />
+          <HeroCaption cover={cover} tone="light" />
+        </section>
+      ) : (
+        // Foto de catálogo (recorte sobre fundo claro, resolução menor): a tenda grande no fundo, sem moldura,
+        // ocupando a composição; o fundo do hero acompanha o fundo da foto e o título fica sobreposto.
+        <section className="relative isolate flex min-h-[calc(100svh-72px)] flex-col overflow-hidden bg-white lg:justify-end">
+          <div className="pointer-events-none absolute inset-0 -z-10 flex items-end justify-center pb-10 lg:justify-end lg:pb-0" aria-hidden={!coverPhoto}>
+            {coverPhoto && cover ? (
+              <Photo
+                id={coverPhoto}
+                alt={cover.name}
+                priority
+                sizes="(min-width: 1024px) 70vw, 100vw"
+                className="h-auto! w-full! max-w-[620px] bg-transparent! object-contain! mix-blend-multiply sm:max-w-[680px] lg:mb-[1%] lg:mr-[1%] lg:h-[82%]! lg:w-auto! lg:max-w-[64%]"
+              />
+            ) : (
+              <TentDrawing strokeWidth={0.7} className="w-[90%] max-w-[900px] text-night/15 lg:w-[68%]" />
+            )}
+          </div>
+          <HeroText settings={settings} wa={wa} tone="dark" />
+          {cover ? <HeroCaption cover={cover} tone="dark" /> : null}
+        </section>
+      )}
 
       {/* Estruturas: a primeira em destaque, as demais em composição livre */}
       <section id="estruturas" className="scroll-mt-24 border-t border-night/10 bg-white py-20 sm:py-24" aria-labelledby="estruturas-titulo">
@@ -224,6 +216,58 @@ export default async function HomePage() {
 
       <SiteFooter settings={settings} />
     </>
+  );
+}
+
+function HeroText({ settings, wa, tone }: { settings: SiteSettings; wa: string | null; tone: "light" | "dark" }) {
+  const light = tone === "light";
+  return (
+    <div className="mx-auto w-full max-w-[1280px] px-5 pb-12 pt-14 sm:px-8 sm:pb-16 lg:pb-24 lg:pt-20">
+      <p className={`text-[14px] ${light ? "text-white/75" : "text-night/55"}`}>Universo Tendas · {settings.city}</p>
+      <h1
+        className={`mt-4 max-w-[11ch] text-[48px] font-semibold leading-[0.98] tracking-[-0.035em] [text-wrap:balance] sm:text-[76px] lg:text-[104px] ${
+          light ? "text-white" : "text-night"
+        }`}
+      >
+        Estrutura para eventos.
+      </h1>
+      <p className={`mt-6 max-w-md text-[17px] leading-relaxed sm:text-[19px] ${light ? "text-white/85" : "text-night/70"}`}>
+        Locação de tendas em Sinop e região. Escolha a estrutura, informe a data e o local; nossa equipe confirma a disponibilidade.
+      </p>
+      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Link href={QUOTE_HREF} className="inline-flex h-[52px] items-center justify-center bg-ink px-7 text-[16px] font-medium text-white transition-colors hover:bg-ink-deep">
+          Solicitar orçamento
+        </Link>
+        <Link
+          href="/tendas"
+          className={`text-[16px] font-medium underline underline-offset-[6px] transition-colors ${
+            light ? "text-white decoration-white/40 hover:decoration-white" : "text-ink decoration-ink/30 hover:decoration-ink"
+          }`}
+        >
+          Ver as tendas
+        </Link>
+      </div>
+      {wa && settings.whatsappNumber ? (
+        <p className={`mt-8 text-[14.5px] ${light ? "text-white/70" : "text-night/55"}`}>
+          WhatsApp{" "}
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={`underline underline-offset-4 ${light ? "text-white decoration-white/40" : "text-night decoration-night/25"}`}>
+            {formatPhoneDisplay(settings.whatsappNumber)}
+          </a>
+          {settings.phones ? <> · Telefone {settings.phones.split("·")[0].trim()}</> : null}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function HeroCaption({ cover, tone }: { cover: { name: string; slug: string | null; id: string }; tone: "light" | "dark" }) {
+  return (
+    <p className={`absolute bottom-4 right-5 hidden text-[13px] sm:right-8 lg:block ${tone === "light" ? "text-white/70" : "text-night/45"}`}>
+      Na foto:{" "}
+      <Link href={productPath(cover)} className="underline underline-offset-4">
+        {cover.name}
+      </Link>
+    </p>
   );
 }
 
