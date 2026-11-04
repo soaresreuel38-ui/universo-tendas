@@ -40,7 +40,7 @@ export default async function HomePage() {
   const coverPhoto = cover ? productPhotos(cover)[0] : null;
   // Foto grande o bastante para tela cheia? (lida do próprio arquivo)
   const coverSize = coverPhoto ? await photoSize(coverPhoto) : null;
-  const fullBleed = Boolean(coverSize && coverSize.width >= 1400);
+  const fullBleed = Boolean(coverSize && coverSize.width >= 1200);
 
   const allPhotos: GalleryItem[] = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name, path: productPath(p) })));
   const aboutPhoto = allPhotos.find((x) => x.id !== coverPhoto) ?? allPhotos[0] ?? null;
