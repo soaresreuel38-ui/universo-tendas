@@ -106,7 +106,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             ) : null}
             <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-1">
               <label className="inline-flex h-12 items-center gap-2.5 text-[14.5px] text-night/75">
-                <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#0c3f80]" />
+                <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#b8955c]" />
                 Só disponíveis
               </label>
               <button className={`${ui.btnPrimary} flex-1 lg:flex-none`}>Consultar datas</button>
@@ -150,7 +150,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                           {p.dimensions ? ` · ${p.dimensions}` : ""}
                         </p>
                         <h2 className={`mt-1.5 font-semibold tracking-[-0.015em] text-night ${featured ? "text-[26px] sm:text-[30px]" : "text-[21px]"}`}>
-                          <Link href={productPath(p)} className="hover:text-ink">{p.name}</Link>
+                          <Link href={productPath(p)} className="hover:text-night">{p.name}</Link>
                         </h2>
                         {p.description ? <p className={`mt-2 max-w-lg text-[15.5px] leading-relaxed text-night/65 ${featured ? "line-clamp-4" : "line-clamp-2"}`}>{p.description}</p> : null}
                         <p className="mt-3 text-[15.5px] text-night">
@@ -165,7 +165,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
                         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
                           <Link href={productPath(p)} className={ui.link}>Ver estrutura</Link>
                           {n !== 0 ? (
-                            <Link href={reserveHref(p.slug ?? p.id)} className="text-[15px] text-night/70 hover:text-ink">
+                            <Link href={reserveHref(p.slug ?? p.id)} className="text-[15px] text-night/70 hover:text-night">
                               Solicitar orçamento →
                             </Link>
                           ) : null}
@@ -199,7 +199,7 @@ function FilterTab({ href, active, children }: { href: string; active: boolean; 
       href={href}
       aria-current={active ? "true" : undefined}
       className={`relative flex h-12 shrink-0 items-center whitespace-nowrap text-[15px] transition-colors ${
-        active ? "font-medium text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-ink" : "text-night/60 hover:text-night"
+        active ? "font-medium text-night after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-gold" : "text-night/60 hover:text-night"
       }`}
     >
       {children}

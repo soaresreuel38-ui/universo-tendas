@@ -14,7 +14,7 @@ type Ref = { token: string } | { code: string; phone: string };
 const TONE = {
   wait: "bg-amber-100 text-amber-900",
   ok: "bg-emerald-100 text-emerald-900",
-  active: "bg-ink-tint text-ink",
+  active: "bg-gold/15 text-night",
   done: "bg-sand text-night",
   canceled: "bg-night/10 text-night/70",
 } as const;
@@ -87,7 +87,7 @@ export function ReservationView({ rental, reference, fresh = false }: { rental: 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("whatsapp_click", { from: "reserva" })}
-            className="inline-flex h-14 flex-1 items-center justify-center bg-ink px-6 text-[15px] font-medium text-white hover:bg-ink-deep"
+            className="inline-flex h-14 flex-1 items-center justify-center bg-coal px-6 text-[15px] font-medium text-white hover:bg-night-soft"
           >
             Falar pelo WhatsApp
           </a>
@@ -157,7 +157,7 @@ function CancelRequest({ reference, onDone }: { reference: Ref; onDone: () => vo
           />
           {state.error ? <p className="mt-2 text-[14px] text-accent">{state.error}</p> : null}
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button type="button" onClick={send} disabled={state.sending} className="h-12 flex-1 bg-ink px-5 text-[14px] font-medium text-white disabled:opacity-60">
+            <button type="button" onClick={send} disabled={state.sending} className="h-12 flex-1 bg-coal px-5 text-[14px] font-medium text-white disabled:opacity-60">
               {state.sending ? "Enviando…" : "Enviar pedido de cancelamento"}
             </button>
             <button type="button" onClick={() => setOpen(false)} className="h-12 flex-1 border border-night/20 px-5 text-[14px] font-medium">

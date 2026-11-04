@@ -30,7 +30,7 @@ export default async function ReservationByTokenPage({ params, searchParams }: {
           <div className="py-16 text-center">
             <p className="text-[24px] font-semibold tracking-[0.01em]">Link de reserva inválido.</p>
             <p className="mt-3 text-night/60">Consulte pelo número da reserva e o telefone informado no pedido.</p>
-            <Link href="/minha-reserva" className="mt-8 inline-flex h-14 items-center bg-ink px-8 text-[15px] font-medium text-white hover:bg-ink-deep">
+            <Link href="/minha-reserva" className="mt-8 inline-flex h-14 items-center bg-coal px-8 text-[15px] font-medium text-white hover:bg-night-soft">
               Consultar minha reserva
             </Link>
           </div>

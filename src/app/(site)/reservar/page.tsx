@@ -36,7 +36,7 @@ export default async function ReservePage({ searchParams }: { searchParams: Prom
       <header className="border-b border-night/10 bg-linen">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="Universo Tendas — início">
-            <Brand />
+            <Brand tone="dark" />
           </Link>
           <Link href="/tendas" className="text-[13px] font-medium text-night/55 hover:text-night">Sair</Link>
         </div>

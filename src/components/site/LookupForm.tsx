@@ -67,7 +67,7 @@ export function LookupForm() {
         />
       </label>
       {state.error ? <p role="alert" className="mt-4 bg-accent-soft px-4 py-3 text-[14px] text-accent">{state.error}</p> : null}
-      <button disabled={state.loading} className="mt-6 h-12 w-full bg-ink text-[15px] font-medium text-white transition-colors hover:bg-ink-deep disabled:opacity-60">
+      <button disabled={state.loading} className="mt-6 h-12 w-full bg-coal text-[15px] font-medium text-white transition-colors hover:bg-night-soft disabled:opacity-60">
         {state.loading ? "Consultando…" : "Consultar"}
       </button>
     </form>

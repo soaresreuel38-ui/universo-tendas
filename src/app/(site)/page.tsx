@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TentDrawing } from "@/components/brand/TentDrawing";
+import { HomeGallery, type GalleryItem } from "@/components/site/HomeGallery";
 import { Photo } from "@/components/site/Photo";
 import { QUOTE_HREF, SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { ui } from "@/components/site/ui";
@@ -9,39 +10,44 @@ import { money, whatsappLink } from "@/lib/format";
 import { prisma } from "@/server/db";
 import { photoSize } from "@/server/image-size";
 import { listPublicProducts, productPath, productPhotos } from "@/server/public-booking";
-import { getSiteSettings, instagramUrl, type SiteSettings } from "@/server/site-data";
+import { getSiteSettings, instagramUrl } from "@/server/site-data";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "Universo Tendas | Locação de Tendas em Sinop - MT" },
-  description: "Locação de tendas e estruturas para eventos em Sinop e região. Escolha a estrutura, informe a data e o local e solicite o orçamento.",
+  description:
+    "Locação de tendas e estruturas para eventos em Sinop e região, com montagem e desmontagem pela nossa equipe. Consulte a disponibilidade e solicite o orçamento.",
   alternates: { canonical: "/" },
 };
 
-const STEPS = [
-  ["Escolha a estrutura", "Veja as tendas do catálogo, com fotos e informações de cada uma."],
-  ["Informe a data e o local", "O site mostra na hora quantas unidades estão livres para o período do evento."],
-  ["Envie o pedido", "A equipe confere os detalhes e retorna pelo WhatsApp para confirmar a locação."],
+/** Diferenciais reais do serviço (nada de números, prêmios ou clientes inventados). */
+const DIFFERENTIALS = [
+  ["Montagem e desmontagem", "Nossa equipe leva a estrutura, monta no endereço do evento e retira depois."],
+  ["Disponibilidade na hora", "Pelo site, você vê quantas unidades estão livres para a data do seu evento."],
+  ["Atendimento direto", "Do primeiro contato à confirmação, você fala com a nossa equipe pelo WhatsApp."],
+  ["Reserva acompanhada", "Cada pedido tem número, contrato e acompanhamento online, sem precisar de cadastro."],
 ] as const;
+
+type PublicProducts = Awaited<ReturnType<typeof listPublicProducts>>;
 
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSiteSettings(), listPublicProducts(prisma)]);
 
-  // Fotos reais cadastradas no painel. Capa: 1ª foto do 1º produto em "Destaque" (ou do 1º produto com foto).
+  // Somente fotos reais cadastradas no painel. Capa: 1ª foto do 1º produto em "Destaque" (ou do 1º com foto).
   const withPhotos = products.filter((p) => productPhotos(p).length);
   const cover = withPhotos.find((p) => p.featured) ?? withPhotos[0] ?? null;
   const coverPhoto = cover ? productPhotos(cover)[0] : null;
-  // Foto grande o bastante para tela cheia? (lida do próprio arquivo; nada é inventado)
+  // Foto grande o bastante para tela cheia? (lida do próprio arquivo)
   const coverSize = coverPhoto ? await photoSize(coverPhoto) : null;
   const fullBleed = Boolean(coverSize && coverSize.width >= 1400);
-  // Uma segunda foto real (se houver) para a faixa entre as seções.
-  const bandPhoto = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name }))).find((x) => x.id !== coverPhoto) ?? null;
-  // Estruturas em destaque primeiro; o catálogo completo fica em /tendas.
-  const shown = [...products].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, 5);
-  const [lead, ...rest] = shown;
 
-  const wa = whatsappLink(settings.whatsappNumber, "Olá! Vim pelo site da Universo Tendas e gostaria de um orçamento.");
+  const allPhotos: GalleryItem[] = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name, path: productPath(p) })));
+  const aboutPhoto = allPhotos.find((x) => x.id !== coverPhoto) ?? allPhotos[0] ?? null;
+  const ctaPhoto = allPhotos.find((x) => x.id !== coverPhoto && x.id !== aboutPhoto?.id) ?? null;
+  const shown = [...products].sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, 5);
+
+  const wa = whatsappLink(settings.whatsappNumber, "Olá! Vim pelo site da Universo Tendas e gostaria de falar sobre uma estrutura para o meu evento.");
   const ig = instagramUrl(settings.instagram);
   const mapQuery = encodeURIComponent(`${settings.address ? `${settings.address}, ` : ""}${settings.city}`);
 
@@ -60,157 +66,243 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <SiteHeader />
 
-      {/* Hero: a tenda real da Universo Tendas ocupa a composição inteira; o texto fica sobre ela */}
-      {fullBleed && coverPhoto && cover ? (
-        // Foto grande (≥ 1400 px): fotografia em tela cheia, overlay moderado para leitura, tenda reconhecível.
-        <section className="relative isolate flex min-h-[calc(100svh-72px)] items-end overflow-hidden bg-night text-white">
-          <div className="absolute inset-0 -z-10">
-            <Photo id={coverPhoto} alt={cover.name} priority sizes="100vw" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(14,17,21,0.62)_0%,rgba(14,17,21,0.32)_48%,rgba(14,17,21,0.08)_100%)]" />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(0deg,rgba(14,17,21,0.55),transparent)]" />
+      {/* ───────────── 1. Capa ───────────── */}
+      <section className="relative isolate flex min-h-[calc(100svh-72px)] flex-col overflow-hidden bg-coal text-white">
+        {fullBleed && coverPhoto && cover ? (
+          // Foto grande: fotografia de campanha em tela cheia, overlay para leitura sem esconder a tenda.
+          <div className="absolute inset-0 -z-10" aria-hidden>
+            <div className="h-full w-full animate-slow-zoom">
+              <Photo id={coverPhoto} alt="" priority sizes="100vw" />
+            </div>
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,9,11,0.82)_0%,rgba(8,9,11,0.5)_45%,rgba(8,9,11,0.15)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(8,9,11,0.85),transparent)]" />
           </div>
-          <HeroText settings={settings} wa={wa} tone="light" />
-          <HeroCaption cover={cover} tone="light" />
-        </section>
-      ) : (
-        // Foto de catálogo (recorte sobre fundo claro, resolução menor): a tenda grande no fundo, sem moldura,
-        // ocupando a composição; o fundo do hero acompanha o fundo da foto e o título fica sobreposto.
-        <section className="relative isolate flex min-h-[calc(100svh-72px)] flex-col overflow-hidden bg-white lg:justify-end">
-          <div className="pointer-events-none absolute inset-0 -z-10 flex items-end justify-center pb-10 lg:justify-end lg:pb-0" aria-hidden={!coverPhoto}>
-            {coverPhoto && cover ? (
-              <Photo
-                id={coverPhoto}
-                alt={cover.name}
-                priority
-                sizes="(min-width: 1024px) 70vw, 100vw"
-                className="h-auto! w-full! max-w-[620px] bg-transparent! object-contain! mix-blend-multiply sm:max-w-[680px] lg:mb-[1%] lg:mr-[1%] lg:h-[82%]! lg:w-auto! lg:max-w-[64%]"
-              />
+        ) : null}
+
+        <div className="mx-auto flex w-full max-w-[1360px] flex-1 flex-col justify-start px-5 pt-16 sm:px-8 lg:justify-center lg:pt-0">
+          <p className={`${ui.kicker} animate-rise`}>Universo Tendas · {settings.city}</p>
+          <h1 className="mt-6 max-w-[14ch] animate-rise text-[40px] font-semibold uppercase leading-[0.98] tracking-[-0.025em] [animation-delay:80ms] [text-wrap:balance] sm:text-[60px] lg:text-[80px] xl:text-[92px]">
+            Estruturas que transformam eventos em experiências.
+          </h1>
+          <p className="mt-7 max-w-[34rem] animate-rise text-[17px] leading-relaxed text-white/75 [animation-delay:140ms] sm:text-[19px]">
+            Locação de tendas e estruturas para eventos com qualidade, segurança e excelência em cada detalhe.
+          </p>
+          <div className="mt-10 flex animate-rise flex-col gap-3 [animation-delay:200ms] sm:flex-row">
+            <Link href={QUOTE_HREF} className={ui.btnGold}>
+              Solicitar orçamento
+              <span aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
+            </Link>
+            <a href="#estruturas" className={ui.btnGhostLight}>
+              Conhecer nossas estruturas
+            </a>
+          </div>
+        </div>
+
+        {!fullBleed ? (
+          // Foto de catálogo (recorte de fundo claro, resolução menor): a tenda "iluminada" sobre o fundo escuro.
+          // A luz e a foto ficam na MESMA camada para o fundo branco do recorte se fundir à luz (multiply).
+          // Celular: abaixo dos botões, sem ficar atrás do texto. Telas grandes: composição à direita.
+          <div
+            aria-hidden
+            className="pointer-events-none relative mt-6 flex justify-center bg-[radial-gradient(ellipse_75%_58%_at_50%_55%,#e9e6e0_0%,#bdb8ae_34%,#3a3a38_66%,#0c0e11_92%)] px-4 py-10 lg:absolute lg:inset-0 lg:-z-10 lg:mt-0 lg:items-center lg:justify-end lg:bg-[linear-gradient(90deg,rgba(12,14,17,1)_0%,rgba(12,14,17,0.94)_30%,rgba(12,14,17,0.35)_52%,transparent_66%),radial-gradient(ellipse_44%_64%_at_72%_56%,#ece9e3_0%,#c2bdb3_36%,#3b3b39_68%,#0c0e11_92%)] lg:px-0 lg:py-0 lg:pr-[5%] lg:pt-[4%]"
+          >
+            {coverPhoto ? (
+              <div className="animate-slow-zoom mix-blend-multiply">
+                <Photo id={coverPhoto} alt="" priority sizes="(min-width: 1024px) 46vw, 100vw" className="h-auto! w-[86vw]! max-w-[500px] bg-transparent! object-contain! lg:w-[min(44vw,760px)]! lg:max-w-none" />
+              </div>
             ) : (
-              <TentDrawing strokeWidth={0.7} className="w-[90%] max-w-[900px] text-night/15 lg:w-[68%]" />
+              <TentDrawing strokeWidth={0.6} className="w-[86%] max-w-[560px] text-night/35 lg:w-[44%] lg:max-w-[760px]" />
             )}
           </div>
-          <HeroText settings={settings} wa={wa} tone="dark" />
-          {cover ? <HeroCaption cover={cover} tone="dark" /> : null}
-        </section>
-      )}
+        ) : null}
 
-      {/* Estruturas: a primeira em destaque, as demais em composição livre */}
-      <section id="estruturas" className="scroll-mt-24 border-t border-night/10 bg-white py-20 sm:py-24" aria-labelledby="estruturas-titulo">
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 id="estruturas-titulo" className={ui.h2}>Estruturas para locação</h2>
-            <Link href="/tendas" className={ui.link}>Ver o catálogo completo</Link>
+        {/* Faixa inferior com informações reais da empresa */}
+        <div className="relative mt-12 border-t border-white/10 lg:mt-0">
+          <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-5 text-[13px] text-white/60 sm:px-8">
+            <ul className="flex flex-wrap gap-x-7 gap-y-2">
+              {["Sinop e região", "Montagem e desmontagem", "Disponibilidade consultada na hora"].map((t) => (
+                <li key={t} className="flex items-center gap-2.5">
+                  <span aria-hidden className="h-1 w-1 bg-gold" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+            {cover ? (
+              <Link href={productPath(cover)} className="hidden text-white/45 transition-colors hover:text-white lg:inline">
+                Na imagem: {cover.name}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── 2. Estruturas ───────────── */}
+      <section id="estruturas" className="scroll-mt-20 bg-linen py-24 sm:py-32" aria-labelledby="estruturas-titulo">
+        <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
+          <div className="reveal grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className={ui.kicker}>Estruturas para locação</p>
+              <h2 id="estruturas-titulo" className={`${ui.h2} mt-4 max-w-[18ch] [text-wrap:balance]`}>Uma estrutura para cada formato de evento.</h2>
+            </div>
+            <Link href="/tendas" className={ui.link}>
+              Ver o catálogo completo →
+            </Link>
           </div>
 
-          {lead ? (
-            <>
-              <article className="reveal mt-10 grid gap-6 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:items-end lg:gap-10">
-                <Link href={productPath(lead)} className="group -mx-5 block overflow-hidden bg-linen sm:mx-0">
-                  <div className="aspect-[3/2]">
-                    <Photo id={productPhotos(lead)[0]} alt={lead.name} className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]" sizes="(min-width: 1024px) 66vw, 100vw" />
-                  </div>
-                </Link>
-                <ProductText p={lead} large />
-              </article>
-
-              {rest.length ? (
-                <div className="mt-16 grid gap-x-10 gap-y-14 sm:grid-cols-2">
-                  {rest.map((p, i) => (
-                    <article key={p.id} className={`reveal ${i % 2 ? "sm:mt-16" : ""}`}>
-                      <Link href={productPath(p)} className="group block overflow-hidden bg-linen">
-                        <div className={i % 3 === 0 ? "aspect-[4/5]" : "aspect-[4/3]"}>
-                          <Photo id={productPhotos(p)[0]} alt={p.name} size="full" className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]" sizes="(min-width: 640px) 50vw, 100vw" />
-                        </div>
-                      </Link>
-                      <div className="mt-5">
-                        <ProductText p={p} />
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : null}
-            </>
+          {shown.length ? (
+            <div className="mt-16 space-y-24 sm:space-y-32">
+              {shown.map((p, i) => (
+                <StructureRow key={p.id} p={p} index={i} />
+              ))}
+            </div>
           ) : (
-            <p className="mt-10 max-w-lg text-[17px] text-night/65">
-              O catálogo está sendo preparado. Para consultar as estruturas disponíveis, fale com a gente pelo WhatsApp.
+            <p className="mt-14 max-w-xl border-t border-night/10 pt-8 text-[17px] text-night/65">
+              O catálogo está sendo preparado. Para consultar as estruturas disponíveis, fale com a nossa equipe pelo WhatsApp.
             </p>
           )}
         </div>
       </section>
 
-      {/* Faixa fotográfica: só aparece quando existe mais uma foto real cadastrada */}
-      {bandPhoto ? (
-        <figure className="relative bg-linen">
-          <div className="mx-auto aspect-[16/9] max-h-[640px] w-full sm:aspect-[21/9]">
-            <Photo id={bandPhoto.id} alt={bandPhoto.name} sizes="100vw" />
+      {/* ───────────── 3. A empresa ───────────── */}
+      <section id="empresa" className="scroll-mt-20 bg-white py-24 sm:py-32" aria-labelledby="empresa-titulo">
+        <div className="mx-auto grid max-w-[1360px] gap-14 px-5 sm:px-8 lg:grid-cols-12 lg:gap-10">
+          <div className="reveal lg:col-span-6 lg:pr-10">
+            <p className={ui.kicker}>A empresa</p>
+            <h2 id="empresa-titulo" className={`${ui.h2} mt-4 [text-wrap:balance]`}>Estrutura, experiência e confiança em cada projeto.</h2>
+            <div className={`${ui.lead} mt-8 space-y-5`}>
+              <p>
+                A {settings.companyName} é especializada em locação de tendas e estruturas para eventos em {settings.city} e região — de encontros
+                sociais a eventos corporativos.
+              </p>
+              <p>
+                Cada locação é planejada em torno da data e do local do seu evento: a nossa equipe leva a estrutura, faz a montagem e retira depois,
+                para que você possa se concentrar no que importa.
+              </p>
+            </div>
+            <dl className="mt-10 grid gap-x-10 gap-y-6 border-t border-night/10 pt-8 sm:grid-cols-2">
+              <div>
+                <dt className="text-[12px] uppercase tracking-[0.18em] text-night/45">Onde estamos</dt>
+                <dd className="mt-1.5 text-[16px] text-night">
+                  {settings.address ? `${settings.address}, ` : ""}
+                  {settings.city}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12px] uppercase tracking-[0.18em] text-night/45">Atendimento</dt>
+                <dd className="mt-1.5 text-[16px] text-night">Sinop e região</dd>
+              </div>
+            </dl>
           </div>
-        </figure>
+          <figure className="reveal relative lg:col-span-6">
+            <span aria-hidden className="absolute -left-3 -top-3 hidden h-24 w-24 border-l border-t border-gold lg:block" />
+            <div className="relative aspect-[5/4] overflow-hidden bg-linen">
+              {aboutPhoto ? (
+                <Photo id={aboutPhoto.id} alt={aboutPhoto.name} sizes="(min-width: 1024px) 50vw, 100vw" />
+              ) : (
+                <div className="flex h-full items-center justify-center" aria-hidden>
+                  <TentDrawing variant="articulada" strokeWidth={0.8} className="w-[70%] text-night/20" />
+                </div>
+              )}
+            </div>
+            {aboutPhoto ? <figcaption className="mt-3 text-[13px] text-night/45">{aboutPhoto.name}</figcaption> : null}
+          </figure>
+        </div>
+      </section>
+
+      {/* ───────────── 4. Galeria (só com fotos reais suficientes) ───────────── */}
+      {allPhotos.length >= 3 ? (
+        <section id="galeria" className="scroll-mt-20 bg-coal py-24 text-white sm:py-32" aria-labelledby="galeria-titulo">
+          <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
+            <div className="reveal mb-12 flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <p className={ui.kicker}>Galeria</p>
+                <h2 id="galeria-titulo" className="mt-4 text-[28px] font-semibold tracking-[-0.025em] sm:text-[38px] lg:text-[44px]">
+                  Nossas estruturas.
+                </h2>
+              </div>
+              <p className="max-w-sm text-[15px] text-white/55">Fotos das estruturas da Universo Tendas. Toque em uma imagem para ampliar.</p>
+            </div>
+            <HomeGallery items={allPhotos.slice(0, 10)} />
+          </div>
+        </section>
       ) : null}
 
-      {/* Como solicitar: três passos em texto corrido, sem cartões */}
-      <section id="como-solicitar" className="scroll-mt-24 bg-linen py-20 sm:py-24" aria-labelledby="como-titulo">
-        <div className="mx-auto grid max-w-[1280px] gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
-          <div className="reveal">
-            <h2 id="como-titulo" className={ui.h2}>Como solicitar um orçamento</h2>
-            <p className={`${ui.lead} mt-4 max-w-sm`}>Pelo site, sem cadastro. O pedido chega direto para a nossa equipe.</p>
-            <Link href={QUOTE_HREF} className={`${ui.btnPrimary} mt-8`}>
-              Solicitar orçamento
-            </Link>
+      {/* ───────────── 5. Diferenciais ───────────── */}
+      <section className="bg-linen py-24 sm:py-32" aria-labelledby="diferenciais-titulo">
+        <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
+          <div className="reveal max-w-2xl">
+            <p className={ui.kicker}>Diferenciais</p>
+            <h2 id="diferenciais-titulo" className={`${ui.h2} mt-4 [text-wrap:balance]`}>Do pedido à desmontagem, tudo com a mesma equipe.</h2>
           </div>
-          <ol className="reveal border-t border-night/15">
-            {STEPS.map(([title, text], i) => (
-              <li key={title} className="grid grid-cols-[2.5rem_1fr] gap-x-4 border-b border-night/15 py-6 sm:grid-cols-[3rem_14rem_1fr] sm:items-baseline">
-                <span className="text-[15px] font-semibold text-ink tabular">{i + 1}.</span>
-                <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-night">{title}</h3>
-                <p className="col-start-2 mt-1 text-[15.5px] leading-relaxed text-night/65 sm:col-start-3 sm:mt-0">{text}</p>
+          <ol className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            {DIFFERENTIALS.map(([title, text], i) => (
+              <li key={title} className="reveal border-t border-night/15 pt-6" style={{ transitionDelay: `${i * 70}ms` }}>
+                <span className="block text-[13px] font-semibold tabular tracking-[0.12em] text-gold">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="mt-5 text-[19px] font-semibold tracking-[-0.01em] text-night">{title}</h3>
+                <p className="mt-2.5 text-[15.5px] leading-relaxed text-night/65">{text}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* A empresa e o contato, juntos: quem somos, onde estamos e como falar com a gente */}
-      <section id="empresa" className="scroll-mt-24 bg-white py-20 sm:py-24" aria-labelledby="empresa-titulo">
-        <div className="mx-auto grid max-w-[1280px] gap-14 px-5 sm:px-8 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-24">
-          <div className="reveal">
-            <h2 id="empresa-titulo" className={ui.h2}>{settings.companyName}</h2>
-            <div className={`${ui.lead} mt-5 max-w-xl space-y-4`}>
-              <p>
-                Empresa de locação de tendas e estruturas para eventos em {settings.city}. Atendemos eventos sociais, empresas e projetos na
-                cidade e na região.
-              </p>
-              <p>A montagem e a desmontagem são feitas pela nossa equipe, no endereço do evento.</p>
+      {/* ───────────── 6. Chamada para orçamento ───────────── */}
+      <section id="contato" className="relative isolate scroll-mt-20 overflow-hidden bg-coal text-white" aria-labelledby="cta-titulo">
+        {ctaPhoto ? (
+          <div className="absolute inset-0 -z-10" aria-hidden>
+            <Photo id={ctaPhoto.id} alt="" sizes="100vw" className="opacity-30" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,14,17,0.96)_0%,rgba(12,14,17,0.75)_60%,rgba(12,14,17,0.55)_100%)]" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden>
+            <TentDrawing strokeWidth={0.5} className="absolute -bottom-[25%] -right-[8%] w-[80%] max-w-[900px] text-white/[0.06]" />
+          </div>
+        )}
+        <div className="mx-auto grid max-w-[1360px] gap-14 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-12 lg:items-end">
+          <div className="reveal lg:col-span-7">
+            <span aria-hidden className="block h-px w-16 bg-gold" />
+            <h2 id="cta-titulo" className="mt-8 text-[34px] font-semibold uppercase leading-[1.02] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px] lg:text-[64px]">
+              Seu evento merece uma estrutura à altura.
+            </h2>
+            <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-white/70 sm:text-[19px]">
+              Conte com a {settings.companyName} para encontrar a estrutura ideal para o seu evento.
+            </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              {wa ? (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={ui.btnGold}>
+                  Fale com nossa equipe
+                  <span aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
+                </a>
+              ) : null}
+              <Link href={QUOTE_HREF} className={ui.btnGhostLight}>
+                Solicitar orçamento online
+              </Link>
             </div>
           </div>
-          <div id="contato" className="reveal scroll-mt-24">
-            <dl className="divide-y divide-night/10 border-y border-night/10 text-[15.5px]">
-              {settings.address ? (
-                <ContactRow label="Endereço">
-                  {settings.address}
-                  <br />
-                  {settings.city}{" "}
-                  <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
-                    ver no mapa
-                  </a>
-                </ContactRow>
-              ) : null}
-              {settings.phones ? <ContactRow label="Telefone">{settings.phones.split("·")[0].trim()}</ContactRow> : null}
-              {wa && settings.whatsappNumber ? (
-                <ContactRow label="WhatsApp">
-                  <a href={wa} target="_blank" rel="noopener noreferrer" className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
-                    {formatPhoneDisplay(settings.whatsappNumber)}
-                  </a>
-                </ContactRow>
-              ) : null}
-              {ig ? (
-                <ContactRow label="Instagram">
-                  <a href={ig} target="_blank" rel="noopener noreferrer" className="hover:text-ink">
-                    {settings.instagram}
-                  </a>
-                </ContactRow>
-              ) : null}
-            </dl>
-          </div>
+          <dl className="reveal grid gap-6 border-t border-white/10 pt-8 text-[15px] sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+            {settings.whatsappNumber && wa ? (
+              <ContactItem label="WhatsApp">
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="hover:text-gold">
+                  {formatPhoneDisplay(settings.whatsappNumber)}
+                </a>
+              </ContactItem>
+            ) : null}
+            {settings.phones ? <ContactItem label="Telefone">{settings.phones.split("·")[0].trim()}</ContactItem> : null}
+            <ContactItem label="Endereço">
+              {settings.address ? `${settings.address} · ` : ""}
+              {settings.city}{" "}
+              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-gold underline decoration-gold/40 underline-offset-4 hover:decoration-gold">
+                mapa
+              </a>
+            </ContactItem>
+            {ig ? (
+              <ContactItem label="Instagram">
+                <a href={ig} target="_blank" rel="noopener noreferrer" className="hover:text-gold">
+                  {settings.instagram}
+                </a>
+              </ContactItem>
+            ) : null}
+          </dl>
         </div>
       </section>
 
@@ -219,90 +311,68 @@ export default async function HomePage() {
   );
 }
 
-function HeroText({ settings, wa, tone }: { settings: SiteSettings; wa: string | null; tone: "light" | "dark" }) {
-  const light = tone === "light";
+/** Estrutura em destaque: fotografia grande e texto ao lado, alternando o lado a cada item. */
+function StructureRow({ p, index }: { p: PublicProducts[number]; index: number }) {
+  const photo = productPhotos(p)[0];
+  const flip = index % 2 === 1;
+  const lead = index === 0;
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-5 pb-12 pt-14 sm:px-8 sm:pb-16 lg:pb-24 lg:pt-20">
-      <p className={`text-[14px] ${light ? "text-white/75" : "text-night/55"}`}>Universo Tendas · {settings.city}</p>
-      <h1
-        className={`mt-4 max-w-[11ch] text-[48px] font-semibold leading-[0.98] tracking-[-0.035em] [text-wrap:balance] sm:text-[76px] lg:text-[104px] ${
-          light ? "text-white" : "text-night"
-        }`}
+    <article className="reveal grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+      <Link
+        href={productPath(p)}
+        className={`group -mx-5 block overflow-hidden bg-white sm:mx-0 ${lead ? "lg:col-span-8" : "lg:col-span-7"} ${flip ? "lg:order-2 lg:col-start-6" : ""}`}
+        aria-label={p.name}
       >
-        Estrutura para eventos.
-      </h1>
-      <p className={`mt-6 max-w-md text-[17px] leading-relaxed sm:text-[19px] ${light ? "text-white/85" : "text-night/70"}`}>
-        Locação de tendas em Sinop e região. Escolha a estrutura, informe a data e o local; nossa equipe confirma a disponibilidade.
-      </p>
-      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-        <Link href={QUOTE_HREF} className="inline-flex h-[52px] items-center justify-center bg-ink px-7 text-[16px] font-medium text-white transition-colors hover:bg-ink-deep">
-          Solicitar orçamento
-        </Link>
-        <Link
-          href="/tendas"
-          className={`text-[16px] font-medium underline underline-offset-[6px] transition-colors ${
-            light ? "text-white decoration-white/40 hover:decoration-white" : "text-ink decoration-ink/30 hover:decoration-ink"
-          }`}
-        >
-          Ver as tendas
-        </Link>
-      </div>
-      {wa && settings.whatsappNumber ? (
-        <p className={`mt-8 text-[14.5px] ${light ? "text-white/70" : "text-night/55"}`}>
-          WhatsApp{" "}
-          <a href={wa} target="_blank" rel="noopener noreferrer" className={`underline underline-offset-4 ${light ? "text-white decoration-white/40" : "text-night decoration-night/25"}`}>
-            {formatPhoneDisplay(settings.whatsappNumber)}
-          </a>
-          {settings.phones ? <> · Telefone {settings.phones.split("·")[0].trim()}</> : null}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function HeroCaption({ cover, tone }: { cover: { name: string; slug: string | null; id: string }; tone: "light" | "dark" }) {
-  return (
-    <p className={`absolute bottom-4 right-5 hidden text-[13px] sm:right-8 lg:block ${tone === "light" ? "text-white/70" : "text-night/45"}`}>
-      Na foto:{" "}
-      <Link href={productPath(cover)} className="underline underline-offset-4">
-        {cover.name}
+        <div className="aspect-[4/3]">
+          <Photo
+            id={photo}
+            alt={p.name}
+            className="transition-transform duration-[1.4s] ease-out group-hover:scale-[1.03]"
+            sizes="(min-width: 1024px) 60vw, 100vw"
+          />
+        </div>
       </Link>
-    </p>
+      <div className={`${lead ? "lg:col-span-4" : "lg:col-span-5"} ${flip ? "lg:order-1 lg:col-start-1 lg:row-start-1" : ""}`}>
+        <p className="text-[13px] font-medium tabular tracking-[0.12em] text-gold">
+          {String(index + 1).padStart(2, "0")}
+          <span className="ml-3 tracking-normal text-night/50">
+            {p.category}
+            {p.dimensions ? ` · ${p.dimensions}` : ""}
+          </span>
+        </p>
+        <h3 className="mt-4 text-[28px] font-semibold leading-[1.1] tracking-[-0.02em] text-night sm:text-[34px]">
+          <Link href={productPath(p)} className="transition-colors hover:text-night/70">
+            {p.name}
+          </Link>
+        </h3>
+        {p.description ? <p className="mt-4 line-clamp-4 text-[16px] leading-relaxed text-night/65">{p.description}</p> : null}
+        <p className="mt-5 text-[16px] text-night">
+          {p.rentalPriceCents != null ? (
+            <>
+              <span className="font-semibold">{money(p.rentalPriceCents)}</span> <span className="text-night/50">por dia</span>
+            </>
+          ) : (
+            <span className="text-night/60">Valor a consultar</span>
+          )}
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+          <Link href={`${QUOTE_HREF}?tenda=${p.slug ?? p.id}`} className={ui.btnPrimary}>
+            Solicitar orçamento
+          </Link>
+          <Link href={productPath(p)} className={ui.link}>
+            Ver detalhes
+          </Link>
+        </div>
+      </div>
+    </article>
   );
 }
 
-function ProductText({ p, large = false }: { p: Awaited<ReturnType<typeof listPublicProducts>>[number]; large?: boolean }) {
+function ContactItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className={ui.meta}>
-        {p.category}
-        {p.dimensions ? ` · ${p.dimensions}` : ""}
-      </p>
-      <h3 className={`mt-1.5 font-semibold tracking-[-0.015em] text-night ${large ? "text-[26px] sm:text-[30px]" : "text-[21px]"}`}>
-        <Link href={productPath(p)} className="hover:text-ink">{p.name}</Link>
-      </h3>
-      {p.description ? <p className={`mt-2 text-[15.5px] leading-relaxed text-night/65 ${large ? "line-clamp-4" : "line-clamp-2"}`}>{p.description}</p> : null}
-      <p className="mt-3 text-[15.5px] text-night">
-        {p.rentalPriceCents != null ? (
-          <>
-            {money(p.rentalPriceCents)} <span className="text-night/55">por dia</span>
-          </>
-        ) : (
-          <span className="text-night/60">Valor a consultar</span>
-        )}
-      </p>
-      <Link href={productPath(p)} className={`${ui.link} mt-4`}>
-        Ver estrutura
-      </Link>
-    </div>
-  );
-}
-
-function ContactRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[6.5rem_1fr] gap-4 py-4">
-      <dt className="text-night/50">{label}</dt>
-      <dd className="text-night">{children}</dd>
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">{label}</dt>
+      <dd className="mt-1.5 text-white/85">{children}</dd>
     </div>
   );
 }

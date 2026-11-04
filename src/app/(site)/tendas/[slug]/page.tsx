@@ -67,9 +67,9 @@ export default async function ProductPage({ params }: Props) {
       <main className="bg-white">
         <div className="mx-auto max-w-[1280px] px-5 pb-24 pt-8 sm:px-8 md:pt-10">
           <nav aria-label="Trilha" className={`${ui.meta} flex flex-wrap items-center gap-x-2 gap-y-1`}>
-            <Link href="/tendas" className="hover:text-ink">Tendas</Link>
+            <Link href="/tendas" className="hover:text-night">Tendas</Link>
             <span aria-hidden>/</span>
-            <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="hover:text-ink">{p.category}</Link>
+            <Link href={`/tendas?categoria=${encodeURIComponent(p.category)}`} className="hover:text-night">{p.category}</Link>
           </nav>
 
           {/* Nome e preço logo acima da fotografia */}
@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: Props) {
               </dl>
 
               {p.model3d ? (
-                <div className="mt-12 border-l-2 border-ink pl-6">
+                <div className="mt-12 border-l-2 border-gold pl-6">
                   <h2 className={ui.h3}>Modelo 3D</h2>
                   <p className="mt-2 max-w-md text-[15.5px] leading-relaxed text-night/65">
                     Gire, aproxime e veja a estrutura de todos os ângulos. O modelo só é carregado quando você abrir.

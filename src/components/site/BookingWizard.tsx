@@ -304,7 +304,7 @@ export function BookingWizard({
         </div>
         <div className="mt-3 grid grid-cols-6 gap-1.5" aria-hidden>
           {STEPS.map((s, i) => (
-            <span key={s} className={`h-[3px] transition-colors duration-500 ${i <= step ? "bg-ink" : "bg-night/10"}`} />
+            <span key={s} className={`h-[3px] transition-colors duration-500 ${i <= step ? "bg-coal" : "bg-night/10"}`} />
           ))}
         </div>
       </div>
@@ -340,7 +340,7 @@ export function BookingWizard({
                       goTo(1);
                     }}
                     className={`flex w-full items-center gap-4 bg-white p-3 text-left ring-1 transition ${
-                      p.id === draft.productId ? "ring-2 ring-ink" : "ring-night/10 hover:ring-night/30"
+                      p.id === draft.productId ? "ring-2 ring-gold" : "ring-night/10 hover:ring-night/30"
                     }`}
                     aria-pressed={p.id === draft.productId}
                   >
@@ -456,7 +456,7 @@ export function BookingWizard({
                   role="radio"
                   aria-checked={draft.customer.personType === t}
                   onClick={() => setCust("personType", t)}
-                  className={`h-11 text-[14px] transition ${draft.customer.personType === t ? "bg-ink text-white" : "text-night/65"}`}
+                  className={`h-11 text-[14px] transition ${draft.customer.personType === t ? "bg-coal text-white" : "text-night/65"}`}
                 >
                   {t === "PF" ? "Pessoa física" : "Pessoa jurídica"}
                 </button>
@@ -548,7 +548,7 @@ export function BookingWizard({
                 type="button"
                 onClick={submit}
                 disabled={submitting}
-                className="h-14 flex-[2] bg-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-ink-deep disabled:opacity-60"
+                className="h-14 flex-[2] bg-coal px-6 text-[15px] font-medium text-white transition-colors hover:bg-night-soft disabled:opacity-60"
               >
                 {submitting ? "Registrando…" : "Confirmar reserva"}
               </button>
@@ -556,7 +556,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={next}
-                className="h-14 flex-[2] bg-ink px-6 text-[15px] font-medium text-white transition-colors hover:bg-ink-deep"
+                className="h-14 flex-[2] bg-coal px-6 text-[15px] font-medium text-white transition-colors hover:bg-night-soft"
               >
                 Continuar
               </button>

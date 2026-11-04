@@ -75,7 +75,7 @@ export function AvailabilityCheck({ productId, slug, unit }: { productId: string
         href={`/reservar?tenda=${slug}${start && end ? `&inicio=${start}&fim=${end}` : ""}`}
         aria-disabled={state.free === 0}
         className={`mt-5 flex h-12 items-center justify-center text-[15px] font-medium transition-colors ${
-          state.free === 0 ? "pointer-events-none bg-night/20 text-night/50" : "bg-ink text-white hover:bg-ink-deep"
+          state.free === 0 ? "pointer-events-none bg-night/20 text-night/50" : "bg-coal text-white hover:bg-night-soft"
         }`}
       >
         Solicitar orçamento

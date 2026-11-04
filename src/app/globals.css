@@ -35,6 +35,10 @@
   --color-sand: #e4e6e9;
   --color-night: #1c1f24;
   --color-night-soft: #30353d;
+  /* Destaque discreto do site: dourado envelhecido (linhas finas, rótulos, botão principal) */
+  --color-gold: #b8955c;
+  --color-gold-soft: #d9c29a;
+  --color-coal: #0c0e11;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --animate-rise: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -215,5 +219,12 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Navegação suave entre seções (respeita "reduzir movimento") */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
