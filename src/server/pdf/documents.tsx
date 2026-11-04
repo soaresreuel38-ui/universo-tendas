@@ -2,7 +2,7 @@ import { Document, Text, View } from "@react-pdf/renderer";
 import type { ContractSnapshot } from "@/lib/contract-types";
 import { BILLING_LABEL, periodLabel } from "@/lib/billing";
 import { fmtDate, fmtDateTime, money, seq } from "@/lib/format";
-import { DocHeader, DocPage, Grid, s, Section, Signatures, Table, Totals, type Column, type Company, type SignatureView } from "./components";
+import { compact, DocHeader, DocPage, Grid, s, Section, Signatures, Table, Totals, type Column, type Company, type SignatureView } from "./components";
 
 const ITEM_COLUMNS: Column[] = [
   { title: "QTD.", width: "8%", align: "center" },
@@ -39,26 +39,25 @@ export function ContractPdf({
 }) {
   const c = snapshot;
   const ref = `Contrato ${seq(number)} · verificação ${contentHash.slice(0, 12).toUpperCase()}`;
+  const clauses = c.clauses.map((cl) => ({ title: cl.title, paras: cl.body.split(/\n{2,}/) }));
+  // O último parágrafo vai junto com as assinaturas: se o contrato passar de uma folha, elas nunca ficam sozinhas.
+  const closing = clauses.length ? clauses[clauses.length - 1].paras.pop() : null;
+  // Se a última cláusula tinha um só parágrafo, o título dela também acompanha o bloco final.
+  const closingTitle = clauses.length && !clauses[clauses.length - 1].paras.length ? clauses.length : null;
+  const clauseTitle = (i: number, title: string) => `Cláusula ${i}ª — ${title}`;
   return (
     <Document title={`Contrato ${seq(number)} — ${c.customer.name}`} author={c.company.name} subject="Contrato de locação" language="pt-BR">
-      <DocPage company={c.company} footerRef={ref}>
-        <DocHeader company={c.company} docType="Contrato de locação" docNumber={`Nº ${seq(number)}`} docDate={`Emitido em ${fmtDate(createdAt)}`} />
+      <DocPage company={c.company} footerRef={ref} dense>
+        <DocHeader company={c.company} docType="Contrato de locação" docNumber={`Nº ${seq(number)}`} docDate={`Emitido em ${fmtDate(createdAt)}`} dense />
 
         {status === "CANCELADO" ? <Text style={[s.sectionTitle, { color: "#c62b34", fontSize: 10 }]}>CONTRATO CANCELADO</Text> : null}
 
-        <Section title="Identificação da operação">
+        <Section title="Contratante" dense>
           <Grid
+            cols={3}
+            dense
             items={[
-              ["Locação (referência)", `#${seq(c.rental.number)}`],
-              ["Evento", c.rental.eventName],
-            ]}
-          />
-        </Section>
-
-        <Section title="Contratante">
-          <Grid
-            items={[
-              ["Nome / razão social", c.customer.name, true],
+              ["Nome / razão social", c.customer.name, 2],
               ["CPF / CNPJ", c.customer.document],
               ["Telefone", c.customer.phone],
               ["WhatsApp", c.customer.whatsapp],
@@ -68,9 +67,13 @@ export function ContractPdf({
           />
         </Section>
 
-        <Section title="Evento e entrega">
+        <Section title="Locação, evento e entrega" dense>
           <Grid
+            cols={3}
+            dense
             items={[
+              ["Locação (referência)", `#${seq(c.rental.number)}`],
+              ["Evento", c.rental.eventName, 2],
               ["Endereço de entrega / evento", c.rental.eventAddress, true],
               ["Modalidade", c.rental.billingMode ? `${BILLING_LABEL[c.rental.billingMode]} — ${periodLabel(c.rental.billingMode, c.rental.periodCount ?? 1)}` : null],
               ["Montagem", d(c.rental.setupAt)],
@@ -83,9 +86,10 @@ export function ContractPdf({
           />
         </Section>
 
-        <Text style={s.sectionTitle}>Produtos</Text>
-        <Table columns={ITEM_COLUMNS} rows={itemRows(c.items)} />
+        <Text style={[s.sectionTitle, compact.sectionTitle]}>Produtos</Text>
+        <Table columns={ITEM_COLUMNS} rows={itemRows(c.items)} dense />
         <Totals
+          dense
           lines={[
             ["Subtotal", money(c.subtotalCents)],
             ...(c.discountCents ? ([["Desconto", `− ${money(c.discountCents)}`]] as Array<[string, string]>) : []),
@@ -94,28 +98,29 @@ export function ContractPdf({
         />
 
         {c.paymentTerms ? (
-          <Section title="Condição / prazo de pagamento">
-            <Text style={s.paragraph}>{c.paymentTerms}</Text>
+          <Section title="Condição / prazo de pagamento" dense>
+            <Text style={[s.paragraph, compact.paragraph]}>{c.paymentTerms}</Text>
           </Section>
         ) : null}
 
         {c.rental.notes ? (
-          <Section title="Observações">
-            <Text style={s.paragraph}>{c.rental.notes}</Text>
+          <Section title="Observações" dense>
+            <Text style={[s.paragraph, compact.paragraph]}>{c.rental.notes}</Text>
           </Section>
         ) : null}
 
         {c.intro || c.clauses.length ? (
           <View>
-            <Text style={s.sectionTitle}>Cláusulas e condições</Text>
-            {c.intro ? <Text style={s.paragraph}>{c.intro}</Text> : null}
-            {c.clauses.map((cl, i) => (
-              <View key={i} wrap={false}>
-                <Text style={s.clauseTitle}>
-                  Cláusula {i + 1}ª — {cl.title}
+            <Text style={[s.sectionTitle, compact.sectionTitle]}>Cláusulas e condições</Text>
+            {c.intro ? <Text style={[s.paragraph, compact.paragraph]}>{c.intro}</Text> : null}
+            {(closingTitle ? clauses.slice(0, -1) : clauses).map((cl, i) => (
+              // Cláusulas longas podem continuar na página seguinte; o título nunca fica sozinho no fim da página.
+              <View key={i} minPresenceAhead={40}>
+                <Text style={[s.clauseTitle, compact.clauseTitle]} minPresenceAhead={24}>
+                  {clauseTitle(i + 1, cl.title)}
                 </Text>
-                {cl.body.split(/\n{2,}/).map((para, j) => (
-                  <Text key={j} style={s.paragraph}>
+                {cl.paras.map((para, j) => (
+                  <Text key={j} style={[s.paragraph, compact.paragraph]}>
                     {para}
                   </Text>
                 ))}
@@ -124,7 +129,11 @@ export function ContractPdf({
           </View>
         ) : null}
 
-        <Signatures place={`${c.company.city}, ${fmtDate(createdAt)}.`} parties={signatures} />
+        <View wrap={false}>
+          {closingTitle ? <Text style={[s.clauseTitle, compact.clauseTitle]}>{clauseTitle(closingTitle, clauses[closingTitle - 1].title)}</Text> : null}
+          {closing ? <Text style={[s.paragraph, compact.paragraph]}>{closing}</Text> : null}
+          <Signatures place={`${c.company.city}, ${fmtDate(createdAt)}.`} parties={signatures} dense />
+        </View>
 
         {c.footer ? <Text style={s.notice}>{c.footer}</Text> : null}
       </DocPage>

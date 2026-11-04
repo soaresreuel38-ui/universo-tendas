@@ -71,6 +71,27 @@ export const s = StyleSheet.create({
   notice: { fontSize: 7.5, color: MUTED, marginTop: 8 },
 });
 
+/** Variante compacta (contrato): mesmo visual, espaçamentos menores para caber em uma folha A4. */
+export const compact = StyleSheet.create({
+  page: { paddingTop: 26, paddingBottom: 46 },
+  header: { paddingBottom: 8, marginBottom: 4 },
+  logo: { width: 44, height: 44 },
+  docNumber: { fontSize: 15 },
+  sectionTitle: { marginTop: 8, marginBottom: 3.5 },
+  grid: { paddingVertical: 4, paddingHorizontal: 8 },
+  cell: { paddingVertical: 1.5 },
+  value: { marginTop: 1, lineHeight: 1.25 },
+  row: { paddingVertical: 4.5 },
+  thead: { paddingVertical: 4.5 },
+  totals: { marginTop: 4 },
+  paragraph: { fontSize: 8.5, lineHeight: 1.33, marginBottom: 3 },
+  clauseTitle: { marginTop: 3, marginBottom: 1.5 },
+  place: { marginTop: 8 },
+  signRow: { marginTop: 4 },
+  signLine: { marginTop: 30 },
+  signImage: { height: 34 },
+});
+
 export type Company = {
   name: string;
   cnpj: string | null;
@@ -81,9 +102,9 @@ export type Company = {
   instagram: string;
 };
 
-export function DocPage({ children, company, footerRef }: { children: ReactNode; company: Company; footerRef: string }) {
+export function DocPage({ children, company, footerRef, dense = false }: { children: ReactNode; company: Company; footerRef: string; dense?: boolean }) {
   return (
-    <Page size="A4" style={s.page} wrap>
+    <Page size="A4" style={dense ? [s.page, compact.page] : s.page} wrap>
       {children}
       {/* No @react-pdf, elementos fixos com numeração precisam vir depois do conteúdo. */}
       <Text style={s.footerLeft} fixed>
@@ -98,7 +119,19 @@ export function DocPage({ children, company, footerRef }: { children: ReactNode;
   );
 }
 
-export function DocHeader({ company, docType, docNumber, docDate }: { company: Company; docType: string; docNumber: string; docDate: string }) {
+export function DocHeader({
+  company,
+  docType,
+  docNumber,
+  docDate,
+  dense = false,
+}: {
+  company: Company;
+  docType: string;
+  docNumber: string;
+  docDate: string;
+  dense?: boolean;
+}) {
   const lines = [
     company.cnpj ? `CNPJ ${company.cnpj}` : null,
     [company.address, company.city].filter(Boolean).join(" · "),
@@ -106,8 +139,8 @@ export function DocHeader({ company, docType, docNumber, docDate }: { company: C
     company.instagram,
   ].filter(Boolean) as string[];
   return (
-    <View style={s.header} fixed>
-      <Image src={LOGO_DATA_URI} style={s.logo} />
+    <View style={dense ? [s.header, compact.header] : s.header} fixed>
+      <Image src={LOGO_DATA_URI} style={dense ? [s.logo, compact.logo] : s.logo} />
       <View style={s.company}>
         <Text style={s.companyName}>{company.name.toUpperCase()}</Text>
         {lines.map((l) => (
@@ -118,30 +151,32 @@ export function DocHeader({ company, docType, docNumber, docDate }: { company: C
       </View>
       <View style={s.docBox}>
         <Text style={s.docType}>{docType}</Text>
-        <Text style={s.docNumber}>{docNumber}</Text>
+        <Text style={dense ? [s.docNumber, compact.docNumber] : s.docNumber}>{docNumber}</Text>
         <Text style={s.docDate}>{docDate}</Text>
       </View>
     </View>
   );
 }
 
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({ title, children, dense = false }: { title: string; children: ReactNode; dense?: boolean }) {
   return (
     <View wrap={false}>
-      <Text style={s.sectionTitle}>{title}</Text>
+      <Text style={dense ? [s.sectionTitle, compact.sectionTitle] : s.sectionTitle}>{title}</Text>
       {children}
     </View>
   );
 }
 
-export function Grid({ items }: { items: Array<[string, string | null | undefined, boolean?]> }) {
+/** Terceiro item: `true` ocupa a linha inteira; um número ocupa essa quantidade de colunas (com `cols`). */
+export function Grid({ items, cols = 2, dense = false }: { items: Array<[string, string | null | undefined, (boolean | number)?]>; cols?: 2 | 3; dense?: boolean }) {
   const visible = items.filter(([, v]) => v != null && v !== "");
+  const width = (span: boolean | number | undefined) => `${(Math.min(span === true ? cols : span || 1, cols) * 100) / cols}%`;
   return (
-    <View style={s.grid}>
-      {visible.map(([label, value, wide]) => (
-        <View key={label} style={wide ? s.cellWide : s.cell}>
+    <View style={dense ? [s.grid, compact.grid] : s.grid}>
+      {visible.map(([label, value, span]) => (
+        <View key={label} style={[span === true ? s.cellWide : s.cell, dense ? compact.cell : {}, { width: width(span) }]}>
           <Text style={s.label}>{label}</Text>
-          <Text style={s.value}>{value}</Text>
+          <Text style={dense ? [s.value, compact.value] : s.value}>{value}</Text>
         </View>
       ))}
     </View>
@@ -150,10 +185,10 @@ export function Grid({ items }: { items: Array<[string, string | null | undefine
 
 export type Column = { title: string; width: string; align?: "left" | "right" | "center" };
 
-export function Table({ columns, rows }: { columns: Column[]; rows: string[][] }) {
+export function Table({ columns, rows, dense = false }: { columns: Column[]; rows: string[][]; dense?: boolean }) {
   return (
     <View style={s.table}>
-      <View style={s.thead} fixed>
+      <View style={dense ? [s.thead, compact.thead] : s.thead} fixed>
         {columns.map((c) => (
           <Text key={c.title} style={{ width: c.width, textAlign: c.align ?? "left" }}>
             {c.title}
@@ -161,7 +196,7 @@ export function Table({ columns, rows }: { columns: Column[]; rows: string[][] }
         ))}
       </View>
       {rows.map((r, i) => (
-        <View key={i} style={i % 2 ? [s.row, s.rowAlt] : s.row} wrap={false}>
+        <View key={i} style={[s.row, i % 2 ? s.rowAlt : {}, dense ? compact.row : {}]} wrap={false}>
           {r.map((cell, j) => (
             <Text key={j} style={{ width: columns[j].width, textAlign: columns[j].align ?? "left" }}>
               {cell}
@@ -173,9 +208,9 @@ export function Table({ columns, rows }: { columns: Column[]; rows: string[][] }
   );
 }
 
-export function Totals({ lines, total }: { lines: Array<[string, string]>; total: string }) {
+export function Totals({ lines, total, dense = false }: { lines: Array<[string, string]>; total: string; dense?: boolean }) {
   return (
-    <View style={s.totals} wrap={false}>
+    <View style={dense ? [s.totals, compact.totals] : s.totals} wrap={false}>
       {lines.map(([l, v]) => (
         <View key={l} style={s.totalLine}>
           <Text style={{ color: MUTED }}>{l}</Text>
@@ -192,15 +227,15 @@ export function Totals({ lines, total }: { lines: Array<[string, string]>; total
 
 export type SignatureView = { role: string; name: string | null; document?: string | null; imageDataUri?: string | null; meta?: string | null };
 
-export function Signatures({ parties, place }: { parties: SignatureView[]; place: string }) {
+export function Signatures({ parties, place, dense = false }: { parties: SignatureView[]; place: string; dense?: boolean }) {
   return (
     <View wrap={false}>
-      <Text style={[s.paragraph, { marginTop: 14 }]}>{place}</Text>
-      <View style={s.signRow}>
+      <Text style={[s.paragraph, { marginTop: 14 }, dense ? compact.place : {}]}>{place}</Text>
+      <View style={dense ? [s.signRow, compact.signRow] : s.signRow}>
         {parties.map((p) => (
           <View key={p.role} style={s.signBox}>
-            {p.imageDataUri ? <Image src={p.imageDataUri} style={s.signImage} /> : null}
-            <View style={p.imageDataUri ? s.signLineAfterImage : s.signLine}>
+            {p.imageDataUri ? <Image src={p.imageDataUri} style={dense ? [s.signImage, compact.signImage] : s.signImage} /> : null}
+            <View style={p.imageDataUri ? s.signLineAfterImage : dense ? [s.signLine, compact.signLine] : s.signLine}>
               <Text style={s.signName}>{p.name ?? " "}</Text>
               <Text style={s.signMeta}>{p.role}</Text>
               {p.document ? <Text style={s.signMeta}>{p.document}</Text> : null}
