@@ -106,7 +106,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             ) : null}
             <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-1">
               <label className="inline-flex h-12 items-center gap-2.5 text-[14.5px] text-night/75">
-                <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#b8955c]" />
+                <input type="checkbox" name="livres" value="1" defaultChecked={sp.livres === "1"} className="h-4 w-4 accent-[#0c3f80]" />
                 Só disponíveis
               </label>
               <button className={`${ui.btnPrimary} flex-1 lg:flex-none`}>Consultar datas</button>
@@ -199,7 +199,7 @@ function FilterTab({ href, active, children }: { href: string; active: boolean; 
       href={href}
       aria-current={active ? "true" : undefined}
       className={`relative flex h-12 shrink-0 items-center whitespace-nowrap text-[15px] transition-colors ${
-        active ? "font-medium text-night after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-gold" : "text-night/60 hover:text-night"
+        active ? "font-medium text-night after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-brand" : "text-night/60 hover:text-night"
       }`}
     >
       {children}

@@ -340,7 +340,7 @@ export function BookingWizard({
                       goTo(1);
                     }}
                     className={`flex w-full items-center gap-4 bg-white p-3 text-left ring-1 transition ${
-                      p.id === draft.productId ? "ring-2 ring-gold" : "ring-night/10 hover:ring-night/30"
+                      p.id === draft.productId ? "ring-2 ring-brand" : "ring-night/10 hover:ring-night/30"
                     }`}
                     aria-pressed={p.id === draft.productId}
                   >

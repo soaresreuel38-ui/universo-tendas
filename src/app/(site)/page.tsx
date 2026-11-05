@@ -122,7 +122,7 @@ export default async function HomePage() {
             <ul className="flex flex-wrap gap-x-7 gap-y-2">
               {["Sinop e região", "Montagem e desmontagem", "Disponibilidade consultada na hora"].map((t) => (
                 <li key={t} className="flex items-center gap-2.5">
-                  <span aria-hidden className="h-1 w-1 bg-gold" />
+                  <span aria-hidden className="h-1 w-1 bg-brand" />
                   {t}
                 </li>
               ))}
@@ -194,7 +194,7 @@ export default async function HomePage() {
             </dl>
           </div>
           <figure className="reveal relative lg:col-span-6">
-            <span aria-hidden className="absolute -left-3 -top-3 hidden h-24 w-24 border-l border-t border-gold lg:block" />
+            <span aria-hidden className="absolute -left-3 -top-3 hidden h-24 w-24 border-l border-t border-brand lg:block" />
             <div className="relative aspect-[5/4] overflow-hidden bg-linen">
               {aboutPhoto ? (
                 <Photo id={aboutPhoto.id} alt={aboutPhoto.name} sizes="(min-width: 1024px) 50vw, 100vw" />
@@ -237,7 +237,7 @@ export default async function HomePage() {
           <ol className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {DIFFERENTIALS.map(([title, text], i) => (
               <li key={title} className="reveal border-t border-night/15 pt-6" style={{ transitionDelay: `${i * 70}ms` }}>
-                <span className="block text-[13px] font-semibold tabular tracking-[0.12em] text-gold">{String(i + 1).padStart(2, "0")}</span>
+                <span className="block text-[13px] font-semibold tabular tracking-[0.12em] text-brand">{String(i + 1).padStart(2, "0")}</span>
                 <h3 className="mt-5 text-[19px] font-semibold tracking-[-0.01em] text-night">{title}</h3>
                 <p className="mt-2.5 text-[15.5px] leading-relaxed text-night/65">{text}</p>
               </li>
@@ -260,7 +260,7 @@ export default async function HomePage() {
         )}
         <div className="mx-auto grid max-w-[1360px] gap-14 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-12 lg:items-end">
           <div className="reveal lg:col-span-7">
-            <span aria-hidden className="block h-px w-16 bg-gold" />
+            <span aria-hidden className="block h-px w-16 bg-brand" />
             <h2 id="cta-titulo" className="mt-8 text-[34px] font-semibold uppercase leading-[1.02] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px] lg:text-[64px]">
               Seu evento merece uma estrutura à altura.
             </h2>
@@ -282,7 +282,7 @@ export default async function HomePage() {
           <dl className="reveal grid gap-6 border-t border-white/10 pt-8 text-[15px] sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
             {settings.whatsappNumber && wa ? (
               <ContactItem label="WhatsApp">
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="hover:text-gold">
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="hover:text-brand">
                   {formatPhoneDisplay(settings.whatsappNumber)}
                 </a>
               </ContactItem>
@@ -291,13 +291,13 @@ export default async function HomePage() {
             <ContactItem label="Endereço">
               {settings.address ? `${settings.address} · ` : ""}
               {settings.city}{" "}
-              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-gold underline decoration-gold/40 underline-offset-4 hover:decoration-gold">
+              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="ml-1 text-brand underline decoration-brand/40 underline-offset-4 hover:decoration-brand">
                 mapa
               </a>
             </ContactItem>
             {ig ? (
               <ContactItem label="Instagram">
-                <a href={ig} target="_blank" rel="noopener noreferrer" className="hover:text-gold">
+                <a href={ig} target="_blank" rel="noopener noreferrer" className="hover:text-brand">
                   {settings.instagram}
                 </a>
               </ContactItem>
@@ -333,7 +333,7 @@ function StructureRow({ p, index }: { p: PublicProducts[number]; index: number }
         </div>
       </Link>
       <div className={`${lead ? "lg:col-span-4" : "lg:col-span-5"} ${flip ? "lg:order-1 lg:col-start-1 lg:row-start-1" : ""}`}>
-        <p className="text-[13px] font-medium tabular tracking-[0.12em] text-gold">
+        <p className="text-[13px] font-medium tabular tracking-[0.12em] text-brand">
           {String(index + 1).padStart(2, "0")}
           <span className="ml-3 tracking-normal text-night/50">
             {p.category}
@@ -371,7 +371,7 @@ function StructureRow({ p, index }: { p: PublicProducts[number]; index: number }
 function ContactItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">{label}</dt>
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand">{label}</dt>
       <dd className="mt-1.5 text-white/85">{children}</dd>
     </div>
   );

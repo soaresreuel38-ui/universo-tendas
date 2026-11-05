@@ -52,7 +52,7 @@ export function HomeGallery({ items }: { items: GalleryItem[] }) {
               />
               <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/65 via-black/10 to-transparent p-5 pt-16 text-left opacity-90 transition-opacity duration-500 md:opacity-0 md:group-hover:opacity-100">
                 <span className="text-[15px] font-medium text-white">{it.name}</span>
-                <span aria-hidden className="text-[13px] text-gold">Ampliar ↗</span>
+                <span aria-hidden className="text-[13px] text-brand">Ampliar ↗</span>
               </span>
             </button>
           </li>
@@ -63,7 +63,7 @@ export function HomeGallery({ items }: { items: GalleryItem[] }) {
         <div className="fixed inset-0 z-50 flex flex-col bg-coal/[0.97]" role="dialog" aria-modal="true" aria-label={`Foto: ${items[open].name}`} onClick={close}>
           <div className="flex items-center justify-between px-5 py-4 text-white sm:px-8" onClick={(e) => e.stopPropagation()}>
             <p className="text-[14px] text-white/70">
-              <span className="tabular text-gold">
+              <span className="tabular text-brand">
                 {open + 1} / {items.length}
               </span>
               <span className="mx-3 text-white/25">|</span>

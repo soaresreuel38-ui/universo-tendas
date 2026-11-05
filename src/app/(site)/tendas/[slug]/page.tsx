@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: Props) {
               </dl>
 
               {p.model3d ? (
-                <div className="mt-12 border-l-2 border-gold pl-6">
+                <div className="mt-12 border-l-2 border-brand pl-6">
                   <h2 className={ui.h3}>Modelo 3D</h2>
                   <p className="mt-2 max-w-md text-[15.5px] leading-relaxed text-night/65">
                     Gire, aproxime e veja a estrutura de todos os ângulos. O modelo só é carregado quando você abrir.

@@ -87,7 +87,7 @@ export function Gallery({ photos, name }: { photos: string[]; name: string }) {
               key={id}
               type="button"
               onClick={() => go(i)}
-              className={`h-16 w-20 shrink-0 overflow-hidden border-b-2 transition sm:h-20 sm:w-28 ${i === index ? "border-gold" : "border-transparent opacity-55 hover:opacity-100"}`}
+              className={`h-16 w-20 shrink-0 overflow-hidden border-b-2 transition sm:h-20 sm:w-28 ${i === index ? "border-brand" : "border-transparent opacity-55 hover:opacity-100"}`}
               aria-label={`Ver foto ${i + 1}`}
             >
               <img src={publicPhotoUrl(id, true)} alt="" loading="lazy" className="h-full w-full object-cover" />

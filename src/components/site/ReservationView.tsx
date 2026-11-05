@@ -14,7 +14,7 @@ type Ref = { token: string } | { code: string; phone: string };
 const TONE = {
   wait: "bg-amber-100 text-amber-900",
   ok: "bg-emerald-100 text-emerald-900",
-  active: "bg-gold/15 text-night",
+  active: "bg-brand/15 text-night",
   done: "bg-sand text-night",
   canceled: "bg-night/10 text-night/70",
 } as const;

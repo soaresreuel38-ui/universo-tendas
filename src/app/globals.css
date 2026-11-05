@@ -35,9 +35,10 @@
   --color-sand: #e4e6e9;
   --color-night: #1c1f24;
   --color-night-soft: #30353d;
-  /* Destaque discreto do site: dourado envelhecido (linhas finas, rótulos, botão principal) */
-  --color-gold: #b8955c;
-  --color-gold-soft: #d9c29a;
+  /* Destaque do site: azul da logo (botão principal) e um azul mais claro da mesma família (linhas finas, rótulos, números) */
+  --color-brand: #3b7ddd;
+  --color-brand-logo: #0c3f80;
+  --color-brand-soft: #1d56a3;
   --color-coal: #0c0e11;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;

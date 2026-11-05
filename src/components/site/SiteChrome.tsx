@@ -47,7 +47,7 @@ export async function SiteHeader() {
             <Link
               key={n.href}
               href={n.href}
-              className="relative text-[14px] text-white/70 transition-colors duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-0 after:bg-gold after:transition-[width] after:duration-300 hover:text-white hover:after:w-full"
+              className="relative text-[14px] text-white/70 transition-colors duration-300 after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-0 after:bg-brand after:transition-[width] after:duration-300 hover:text-white hover:after:w-full"
             >
               {n.label}
             </Link>
@@ -56,16 +56,16 @@ export async function SiteHeader() {
         <div className="hidden items-center gap-6 lg:flex">
           {wa && settings.whatsappNumber ? (
             <a href={wa} target="_blank" rel="noopener noreferrer" className="text-right text-[14px] leading-tight text-white/80 transition-colors hover:text-white">
-              <span className="block text-[10.5px] uppercase tracking-[0.2em] text-gold">WhatsApp</span>
+              <span className="block text-[10.5px] uppercase tracking-[0.2em] text-brand">WhatsApp</span>
               {formatPhoneDisplay(settings.whatsappNumber)}
             </a>
           ) : null}
-          <Link href={QUOTE_HREF} className="inline-flex h-11 items-center bg-gold px-5 text-[14px] font-semibold text-coal transition-colors duration-300 hover:bg-gold-soft">
+          <Link href={QUOTE_HREF} className="inline-flex h-11 items-center bg-brand-logo px-5 text-[14px] font-semibold text-white transition-colors duration-300 hover:bg-brand-soft">
             Solicitar orçamento
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
-          <Link href={QUOTE_HREF} className="inline-flex h-10 items-center bg-gold px-3 text-[13.5px] font-semibold text-coal">
+          <Link href={QUOTE_HREF} className="inline-flex h-10 items-center bg-brand-logo px-3 text-[13.5px] font-semibold text-white">
             Orçamento
           </Link>
           <details data-site-menu className="group relative shrink-0">
@@ -81,13 +81,13 @@ export async function SiteHeader() {
                 {[...NAV, { href: "/minha-reserva", label: "Minha reserva" }].map((n) => (
                   <Link key={n.href} href={n.href} className="flex h-16 items-center justify-between text-[20px] font-medium text-white">
                     {n.label}
-                    <span aria-hidden className="text-gold">→</span>
+                    <span aria-hidden className="text-brand">→</span>
                   </Link>
                 ))}
               </nav>
               {wa && settings.whatsappNumber ? (
                 <a href={wa} target="_blank" rel="noopener noreferrer" className="mt-8 block text-white/80">
-                  <span className="block text-[11px] uppercase tracking-[0.2em] text-gold">WhatsApp</span>
+                  <span className="block text-[11px] uppercase tracking-[0.2em] text-brand">WhatsApp</span>
                   <span className="text-[20px]">{formatPhoneDisplay(settings.whatsappNumber)}</span>
                 </a>
               ) : null}
@@ -141,7 +141,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
           <FooterCol title="Localização">
             {settings.address ? <span>{settings.address}</span> : null}
             <span>{settings.city}</span>
-            <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="text-gold underline decoration-gold/40 underline-offset-4 hover:decoration-gold">
+            <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer" className="text-brand underline decoration-brand/40 underline-offset-4 hover:decoration-brand">
               Ver no mapa
             </a>
           </FooterCol>
@@ -158,7 +158,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
 function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">{title}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-brand">{title}</p>
       <div className="mt-5 flex flex-col items-start gap-2.5 text-[15px] leading-relaxed">{children}</div>
     </div>
   );
