@@ -60,16 +60,16 @@ export async function SiteHeader() {
               {formatPhoneDisplay(settings.whatsappNumber)}
             </a>
           ) : null}
-          <Link href={QUOTE_HREF} className="inline-flex h-11 items-center bg-brand-logo px-5 text-[14px] font-semibold text-white transition-colors duration-300 hover:bg-brand-soft">
+          <Link href={QUOTE_HREF} className="inline-flex h-11 items-center rounded-md bg-brand-logo px-5 text-[14px] font-semibold text-white transition-colors duration-300 hover:bg-brand-soft">
             Solicitar orçamento
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
-          <Link href={QUOTE_HREF} className="inline-flex h-10 items-center bg-brand-logo px-3 text-[13.5px] font-semibold text-white">
+          <Link href={QUOTE_HREF} className="inline-flex h-10 items-center rounded-md bg-brand-logo px-3 text-[13.5px] font-semibold text-white">
             Orçamento
           </Link>
           <details data-site-menu className="group relative shrink-0">
-            <summary className="flex h-10 w-10 list-none items-center justify-center border border-white/20 text-white [&::-webkit-details-marker]:hidden" aria-label="Abrir menu">
+            <summary className="flex h-10 w-10 rounded-md list-none items-center justify-center border border-white/20 text-white [&::-webkit-details-marker]:hidden" aria-label="Abrir menu">
               <span className="relative block h-3 w-4" aria-hidden>
                 <span className="absolute inset-x-0 top-0 h-[1.5px] bg-current transition-transform group-open:translate-y-[5px] group-open:rotate-45" />
                 <span className="absolute inset-x-0 top-[5px] h-[1.5px] bg-current transition-opacity group-open:opacity-0" />

@@ -88,11 +88,11 @@ export default async function HomePage() {
             Locação de tendas e estruturas para eventos com qualidade, segurança e excelência em cada detalhe.
           </p>
           <div className="mt-10 flex animate-rise flex-col gap-3 [animation-delay:200ms] sm:flex-row">
-            <Link href={QUOTE_HREF} className={ui.btnGold}>
+            <Link href={QUOTE_HREF} className={`${ui.btnGold} rounded-md`}>
               Solicitar orçamento
               <span aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
             </Link>
-            <a href="#estruturas" className={ui.btnGhostLight}>
+            <a href="#estruturas" className={`${ui.btnGhostLight} rounded-md`}>
               Conhecer nossas estruturas
             </a>
           </div>
@@ -269,12 +269,12 @@ export default async function HomePage() {
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               {wa ? (
-                <a href={wa} target="_blank" rel="noopener noreferrer" className={ui.btnGold}>
+                <a href={wa} target="_blank" rel="noopener noreferrer" className={`${ui.btnGold} rounded-md`}>
                   Fale com nossa equipe
                   <span aria-hidden className="transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
                 </a>
               ) : null}
-              <Link href={QUOTE_HREF} className={ui.btnGhostLight}>
+              <Link href={QUOTE_HREF} className={`${ui.btnGhostLight} rounded-md`}>
                 Solicitar orçamento online
               </Link>
             </div>
@@ -356,7 +356,7 @@ function StructureRow({ p, index }: { p: PublicProducts[number]; index: number }
           )}
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
-          <Link href={`${QUOTE_HREF}?tenda=${p.slug ?? p.id}`} className={ui.btnPrimary}>
+          <Link href={`${QUOTE_HREF}?tenda=${p.slug ?? p.id}`} className={`${ui.btnPrimary} rounded-md`}>
             Solicitar orçamento
           </Link>
           <Link href={productPath(p)} className={ui.link}>

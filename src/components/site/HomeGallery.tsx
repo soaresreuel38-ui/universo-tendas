@@ -71,7 +71,7 @@ export function HomeGallery({ items }: { items: GalleryItem[] }) {
                 {items[open].name}
               </Link>
             </p>
-            <button type="button" onClick={close} className="h-10 border border-white/25 px-4 text-[14px] text-white transition-colors hover:border-white">
+            <button type="button" onClick={close} className="h-10 rounded-md border border-white/25 px-4 text-[14px] text-white transition-colors hover:border-white">
               Fechar
             </button>
           </div>
@@ -80,10 +80,10 @@ export function HomeGallery({ items }: { items: GalleryItem[] }) {
           </div>
           {items.length > 1 ? (
             <div className="flex justify-center gap-3 pb-6" onClick={(e) => e.stopPropagation()}>
-              <button type="button" onClick={() => step(-1)} className="h-11 border border-white/25 px-5 text-[14px] text-white transition-colors hover:border-white">
+              <button type="button" onClick={() => step(-1)} className="h-11 rounded-md border border-white/25 px-5 text-[14px] text-white transition-colors hover:border-white">
                 ← Anterior
               </button>
-              <button type="button" onClick={() => step(1)} className="h-11 border border-white/25 px-5 text-[14px] text-white transition-colors hover:border-white">
+              <button type="button" onClick={() => step(1)} className="h-11 rounded-md border border-white/25 px-5 text-[14px] text-white transition-colors hover:border-white">
                 Próxima →
               </button>
             </div>
