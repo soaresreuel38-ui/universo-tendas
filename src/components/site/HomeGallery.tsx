@@ -45,7 +45,7 @@ export function HomeGallery({ items }: { items: GalleryItem[] }) {
             <button type="button" onClick={() => setOpen(i)} className="absolute inset-0 block h-full w-full cursor-zoom-in" aria-label={`Ampliar foto: ${it.name}`}>
               <img
                 src={publicPhotoUrl(it.id)}
-                alt={it.name}
+                alt=""
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"

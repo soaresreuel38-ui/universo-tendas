@@ -229,3 +229,12 @@
     scroll-behavior: smooth;
   }
 }
+
+/* Site público: seleção de texto e foco no azul da marca */
+.site-root ::selection {
+  background: color-mix(in srgb, var(--color-brand) 28%, transparent);
+}
+.site-root :focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}

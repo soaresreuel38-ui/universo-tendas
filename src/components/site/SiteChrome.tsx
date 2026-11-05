@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatPhoneDisplay } from "@/lib/br-documents";
 import { whatsappLink } from "@/lib/format";
 import { getSiteSettings, instagramUrl, type SiteSettings } from "@/server/site-data";
+import { ArrowRight } from "./Icons";
 import { MenuCloser } from "./MenuCloser";
 
 const NAV = [
@@ -81,7 +82,7 @@ export async function SiteHeader() {
                 {[...NAV, { href: "/minha-reserva", label: "Minha reserva" }].map((n) => (
                   <Link key={n.href} href={n.href} className="flex h-16 items-center justify-between text-[20px] font-medium text-white">
                     {n.label}
-                    <span aria-hidden className="text-brand">→</span>
+                    <ArrowRight className="h-5 w-5 text-brand" />
                   </Link>
                 ))}
               </nav>
@@ -146,9 +147,9 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             </a>
           </FooterCol>
         </div>
-        <div className="flex flex-col gap-2 py-6 text-[13px] text-white/40 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-2 py-6 text-[13px] sm:flex-row sm:justify-between text-white/60">
           <span>© {new Date().getFullYear()} {settings.companyName} · {settings.city}</span>
-          <Link href="/login" className="hover:text-white/70">Acesso da equipe</Link>
+          <Link href="/login" className="hover:text-white">Acesso da equipe</Link>
         </div>
       </div>
     </footer>
