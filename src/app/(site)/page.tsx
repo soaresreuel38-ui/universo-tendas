@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { preload } from "react-dom";
 import { EditorialImage } from "@/components/site/EditorialImage";
 import { Footprint, areaLabel, parseDimensions } from "@/components/site/Footprint";
 import { HomeGallery, type GalleryItem } from "@/components/site/HomeGallery";
@@ -7,7 +8,7 @@ import { ArrowRight, WhatsAppIcon } from "@/components/site/Icons";
 import { Photo } from "@/components/site/Photo";
 import { QUOTE_HREF, SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { formatPhoneDisplay } from "@/lib/br-documents";
-import { EDITORIAL } from "@/lib/editorial-photos";
+import { EDITORIAL, editorialSrc, editorialSrcSet } from "@/lib/editorial-photos";
 import { money, whatsappLink } from "@/lib/format";
 import { prisma } from "@/server/db";
 import { photoSize } from "@/server/image-size";
@@ -59,12 +60,11 @@ export default async function HomePage() {
   const realCandidates = await Promise.all(
     withPhotos.map(async (p) => ({ p, id: productPhotos(p)[0], size: await photoSize(productPhotos(p)[0]) })),
   );
-  // Capa: a maior foto REAL do catálogo (de preferência de um produto em "Destaque"), se tiver tamanho para tela cheia.
   const bySize = realCandidates.filter((c) => c.size).sort((a, b) => Number(b.p.featured) - Number(a.p.featured) || (b.size!.width - a.size!.width));
-  const heroCandidate = bySize.find((c) => c.size!.width >= 1200) ?? null;
-  const realHero = heroCandidate ? { id: heroCandidate.id, product: heroCandidate.p } : null;
-  // Foto real no quadro de estruturas: outra foto grande, diferente da capa.
-  const catalogPhoto = bySize.find((c) => c.size!.width >= 900 && c.id !== realHero?.id) ?? null;
+  const catalogPhoto = bySize.find((c) => c.size!.width >= 900) ?? null;
+
+  // Capa: a foto da capa começa a baixar antes do restante da página (melhora o LCP).
+  preload(editorialSrc(EDITORIAL.hero, 1440), { as: "image", imageSrcSet: editorialSrcSet(EDITORIAL.hero), imageSizes: "100vw", fetchPriority: "high" });
 
   const allPhotos: GalleryItem[] = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name, path: productPath(p) })));
 
@@ -97,21 +97,9 @@ export default async function HomePage() {
       {/* ═════════════ Capa: a tenda domina a tela ═════════════ */}
       <section className="relative isolate flex min-h-svh flex-col overflow-hidden bg-abismo text-white" aria-labelledby="capa-titulo">
         <div className="absolute inset-0 -z-10 animate-unveil" aria-hidden>
-          {realHero ? (
-            <Photo id={realHero.id} alt="" priority sizes="100vw" />
-          ) : (
-            <EditorialImage photo={EDITORIAL.field} sizes="100vw" priority decorative className="h-full w-full" />
-          )}
+          <EditorialImage photo={EDITORIAL.hero} sizes="100vw" priority decorative className="h-full w-full" />
           {/* leitura: escurece só o alto (onde fica o título) e a base (onde fica o carimbo) */}
-          {realHero ? (
-            // Foto real (céu claro): escurece mais à esquerda, onde fica o título, e na base.
-            <>
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,14,26,0.86)_0%,rgba(7,14,26,0.6)_42%,rgba(7,14,26,0.2)_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(7,14,26,0.85),transparent)]" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,20,40,0.55)_0%,rgba(7,20,40,0.12)_38%,rgba(7,20,40,0)_55%,rgba(7,20,40,0.5)_100%)]" />
-          )}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,20,40,0.55)_0%,rgba(7,20,40,0.12)_38%,rgba(7,20,40,0)_55%,rgba(7,20,40,0.5)_100%)]" />
         </div>
 
         <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-5 pb-6 pt-[104px] sm:px-8 sm:pt-[116px] lg:px-10 lg:pb-10">
@@ -134,7 +122,7 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-8 grid flex-1 content-between gap-4 sm:mt-auto sm:flex-none sm:pt-12 lg:grid-cols-12 lg:items-end">
-            {!realHero ? <p className="order-2 text-[12px] text-white/80 lg:order-1 lg:col-span-4">Foto: Universo Tendas</p> : <Link href={productPath(realHero.product)} className="order-2 w-fit text-[12px] text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white lg:order-1 lg:col-span-4">Foto real: {realHero.product.name}</Link>}
+            <p className="order-2 text-[11.5px] text-white/70 lg:order-1 lg:col-span-4">Imagem ilustrativa</p>
             <div className="order-1 animate-block-in [animation-delay:620ms] lg:order-2 lg:col-span-6 lg:col-start-7">
               <TitleBlock
                 rows={[

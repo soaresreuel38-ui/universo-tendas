@@ -13,9 +13,21 @@ export type EditorialPhoto = {
   focus?: string;
   /** recorte no celular (tela estreita), quando diferente */
   mobileFocus?: string;
+  /** larguras disponíveis em /public/fotos (padrão: 640 e 1080) */
+  widths?: number[];
 };
 
 export const EDITORIAL = {
+  // Capa: imagem ilustrativa (licença Unsplash, foto de boris misevic), mantida a pedido da empresa e marcada como ilustrativa.
+  hero: {
+    file: "capa-ceu-azul",
+    alt: "Cumeeiras de uma grande tenda branca contra o céu azul",
+    width: 2560,
+    height: 1440,
+    focus: "50% 100%",
+    mobileFocus: "22% 100%",
+    widths: [640, 1080, 1440, 1920, 2560],
+  },
   lake: {
     file: "tenda-10x10-lago",
     alt: "Tenda 10x10 da Universo Tendas montada à beira do lago, com o caminhão da empresa",
@@ -77,9 +89,10 @@ export const EDITORIAL = {
 const WIDTHS = [640, 1080];
 
 export function editorialSrc(p: EditorialPhoto, w = 1080) {
-  return `/fotos/${p.file}-${WIDTHS.includes(w) ? w : 1080}.webp`;
+  const widths = p.widths ?? WIDTHS;
+  return `/fotos/${p.file}-${widths.includes(w) ? w : 1080}.webp`;
 }
 
 export function editorialSrcSet(p: EditorialPhoto) {
-  return WIDTHS.map((w) => `${editorialSrc(p, w)} ${w}w`).join(", ");
+  return (p.widths ?? WIDTHS).map((w) => `${editorialSrc(p, w)} ${w}w`).join(", ");
 }
