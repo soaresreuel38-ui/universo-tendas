@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { preconnect, preload } from "react-dom";
 import { EditorialImage } from "@/components/site/EditorialImage";
 import { Footprint, areaLabel, parseDimensions } from "@/components/site/Footprint";
 import { HomeGallery, type GalleryItem } from "@/components/site/HomeGallery";
@@ -8,7 +7,7 @@ import { ArrowRight, WhatsAppIcon } from "@/components/site/Icons";
 import { Photo } from "@/components/site/Photo";
 import { QUOTE_HREF, SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 import { formatPhoneDisplay } from "@/lib/br-documents";
-import { EDITORIAL, editorialSrc, editorialSrcSet } from "@/lib/editorial-photos";
+import { EDITORIAL } from "@/lib/editorial-photos";
 import { money, whatsappLink } from "@/lib/format";
 import { prisma } from "@/server/db";
 import { photoSize } from "@/server/image-size";
@@ -24,12 +23,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** Tipos de evento atendidos (confirmados pela empresa). Fotografias ilustrativas. */
+/** Tipos de evento atendidos (confirmados pela empresa), com fotos reais do Instagram da empresa. */
 const APPLICATIONS = [
   { key: "wedding", title: "Casamentos e festas", text: "Casamentos, aniversários, formaturas e festas particulares.", photo: EDITORIAL.wedding },
   { key: "corporate", title: "Eventos corporativos", text: "Lançamentos, confraternizações e eventos de empresas.", photo: EDITORIAL.corporate },
   { key: "agro", title: "Agro e feiras", text: "Dias de campo, feiras agropecuárias, leilões e exposições.", photo: EDITORIAL.agro },
-  { key: "night", title: "Eventos públicos", text: "Shows, eventos municipais, igrejas, esportes e comércio.", photo: EDITORIAL.night },
+  { key: "night", title: "Eventos públicos", text: "Shows, eventos municipais, igrejas, esportes e comércio.", photo: EDITORIAL.publicEvents },
 ] as const;
 
 /** Diferenciais reais do serviço. */
@@ -53,18 +52,19 @@ type Product = Awaited<ReturnType<typeof listPublicProducts>>[number];
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSiteSettings(), listPublicProducts(prisma)]);
 
-  // Fotos reais do catálogo (painel). Uma foto real grande em "Destaque" assume a capa no lugar da ilustrativa.
+  // Fotos reais do catálogo (painel).
   const withPhotos = products.filter((p) => productPhotos(p).length);
-  const featuredReal = withPhotos.find((p) => p.featured) ?? null;
-  const featuredRealPhoto = featuredReal ? productPhotos(featuredReal)[0] : null;
-  const featuredSize = featuredRealPhoto ? await photoSize(featuredRealPhoto) : null;
-  const realHero = featuredRealPhoto && featuredSize && featuredSize.width >= 2000 ? { id: featuredRealPhoto, product: featuredReal! } : null;
 
   // Foto real para o catálogo: a maior foto cadastrada (lida do arquivo).
   const realCandidates = await Promise.all(
     withPhotos.map(async (p) => ({ p, id: productPhotos(p)[0], size: await photoSize(productPhotos(p)[0]) })),
   );
-  const catalogPhoto = realCandidates.filter((c) => c.size && c.size.width >= 900).sort((a, b) => (b.size?.width ?? 0) - (a.size?.width ?? 0))[0] ?? null;
+  // Capa: a maior foto REAL do catálogo (de preferência de um produto em "Destaque"), se tiver tamanho para tela cheia.
+  const bySize = realCandidates.filter((c) => c.size).sort((a, b) => Number(b.p.featured) - Number(a.p.featured) || (b.size!.width - a.size!.width));
+  const heroCandidate = bySize.find((c) => c.size!.width >= 1200) ?? null;
+  const realHero = heroCandidate ? { id: heroCandidate.id, product: heroCandidate.p } : null;
+  // Foto real no quadro de estruturas: outra foto grande, diferente da capa.
+  const catalogPhoto = bySize.find((c) => c.size!.width >= 900 && c.id !== realHero?.id) ?? null;
 
   const allPhotos: GalleryItem[] = withPhotos.flatMap((p) => productPhotos(p).map((id) => ({ id, name: p.name, path: productPath(p) })));
 
@@ -74,11 +74,6 @@ export default async function HomePage() {
   const others = rows.filter((r) => !r.dim);
   const maxSide = Math.max(1, ...tents.map((r) => Math.max(r.dim!.w, r.dim!.d)));
 
-  // Foto da capa: conexão e download começam antes do HTML terminar (melhora o LCP).
-  if (!realHero) {
-    preconnect("https://images.unsplash.com");
-    preload(editorialSrc(EDITORIAL.hero, 1440), { as: "image", imageSrcSet: editorialSrcSet(EDITORIAL.hero), imageSizes: "100vw", fetchPriority: "high" });
-  }
 
   const wa = whatsappLink(settings.whatsappNumber, "Olá! Vim pelo site da Universo Tendas e gostaria de falar sobre uma estrutura para o meu evento.");
   const ig = instagramUrl(settings.instagram);
@@ -105,10 +100,18 @@ export default async function HomePage() {
           {realHero ? (
             <Photo id={realHero.id} alt="" priority sizes="100vw" />
           ) : (
-            <EditorialImage photo={EDITORIAL.hero} sizes="100vw" priority decorative label={false} className="h-full w-full" />
+            <EditorialImage photo={EDITORIAL.field} sizes="100vw" priority decorative className="h-full w-full" />
           )}
           {/* leitura: escurece só o alto (onde fica o título) e a base (onde fica o carimbo) */}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,20,40,0.55)_0%,rgba(7,20,40,0.12)_38%,rgba(7,20,40,0)_55%,rgba(7,20,40,0.5)_100%)]" />
+          {realHero ? (
+            // Foto real (céu claro): escurece mais à esquerda, onde fica o título, e na base.
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,14,26,0.86)_0%,rgba(7,14,26,0.6)_42%,rgba(7,14,26,0.2)_100%)]" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(7,14,26,0.85),transparent)]" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,20,40,0.55)_0%,rgba(7,20,40,0.12)_38%,rgba(7,20,40,0)_55%,rgba(7,20,40,0.5)_100%)]" />
+          )}
         </div>
 
         <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-5 pb-6 pt-[104px] sm:px-8 sm:pt-[116px] lg:px-10 lg:pb-10">
@@ -131,7 +134,7 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-8 grid flex-1 content-between gap-4 sm:mt-auto sm:flex-none sm:pt-12 lg:grid-cols-12 lg:items-end">
-            {!realHero ? <p className="order-2 text-[11.5px] text-white/70 lg:order-1 lg:col-span-4">Imagem ilustrativa</p> : <span className="hidden lg:block lg:col-span-4" />}
+            {!realHero ? <p className="order-2 text-[12px] text-white/80 lg:order-1 lg:col-span-4">Foto: Universo Tendas</p> : <Link href={productPath(realHero.product)} className="order-2 w-fit text-[12px] text-white/80 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white lg:order-1 lg:col-span-4">Foto real: {realHero.product.name}</Link>}
             <div className="order-1 animate-block-in [animation-delay:620ms] lg:order-2 lg:col-span-6 lg:col-start-7">
               <TitleBlock
                 rows={[
@@ -175,7 +178,7 @@ export default async function HomePage() {
             </dl>
           </div>
           <div className="reveal relative lg:col-span-7 lg:mr-[min(-40px,calc(680px_-_50vw))]">
-            <EditorialImage photo={EDITORIAL.clearSpan} sizes="(min-width:1024px) 60vw, 100vw" className="aspect-[4/3] w-full sm:aspect-[16/11]" labelPosition="bottom-right" />
+            <EditorialImage photo={EDITORIAL.lake} sizes="(min-width:1024px) 60vw, 100vw" className="aspect-[4/3] w-full sm:aspect-[16/11]" />
           </div>
         </div>
       </section>
@@ -193,7 +196,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-14 grid gap-10 lg:mt-20 lg:grid-cols-12 lg:gap-10">
-            {/* Foto real do catálogo (ou ilustrativa), fixa enquanto a lista rola */}
+            {/* Foto real (catálogo ou Instagram da empresa), fixa enquanto a lista rola */}
             <figure className="lg:col-span-5">
               <div className="lg:sticky lg:top-24">
                 {catalogPhoto ? (
@@ -203,7 +206,7 @@ export default async function HomePage() {
                     </div>
                   </Link>
                 ) : (
-                  <EditorialImage photo={EDITORIAL.clearSpan} sizes="(min-width:1024px) 40vw, 100vw" className="aspect-[4/5]" />
+                  <EditorialImage photo={EDITORIAL.assembly} sizes="(min-width:1024px) 40vw, 100vw" className="aspect-[4/5]" />
                 )}
                 <figcaption className="mt-3 flex items-baseline justify-between gap-4 text-[13px] text-tinta/65">
                   {catalogPhoto ? (
@@ -212,7 +215,7 @@ export default async function HomePage() {
                       <Link href={productPath(catalogPhoto.p)} className="text-tinta underline decoration-brand underline-offset-4">Ver detalhes</Link>
                     </>
                   ) : (
-                    <span>Estrutura retangular para grandes eventos</span>
+                    <span>Foto: tenda piramidal 10x10 montada para a Norte Show</span>
                   )}
                 </figcaption>
               </div>
@@ -280,7 +283,7 @@ export default async function HomePage() {
       {/* ═════════════ Diferenciais: estrutura é engenharia ═════════════ */}
       <section className="relative isolate overflow-hidden bg-abismo text-white" aria-labelledby="diferenciais-titulo">
         <div className="grid lg:grid-cols-2">
-          <EditorialImage photo={EDITORIAL.structure} sizes="(min-width:1024px) 50vw, 100vw" className="aspect-[4/3] lg:aspect-auto lg:min-h-[760px]" labelPosition="bottom-left" />
+          <EditorialImage photo={EDITORIAL.structure} sizes="(min-width:1024px) 50vw, 100vw" className="aspect-[4/3] lg:aspect-auto lg:min-h-[760px]" />
           <div className="px-5 py-20 sm:px-8 sm:py-28 lg:px-16 xl:px-24">
             <h2 id="diferenciais-titulo" className="reveal max-w-[14ch] text-[34px] font-semibold leading-[1.02] tracking-[-0.035em] [text-wrap:balance] sm:text-[48px] lg:text-[56px]">
               Do pedido à desmontagem, a mesma equipe.
@@ -341,7 +344,7 @@ export default async function HomePage() {
       {/* ═════════════ Chamada final ═════════════ */}
       <section id="contato" className="relative isolate scroll-mt-16 overflow-hidden bg-abismo text-white" aria-labelledby="cta-titulo">
         <div className="absolute inset-0 -z-10" aria-hidden>
-          <EditorialImage photo={EDITORIAL.reception} sizes="100vw" decorative label={false} className="h-full w-full" />
+          <EditorialImage photo={EDITORIAL.field} sizes="100vw" decorative className="h-full w-full" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,20,40,0.94)_0%,rgba(7,20,40,0.78)_45%,rgba(7,20,40,0.35)_100%)]" />
         </div>
         <div className="mx-auto grid min-h-[86svh] max-w-[1440px] gap-12 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-12 lg:items-end lg:px-10">
@@ -365,7 +368,6 @@ export default async function HomePage() {
               waLabel="Fale com nossa equipe"
               mapHref={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
             />
-            <p className="mt-3 text-[11.5px] text-white/55">Imagem de fundo ilustrativa</p>
           </div>
         </div>
       </section>

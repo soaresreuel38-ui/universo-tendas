@@ -6,8 +6,7 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  // Fotografias ilustrativas do site público servidas pelo CDN do Unsplash (licença Unsplash).
-  "img-src 'self' data: blob: https://images.unsplash.com",
+  "img-src 'self' data: blob:",
   "font-src 'self'",
   // ViaCEP: preenchimento do endereço pelo CEP no site (só o CEP é enviado).
   "connect-src 'self' blob: data: https://viacep.com.br",

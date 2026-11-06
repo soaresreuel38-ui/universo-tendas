@@ -116,7 +116,7 @@ export async function SiteHeader({ overlay = false }: { overlay?: boolean } = {}
   );
 }
 
-/** Rodapé enxuto: marca, navegação, contato e créditos das fotografias ilustrativas. */
+/** Rodapé enxuto: marca, navegação e contato. */
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const wa = whatsappLink(settings.whatsappNumber, "Olá! Vim pelo site da Universo Tendas.");
   const ig = instagramUrl(settings.instagram);
@@ -160,12 +160,6 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
         <div className="flex flex-col gap-2 py-6 text-[13px] text-white/60 sm:flex-row sm:items-center sm:justify-between">
           <span>
             © {new Date().getFullYear()} {settings.companyName}, {settings.city}
-          </span>
-          <span>
-            Fotografias marcadas como ilustrativas:{" "}
-            <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white">
-              Unsplash
-            </a>
           </span>
           <Link href="/login" className="hover:text-white">Acesso da equipe</Link>
         </div>
