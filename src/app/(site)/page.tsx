@@ -341,7 +341,7 @@ export default async function HomePage() {
       {/* ═════════════ Chamada final ═════════════ */}
       <section id="contato" className="relative isolate scroll-mt-16 overflow-hidden bg-abismo text-white" aria-labelledby="cta-titulo">
         <div className="absolute inset-0 -z-10" aria-hidden>
-          <EditorialImage photo={EDITORIAL.night} sizes="100vw" decorative label={false} className="h-full w-full" />
+          <EditorialImage photo={EDITORIAL.reception} sizes="100vw" decorative label={false} className="h-full w-full" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,20,40,0.94)_0%,rgba(7,20,40,0.78)_45%,rgba(7,20,40,0.35)_100%)]" />
         </div>
         <div className="mx-auto grid min-h-[86svh] max-w-[1440px] gap-12 px-5 py-24 sm:px-8 sm:py-32 lg:grid-cols-12 lg:items-end lg:px-10">
